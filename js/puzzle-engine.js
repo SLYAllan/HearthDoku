@@ -86,42 +86,57 @@ const PuzzleEngine = (() => {
             pool = cards.filter(c => allowedSets.includes(c.set));
         }
 
-        // Update dynamic set values
+        // Update dynamic set values based on actual pool
         const setsInPool = [...new Set(pool.map(c => c.set).filter(Boolean))];
         CATEGORY_VALUES.set = setsInPool;
 
-        const MAX_ATTEMPTS = 200;
+        // Pre-filter category values that actually have enough cards in the pool
+        const viableValues = {};
+        for (const cat of CATEGORIES) {
+            viableValues[cat] = CATEGORY_VALUES[cat].filter(val => {
+                const count = pool.filter(c => HearthstoneAPI.cardMatchesCriterion(c, cat, val)).length;
+                return count >= 10;
+            });
+        }
+
+        // Only use categories that have at least 3 viable values
+        const viableCategories = CATEGORIES.filter(c => viableValues[c].length >= 3);
+
+        const MAX_ATTEMPTS = 1000;
 
         for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-            const result = tryGeneratePuzzle(pool);
+            const result = tryGeneratePuzzle(pool, viableCategories, viableValues);
             if (result) return result;
         }
 
         return null; // Failed to generate
     }
 
-    function tryGeneratePuzzle(pool) {
+    function tryGeneratePuzzle(pool, availableCategories, viableValues) {
+        const cats = availableCategories || CATEGORIES.filter(c => CATEGORY_VALUES[c].length > 0);
+        const vals = viableValues || CATEGORY_VALUES;
+
         // Pick 6 distinct categories: 3 for rows, 3 for columns
-        const shuffledCats = shuffle(CATEGORIES.filter(c => CATEGORY_VALUES[c].length > 0));
+        const shuffledCats = shuffle(cats);
         if (shuffledCats.length < 6) return null;
 
         const rowCategories = shuffledCats.slice(0, 3);
         const colCategories = shuffledCats.slice(3, 6);
 
-        // Pick specific values for each
+        // Pick specific values for each (from viable values only)
         const rowCriteria = [];
         const colCriteria = [];
 
         for (const cat of rowCategories) {
-            const vals = shuffle(CATEGORY_VALUES[cat]);
-            if (vals.length === 0) return null;
-            rowCriteria.push({ category: cat, value: vals[0] });
+            const catVals = shuffle(vals[cat] || CATEGORY_VALUES[cat]);
+            if (catVals.length === 0) return null;
+            rowCriteria.push({ category: cat, value: catVals[0] });
         }
 
         for (const cat of colCategories) {
-            const vals = shuffle(CATEGORY_VALUES[cat]);
-            if (vals.length === 0) return null;
-            colCriteria.push({ category: cat, value: vals[0] });
+            const catVals = shuffle(vals[cat] || CATEGORY_VALUES[cat]);
+            if (catVals.length === 0) return null;
+            colCriteria.push({ category: cat, value: catVals[0] });
         }
 
         // Check compatibility for all 9 intersections
