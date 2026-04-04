@@ -196,24 +196,13 @@ const UI = (() => {
             return;
         }
 
+        // Only show card name — no stats, no set, no image (anti-spoil)
         els.searchResults.innerHTML = results.map(card => {
-            const imgUrl = CardSearch.getCardImageUrl(card.id);
-            const cost = card.cost ?? '?';
-            const atk = card.attack ?? '-';
-            const hp = card.health ?? card.durability ?? '-';
-            const setName = HearthstoneAPI.getSetDisplayName(card.set);
             const used = usedCardIds.has(card.dbfId || card.id);
 
             return `<div class="search-result ${used ? 'search-result--used' : ''}" data-card-id="${card.id}" data-dbf-id="${card.dbfId}">
-                <img class="search-result__img" src="${imgUrl}" alt="${card.name}" loading="lazy" onerror="this.style.display='none'">
                 <div class="search-result__info">
                     <div class="search-result__name">${card.name}</div>
-                    <div class="search-result__stats">
-                        <span>💎${cost}</span>
-                        <span>⚔️${atk}</span>
-                        <span>❤️${hp}</span>
-                    </div>
-                    <div class="search-result__set">${setName}</div>
                 </div>
                 ${used ? '<div class="search-result__used-tag">Déjà utilisée</div>' : ''}
             </div>`;
@@ -248,8 +237,10 @@ const UI = (() => {
             cellState[activeCellIndex] = { card, correct: true };
             usedCardIds.add(dbfId || cardId);
 
+            const renderUrl = HearthstoneAPI.getCardRenderUrl(cardId);
             cellEl.innerHTML = `<div class="cell-card cell-card--correct">
-                <img src="${CardSearch.getCardImageUrl(cardId)}" alt="${card.name}" onerror="this.parentElement.innerHTML='<span class=\\'cell-card__name\\'>${card.name}</span>'">
+                <img src="${renderUrl}" alt="${card.name}" onerror="this.parentElement.innerHTML='<span class=\\'cell-card__name\\'>${card.name}</span>'">
+                <div class="cell-card__name-overlay">${card.name}</div>
                 <div class="cell-card__score">+${cardScore}</div>
             </div>`;
             cellEl.classList.add('grid-cell--correct');
@@ -338,9 +329,11 @@ const UI = (() => {
 
             const row = Math.floor(i / 3);
             const col = i % 3;
+            const renderUrl = HearthstoneAPI.getCardRenderUrl(card.id);
             const cellEl = document.querySelector(`.grid-cell[data-row="${row}"][data-col="${col}"]`);
             cellEl.innerHTML = `<div class="cell-card cell-card--solution">
-                <img src="${CardSearch.getCardImageUrl(card.id)}" alt="${card.name}" onerror="this.parentElement.innerHTML='<span class=\\'cell-card__name\\'>${card.name}</span>'">
+                <img src="${renderUrl}" alt="${card.name}" onerror="this.parentElement.innerHTML='<span class=\\'cell-card__name\\'>${card.name}</span>'">
+                <div class="cell-card__name-overlay">${card.name}</div>
                 <div class="cell-card__solution-tag">Solution</div>
             </div>`;
             cellEl.classList.add('grid-cell--solution');

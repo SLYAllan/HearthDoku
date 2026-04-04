@@ -6,7 +6,7 @@ const HearthstoneAPI = (() => {
     const API_URL_EN = 'https://api.hearthstonejson.com/v1/latest/enUS/cards.json';
     const CACHE_KEY = 'hearthdoku_cards_cache';
     const CACHE_VERSION_KEY = 'hearthdoku_cache_version';
-    const CACHE_VERSION = '2';
+    const CACHE_VERSION = '3';
 
     let allCards = [];
     let collectibleCards = [];
@@ -56,8 +56,16 @@ const HearthstoneAPI = (() => {
         return collectibleCards;
     }
 
+    function isExcludedSet(setCode) {
+        if (!setCode) return true;
+        const upper = setCode.toUpperCase();
+        return EXCLUDED_SET_PREFIXES.some(prefix => upper.startsWith(prefix));
+    }
+
     function processCards() {
-        collectibleCards = allCards.filter(c => c.collectible === true);
+        collectibleCards = allCards.filter(c =>
+            c.collectible === true && c.set && !isExcludedSet(c.set)
+        );
 
         // Build set name mapping
         setNames = {};
@@ -68,68 +76,121 @@ const HearthstoneAPI = (() => {
         });
     }
 
-    // Standard sets (approximate for 2025-2026 rotation)
+    // Full card render image (shows the complete card with frame, in French)
+    function getCardRenderUrl(cardId) {
+        return `https://art.hearthstonejson.com/v1/render/latest/frFR/256x/${cardId}.png`;
+    }
+
+    // Standard sets (2025-2026 rotation)
     const STANDARD_SETS = [
         'CORE',
-        'PATH_OF_ARTHAS',
-        'BATTLE_OF_THE_BANDS',
-        'TITANS',
-        'WILD_WEST',
-        'WHIZBANGS_WORKSHOP',
-        'ISLAND_VACATION',
-        'GREAT_DARK_BEYOND',
-        'EMERALD_DREAM',
-        'SPACE',
+        'PATH_OF_ARTHAS', 'PA',
+        'BATTLE_OF_THE_BANDS', 'ETC',
+        'TITANS', 'TTN',
+        'WILD_WEST', 'WST',
+        'WHIZBANGS_WORKSHOP', 'TOY',
+        'ISLAND_VACATION', 'VAC',
+        'GREAT_DARK_BEYOND', 'GDB',
+        'EMERALD_DREAM', 'EDR',
     ];
 
-    const CLASSIC_SETS = ['EXPERT1', 'CORE'];
+    const CLASSIC_SETS = ['EXPERT1', 'CORE', 'BASIC', 'VANILLA'];
 
-    // Map set codes to French display names
+    // Sets to exclude from the game (non-real sets)
+    const EXCLUDED_SET_PREFIXES = ['PLACEHOLDER', 'HERO_SKINS', 'LETTUCE', 'LETL', 'PET', 'TUT', 'TUTORIAL', 'CREDITS', 'MISSIONS', 'DEBUG', 'TEMP', 'TAVERN_BRAWL', 'TB', 'MERCENARIES', 'BATTLEGROUNDS'];
+
+    // Official French set names from HearthSim/hsdata Strings/frFR
+    // Includes both HearthstoneJSON long codes AND hsdata short codes
     const SET_DISPLAY_NAMES = {
-        'CORE': 'Ensemble de base',
+        // Ensembles de base
+        'CORE': 'Fondamental',
+        'BASIC': 'De base',
         'EXPERT1': 'Classique',
+        'VANILLA': 'Classique',
+        'LEGACY': 'Héritage',
+        'HOF': 'Panthéon',
+        'PROMO': 'Promo',
+
+        // Aventures & extensions classiques
         'NAXX': 'Naxxramas',
         'GVG': 'Gobelins et Gnomes',
         'BRM': 'Mont Rochenoire',
         'TGT': 'Le Grand Tournoi',
-        'LOE': 'La Ligue des Explorateurs',
-        'OG': 'Les Murmures des Dieux Anciens',
-        'KARA': 'One Night in Karazhan',
+        'LOE': 'La Ligue des explorateurs',
+        'OG': 'Dieux très anciens',
+        'KARA': 'Une nuit à Karazhan',
         'GANGS': 'Main basse sur Gadgetzan',
         'UNGORO': "Voyage au centre d'Un'Goro",
-        'ICECROWN': 'Chevaliers du Trône de Glace',
+        'ICECROWN': 'Chevaliers du Trône de glace',
         'LOOTAPALOOZA': 'Kobolds et Catacombes',
-        'GILNEAS': 'Bois-Maudit',
-        'BOOMSDAY': 'Le Projet Armageboum',
-        'TROLL': "Jeux de Rastakhan",
-        'DALARAN': "L'Envol des Ombres",
-        'ULDUM': 'Les Aventuriers d\'Uldum',
+        'GILNEAS': 'Le Bois Maudit',
+        'BOOMSDAY': 'Projet Armageboum',
+        'TROLL': 'Les Jeux de Rastakhan',
+        'DALARAN': "L'Éveil des ombres",
+        'ULDUM': "Les Aventuriers d'Uldum",
         'DRAGONS': "L'Envol des Dragons",
-        'YEAR_OF_THE_DRAGON': 'Année du Dragon',
-        'BLACK_TEMPLE': "L'Académie Scholomance",
+        'DRG': "L'Envol des Dragons",
+
+        // Année du Dragon — aventure
+        'YEAR_OF_THE_DRAGON': 'Le Réveil de Galakrond',
+        'YOD': 'Le Réveil de Galakrond',
+
+        // Ashes of Outland et suite
+        'BLACK_TEMPLE': "Les Cendres de l'Outreterre",
+        'BT': "Les Cendres de l'Outreterre",
+        'DEMON_HUNTER_INITIATE': 'Initié chasseur de démons',
+        'DHI': 'Initié chasseur de démons',
         'SCHOLOMANCE': "L'Académie Scholomance",
-        'DARKMOON_FAIRE': 'Foire de Sombrelune',
+        'SCH': "L'Académie Scholomance",
+        'DARKMOON_FAIRE': 'Folle journée à Sombrelune',
+        'DMF': 'Folle journée à Sombrelune',
+
+        // 2021
         'THE_BARRENS': 'Forgés dans les Tarides',
+        'BAR': 'Forgés dans les Tarides',
         'STORMWIND': 'Unis à Hurlevent',
-        'ALTERAC_VALLEY': 'Fractured in Alterac Valley',
-        'THE_SUNKEN_CITY': 'Voyage au Cœur du Maelström',
-        'REVENDRETH': 'Meurtre au Château Nathria',
-        'RETURN_OF_THE_LICH_KING': 'Le Retour du Roi-Liche',
-        'PATH_OF_ARTHAS': 'La Voie d\'Arthas',
-        'BATTLE_OF_THE_BANDS': 'Festival de Légendes',
+        'SW': 'Unis à Hurlevent',
+        'ALTERAC_VALLEY': 'Divisés en Alterac',
+        'AV': 'Divisés en Alterac',
+
+        // 2022
+        'THE_SUNKEN_CITY': 'Au cœur de la cité engloutie',
+        'TSC': 'Au cœur de la cité engloutie',
+        'REVENDRETH': 'Meurtre au château Nathria',
+        'REV': 'Meurtre au château Nathria',
+        'RETURN_OF_THE_LICH_KING': 'La marche du roi-liche',
+        'RLK': 'La marche du roi-liche',
+        'PATH_OF_ARTHAS': "Voie d'Arthas",
+        'PA': "Voie d'Arthas",
+
+        // 2023
+        'BATTLE_OF_THE_BANDS': 'La fête des légendes',
+        'ETC': 'La fête des légendes',
         'TITANS': 'TITANS',
-        'WILD_WEST': 'Tonnerre à Badlands',
-        'WHIZBANGS_WORKSHOP': "L'Atelier du Bricoleur",
-        'ISLAND_VACATION': 'Vacances Insulaires',
-        'GREAT_DARK_BEYOND': 'Au-delà de la Grande Ténèbre',
-        'EMERALD_DREAM': 'Rêve d\'Émeraude',
-        'SPACE': 'Espace',
-        'LEGACY': 'Héritage',
-        'VANILLA': 'Classique',
-        'BASIC': 'Basique',
-        'DEMON_HUNTER_INITIATE': 'Initiation du Chasseur de démons',
-        'WONDERS': 'Sentiers des merveilles',
-        'PLACEHOLDER_202404': 'Extension 2024',
+        'TTN': 'TITANS',
+        'WILD_WEST': 'Rixe en terres Ingrates',
+        'WST': 'Rixe en terres Ingrates',
+
+        // 2024
+        'WHIZBANGS_WORKSHOP': "L'Atelier de Mystifix",
+        'TOY': "L'Atelier de Mystifix",
+        'ISLAND_VACATION': 'Paradis en péril',
+        'VAC': 'Paradis en péril',
+        'GREAT_DARK_BEYOND': "La Ténèbre de l'Au-delà",
+        'GDB': "La Ténèbre de l'Au-delà",
+
+        // 2025
+        'EMERALD_DREAM': "Au cœur du Rêve d'émeraude",
+        'EDR': "Au cœur du Rêve d'émeraude",
+
+        // Divers
+        'WONDERS': 'Grottes du Temps',
+        'WON': 'Grottes du Temps',
+        'EVENT': 'Évènement',
+        'EVE': 'Évènement',
+        'CATA': 'CATACLYSME',
+        'TIME': 'Par-delà les voies temporelles',
+        'TLC': "La cité perdue d'Un'Goro",
     };
 
     // Map English keyword mechanics to their field representation
@@ -222,9 +283,14 @@ const HearthstoneAPI = (() => {
     function getAllSets() {
         const sets = new Set();
         collectibleCards.forEach(c => {
-            if (c.set) sets.add(c.set);
+            if (c.set && !isExcludedSet(c.set)) sets.add(c.set);
         });
-        return Array.from(sets).sort();
+        // Sort by French display name
+        return Array.from(sets).sort((a, b) => {
+            const nameA = getSetDisplayName(a);
+            const nameB = getSetDisplayName(b);
+            return nameA.localeCompare(nameB, 'fr');
+        });
     }
 
     function cardHasKeyword(card, keyword) {
@@ -296,6 +362,8 @@ const HearthstoneAPI = (() => {
         cardMatchesCriterion,
         cardHasKeyword,
         getSetDisplayName,
+        getCardRenderUrl,
+        isExcludedSet,
         STANDARD_SETS,
         CLASSIC_SETS,
         KEYWORD_FIELD_MAP,
