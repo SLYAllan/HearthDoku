@@ -6,7 +6,7 @@ const HearthstoneAPI = (() => {
     const API_URL_EN = 'https://api.hearthstonejson.com/v1/latest/enUS/cards.json';
     const CACHE_KEY = 'hearthdoku_cards_cache';
     const CACHE_VERSION_KEY = 'hearthdoku_cache_version';
-    const CACHE_VERSION = '3';
+    const CACHE_VERSION = '4';
 
     let allCards = [];
     let collectibleCards = [];
@@ -97,10 +97,15 @@ const HearthstoneAPI = (() => {
     const CLASSIC_SETS = ['EXPERT1', 'CORE', 'BASIC', 'VANILLA'];
 
     // Sets to exclude from the game (non-real sets)
-    const EXCLUDED_SET_PREFIXES = ['PLACEHOLDER', 'HERO_SKINS', 'LETTUCE', 'LETL', 'PET', 'TUT', 'TUTORIAL', 'CREDITS', 'MISSIONS', 'DEBUG', 'TEMP', 'TAVERN_BRAWL', 'TB', 'MERCENARIES', 'BATTLEGROUNDS'];
+    const EXCLUDED_SET_PREFIXES = [
+        'PLACEHOLDER', 'HERO_SKINS', 'LETTUCE', 'LETL', 'PET', 'TUT',
+        'TUTORIAL', 'CREDITS', 'MISSIONS', 'DEBUG', 'TEMP', 'TAVERN',
+        'TB', 'MERCENARIES', 'BATTLEGROUNDS', 'SLUSH', 'CHEAT', 'BLANK',
+        'DEMO', 'NONE', 'INVALID', 'TEST', 'WILD_EVENT',
+    ];
 
-    // Official French set names from HearthSim/hsdata Strings/frFR
-    // Includes both HearthstoneJSON long codes AND hsdata short codes
+    // Official French set names from HearthSim/hsdata Strings/frFR/GLOBAL.txt
+    // Covers ALL known API set codes (long + short)
     const SET_DISPLAY_NAMES = {
         // Ensembles de base
         'CORE': 'Fondamental',
@@ -111,31 +116,46 @@ const HearthstoneAPI = (() => {
         'HOF': 'Panthéon',
         'PROMO': 'Promo',
 
-        // Aventures & extensions classiques
+        // 2014
         'NAXX': 'Naxxramas',
+        'FP1': 'Naxxramas',
         'GVG': 'Gobelins et Gnomes',
+        'PE1': 'Gobelins et Gnomes',
+
+        // 2015
         'BRM': 'Mont Rochenoire',
+        'FP2': 'Mont Rochenoire',
         'TGT': 'Le Grand Tournoi',
+        'PE2': 'Le Grand Tournoi',
         'LOE': 'La Ligue des explorateurs',
+
+        // 2016
         'OG': 'Dieux très anciens',
+        'OG_RESERVE': 'Dieux très anciens',
         'KARA': 'Une nuit à Karazhan',
+        'KARA_RESERVE': 'Une nuit à Karazhan',
         'GANGS': 'Main basse sur Gadgetzan',
+        'GANGS_RESERVE': 'Main basse sur Gadgetzan',
+
+        // 2017
         'UNGORO': "Voyage au centre d'Un'Goro",
         'ICECROWN': 'Chevaliers du Trône de glace',
         'LOOTAPALOOZA': 'Kobolds et Catacombes',
+
+        // 2018
         'GILNEAS': 'Le Bois Maudit',
         'BOOMSDAY': 'Projet Armageboum',
         'TROLL': 'Les Jeux de Rastakhan',
+
+        // 2019
         'DALARAN': "L'Éveil des ombres",
         'ULDUM': "Les Aventuriers d'Uldum",
         'DRAGONS': "L'Envol des Dragons",
         'DRG': "L'Envol des Dragons",
-
-        // Année du Dragon — aventure
         'YEAR_OF_THE_DRAGON': 'Le Réveil de Galakrond',
         'YOD': 'Le Réveil de Galakrond',
 
-        // Ashes of Outland et suite
+        // 2020
         'BLACK_TEMPLE': "Les Cendres de l'Outreterre",
         'BT': "Les Cendres de l'Outreterre",
         'DEMON_HUNTER_INITIATE': 'Initié chasseur de démons',
@@ -148,6 +168,7 @@ const HearthstoneAPI = (() => {
         // 2021
         'THE_BARRENS': 'Forgés dans les Tarides',
         'BAR': 'Forgés dans les Tarides',
+        'WAILING_CAVERNS': 'Les Cavernes des lamentations',
         'STORMWIND': 'Unis à Hurlevent',
         'SW': 'Unis à Hurlevent',
         'ALTERAC_VALLEY': 'Divisés en Alterac',
@@ -157,6 +178,7 @@ const HearthstoneAPI = (() => {
         'THE_SUNKEN_CITY': 'Au cœur de la cité engloutie',
         'TSC': 'Au cœur de la cité engloutie',
         'REVENDRETH': 'Meurtre au château Nathria',
+        'REVENDETH': 'Meurtre au château Nathria',
         'REV': 'Meurtre au château Nathria',
         'RETURN_OF_THE_LICH_KING': 'La marche du roi-liche',
         'RLK': 'La marche du roi-liche',
@@ -170,6 +192,8 @@ const HearthstoneAPI = (() => {
         'TTN': 'TITANS',
         'WILD_WEST': 'Rixe en terres Ingrates',
         'WST': 'Rixe en terres Ingrates',
+        'WONDERS': 'Grottes du Temps',
+        'WON': 'Grottes du Temps',
 
         // 2024
         'WHIZBANGS_WORKSHOP': "L'Atelier de Mystifix",
@@ -178,20 +202,107 @@ const HearthstoneAPI = (() => {
         'VAC': 'Paradis en péril',
         'GREAT_DARK_BEYOND': "La Ténèbre de l'Au-delà",
         'GDB': "La Ténèbre de l'Au-delà",
+        'SPACE': "La Ténèbre de l'Au-delà",
 
         // 2025
         'EMERALD_DREAM': "Au cœur du Rêve d'émeraude",
         'EDR': "Au cœur du Rêve d'émeraude",
+        'THE_LOST_CITY': "La cité perdue d'Un'Goro",
+        'TLC': "La cité perdue d'Un'Goro",
+        'CATACLYSM': 'CATACLYSME',
+        'CATA': 'CATACLYSME',
+        'TIME_TRAVEL': 'Par-delà les voies temporelles',
+        'TIME': 'Par-delà les voies temporelles',
+        'TAVERNS_OF_TIME': 'Par-delà les voies temporelles',
 
         // Divers
-        'WONDERS': 'Grottes du Temps',
-        'WON': 'Grottes du Temps',
         'EVENT': 'Évènement',
         'EVE': 'Évènement',
-        'CATA': 'CATACLYSME',
-        'TIME': 'Par-delà les voies temporelles',
-        'TLC': "La cité perdue d'Un'Goro",
     };
+
+    // Icon paths for each set (relative to project root)
+    const SET_ICONS = {
+        'NAXX': 'logo/extensions/NaxxIcon.webp',
+        'FP1': 'logo/extensions/NaxxIcon.webp',
+        'GVG': 'logo/extensions/GvGIcon.webp',
+        'PE1': 'logo/extensions/GvGIcon.webp',
+        'BRM': 'logo/extensions/BRMIcon.webp',
+        'FP2': 'logo/extensions/BRMIcon.webp',
+        'TGT': 'logo/extensions/TGTIcon.webp',
+        'LOE': 'logo/extensions/LOEIcon.webp',
+        'OG': 'logo/extensions/OGIcon.webp',
+        'OG_RESERVE': 'logo/extensions/OGIcon.webp',
+        'KARA': 'logo/extensions/KaraIcon.webp',
+        'KARA_RESERVE': 'logo/extensions/KaraIcon.webp',
+        'GANGS': 'logo/extensions/GangsIcon.webp',
+        'GANGS_RESERVE': 'logo/extensions/GangsIcon.webp',
+        'UNGORO': 'logo/extensions/UNGIcon.webp',
+        'ICECROWN': 'logo/extensions/ICCIcon.webp',
+        'LOOTAPALOOZA': 'logo/extensions/LOOTIcon.webp',
+        'GILNEAS': 'logo/extensions/GILIcon.webp',
+        'BOOMSDAY': 'logo/extensions/BOTIcon.webp',
+        'TROLL': 'logo/extensions/TRLIcon.webp',
+        'DALARAN': 'logo/extensions/DALIcon.webp',
+        'ULDUM': 'logo/extensions/UldumIcon.webp',
+        'DRAGONS': 'logo/extensions/DRGIcon.webp',
+        'DRG': 'logo/extensions/DRGIcon.webp',
+        'YEAR_OF_THE_DRAGON': 'logo/extensions/YODIcon.webp',
+        'YOD': 'logo/extensions/YODIcon.webp',
+        'BLACK_TEMPLE': 'logo/extensions/BTIcon.webp',
+        'BT': 'logo/extensions/BTIcon.webp',
+        'DEMON_HUNTER_INITIATE': 'logo/extensions/DHIIcon.webp',
+        'DHI': 'logo/extensions/DHIIcon.webp',
+        'SCHOLOMANCE': 'logo/extensions/SCHIcon.webp',
+        'SCH': 'logo/extensions/SCHIcon.webp',
+        'DARKMOON_FAIRE': 'logo/extensions/DMFIcon.webp',
+        'DMF': 'logo/extensions/DMFIcon.webp',
+        'STORMWIND': 'logo/extensions/SWIcon.webp',
+        'SW': 'logo/extensions/SWIcon.webp',
+        'THE_SUNKEN_CITY': 'logo/extensions/Voyage_to_the_Sunken_City_-_SVG_logo.webp',
+        'TSC': 'logo/extensions/Voyage_to_the_Sunken_City_-_SVG_logo.webp',
+        'PATH_OF_ARTHAS': 'logo/extensions/PoAIcon.webp',
+        'PA': 'logo/extensions/PoAIcon.webp',
+        'TITANS': 'logo/extensions/TTNIcon.webp',
+        'TTN': 'logo/extensions/TTNIcon.webp',
+        'EXPERT1': 'logo/extensions/ClassicIcon.webp',
+        'VANILLA': 'logo/extensions/ClassicIcon.webp',
+        'HOF': 'logo/extensions/HallOfFameIcon.webp',
+        'THE_SUNKEN_CITY': 'logo/extensions/SCIcon.webp',
+    };
+
+    // Class icon paths
+    const CLASS_ICONS = {
+        'MAGE': 'logo/Class/Mage_icon.webp',
+        'WARRIOR': 'logo/Class/Warrior_icon.webp',
+        'PALADIN': 'logo/Class/Paladin_icon.webp',
+        'HUNTER': 'logo/Class/Hunter_icon.webp',
+        'ROGUE': 'logo/Class/Rogue_icon.webp',
+        'PRIEST': 'logo/Class/Priest_icon.webp',
+        'SHAMAN': 'logo/Class/Shaman_icon.webp',
+        'WARLOCK': 'logo/Class/Warlock_icon.webp',
+        'DEATHKNIGHT': 'logo/Class/Death_Knight_icon.webp',
+        'DEMONHUNTER': 'logo/Class/Demon_Hunter_icon.webp',
+    };
+
+    // Rarity icon paths
+    const RARITY_ICONS = {
+        'COMMON': 'logo/rarity/Common.webp',
+        'RARE': 'logo/rarity/Rare.webp',
+        'EPIC': 'logo/rarity/Epic.webp',
+        'LEGENDARY': 'logo/rarity/Legendary.webp',
+    };
+
+    // Stat icon paths
+    const STAT_ICONS = {
+        mana: 'logo/Mana.webp',
+        attack: 'logo/Attack_icon_large.webp',
+        health: 'logo/Health_icon_large.webp',
+    };
+
+    function getSetIcon(setCode) { return SET_ICONS[setCode] || null; }
+    function getClassIcon(classCode) { return CLASS_ICONS[classCode] || null; }
+    function getRarityIcon(rarityCode) { return RARITY_ICONS[rarityCode] || null; }
+    function getStatIcon(statType) { return STAT_ICONS[statType] || null; }
 
     // Map English keyword mechanics to their field representation
     const KEYWORD_FIELD_MAP = {
@@ -364,6 +475,10 @@ const HearthstoneAPI = (() => {
         getSetDisplayName,
         getCardRenderUrl,
         isExcludedSet,
+        getSetIcon,
+        getClassIcon,
+        getRarityIcon,
+        getStatIcon,
         STANDARD_SETS,
         CLASSIC_SETS,
         KEYWORD_FIELD_MAP,
@@ -372,5 +487,9 @@ const HearthstoneAPI = (() => {
         CLASS_MAP,
         RARITY_MAP,
         SET_DISPLAY_NAMES,
+        SET_ICONS,
+        CLASS_ICONS,
+        RARITY_ICONS,
+        STAT_ICONS,
     };
 })();

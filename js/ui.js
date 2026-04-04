@@ -142,6 +142,7 @@ const UI = (() => {
 
     function renderBadge(criterion) {
         const display = PuzzleEngine.getCriterionDisplay(criterion);
+        // icon may contain <img> HTML or emoji text
         return `<div class="badge ${display.bgClass}" title="${display.tooltip}">
             <span class="badge__icon">${display.icon}</span>
             <span class="badge__label">${display.label}</span>

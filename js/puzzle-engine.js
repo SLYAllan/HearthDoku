@@ -179,16 +179,36 @@ const PuzzleEngine = (() => {
         return sorted[0];
     }
 
+    // Helper: build an <img> tag for an icon, with emoji fallback
+    function imgIcon(src, fallbackEmoji, alt) {
+        if (src) {
+            return `<img class="badge-icon-img" src="${src}" alt="${alt || ''}" onerror="this.outerHTML='${fallbackEmoji}'">`;
+        }
+        return fallbackEmoji;
+    }
+
     // Build display info for a criterion
     function getCriterionDisplay(criterion) {
         const { category, value } = criterion;
         switch (category) {
             case 'mana':
-                return { icon: '💎', label: value, bgClass: 'badge--mana', tooltip: `Coût en mana : ${value}` };
+                return {
+                    icon: imgIcon(HearthstoneAPI.getStatIcon('mana'), '💎', 'Mana'),
+                    label: value, bgClass: 'badge--mana',
+                    tooltip: `Coût en mana : ${value}`
+                };
             case 'health':
-                return { icon: '❤️', label: value, bgClass: 'badge--health', tooltip: `Points de vie : ${value}` };
+                return {
+                    icon: imgIcon(HearthstoneAPI.getStatIcon('health'), '❤️', 'PV'),
+                    label: value, bgClass: 'badge--health',
+                    tooltip: `Points de vie : ${value}`
+                };
             case 'attack':
-                return { icon: '⚔️', label: value, bgClass: 'badge--attack', tooltip: `Attaque : ${value}` };
+                return {
+                    icon: imgIcon(HearthstoneAPI.getStatIcon('attack'), '⚔️', 'ATK'),
+                    label: value, bgClass: 'badge--attack',
+                    tooltip: `Attaque : ${value}`
+                };
             case 'keyword':
                 return {
                     icon: getKeywordIcon(value),
@@ -210,32 +230,41 @@ const PuzzleEngine = (() => {
                     bgClass: 'badge--race',
                     tooltip: `Race : ${HearthstoneAPI.RACE_MAP[value] || value}`
                 };
-            case 'class':
+            case 'class': {
+                const iconPath = HearthstoneAPI.getClassIcon(value);
+                const fallback = getClassFallback(value);
                 return {
-                    icon: getClassIcon(value),
+                    icon: imgIcon(iconPath, fallback, HearthstoneAPI.CLASS_MAP[value]),
                     label: HearthstoneAPI.CLASS_MAP[value] || value,
                     bgClass: `badge--class badge--class-${value.toLowerCase()}`,
                     tooltip: `Classe : ${HearthstoneAPI.CLASS_MAP[value] || value}`
                 };
-            case 'set':
+            }
+            case 'set': {
+                const iconPath = HearthstoneAPI.getSetIcon(value);
                 return {
-                    icon: '📦',
+                    icon: imgIcon(iconPath, '📦', HearthstoneAPI.getSetDisplayName(value)),
                     label: HearthstoneAPI.getSetDisplayName(value),
                     bgClass: 'badge--set',
                     tooltip: `Extension : ${HearthstoneAPI.getSetDisplayName(value)}`
                 };
-            case 'rarity':
+            }
+            case 'rarity': {
+                const iconPath = HearthstoneAPI.getRarityIcon(value);
+                const fallback = getRarityFallback(value);
                 return {
-                    icon: getRarityIcon(value),
+                    icon: imgIcon(iconPath, fallback, HearthstoneAPI.RARITY_MAP[value]),
                     label: HearthstoneAPI.RARITY_MAP[value] || value,
                     bgClass: `badge--rarity badge--rarity-${value.toLowerCase()}`,
                     tooltip: `Rareté : ${HearthstoneAPI.RARITY_MAP[value] || value}`
                 };
+            }
             default:
                 return { icon: '?', label: value, bgClass: '', tooltip: '' };
         }
     }
 
+    // Keyword icons (keep emojis — no logo files for these)
     function getKeywordIcon(kw) {
         const map = {
             'TAUNT': '🛡️', 'DIVINE_SHIELD': '✨', 'BATTLECRY': '📢', 'DEATHRATTLE': '💀',
@@ -248,11 +277,13 @@ const PuzzleEngine = (() => {
         return map[kw] || '🔑';
     }
 
+    // Type icons (keep emojis — no logo files for these)
     function getTypeIcon(type) {
         const map = { 'MINION': '🗡️', 'SPELL': '📖', 'WEAPON': '⚒️', 'HERO': '🪖', 'LOCATION': '🏰' };
         return map[type] || '📄';
     }
 
+    // Race icons (keep emojis — no logo files for these)
     function getRaceIcon(race) {
         const map = {
             'BEAST': '🐾', 'DRAGON': '🐉', 'MURLOC': '🐸', 'DEMON': '😈',
@@ -262,7 +293,8 @@ const PuzzleEngine = (() => {
         return map[race] || '🔘';
     }
 
-    function getClassIcon(cls) {
+    // Fallback emojis for classes without icon files
+    function getClassFallback(cls) {
         const map = {
             'MAGE': '🟣', 'WARRIOR': '🔴', 'PALADIN': '🟡', 'HUNTER': '🟢',
             'ROGUE': '⚫', 'PRIEST': '⚪', 'SHAMAN': '🔵', 'WARLOCK': '🟤',
@@ -271,7 +303,8 @@ const PuzzleEngine = (() => {
         return map[cls] || '🔘';
     }
 
-    function getRarityIcon(rarity) {
+    // Fallback emojis for rarities without icon files
+    function getRarityFallback(rarity) {
         const map = {
             'FREE': '⬜', 'COMMON': '⬜', 'RARE': '🔷', 'EPIC': '🟪', 'LEGENDARY': '🟧',
         };
