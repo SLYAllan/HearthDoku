@@ -81,17 +81,14 @@ const HearthstoneAPI = (() => {
         return `https://art.hearthstonejson.com/v1/render/latest/frFR/256x/${cardId}.png`;
     }
 
-    // Standard sets (2025-2026 rotation)
+    // Standard sets (2026 rotation — Année du Scarabée)
     const STANDARD_SETS = [
         'CORE',
-        'PATH_OF_ARTHAS', 'PA',
-        'BATTLE_OF_THE_BANDS', 'ETC',
-        'TITANS', 'TTN',
-        'WILD_WEST', 'WST',
-        'WHIZBANGS_WORKSHOP', 'TOY',
-        'ISLAND_VACATION', 'VAC',
-        'GREAT_DARK_BEYOND', 'GDB',
+        'EVENT',
         'EMERALD_DREAM', 'EDR',
+        'THE_LOST_CITY', 'TLC',
+        'TIME_TRAVEL', 'TIME',
+        'CATACLYSM', 'CATA',
     ];
 
     const CLASSIC_SETS = ['EXPERT1', 'CORE', 'BASIC', 'VANILLA'];
@@ -462,8 +459,24 @@ const HearthstoneAPI = (() => {
         collectibleCards.forEach(c => {
             if (c.set && !isExcludedSet(c.set)) sets.add(c.set);
         });
+        // Deduplicate sets that have the same French display name
+        // Keep the set code with the most cards
+        const byName = {};
+        for (const code of sets) {
+            const name = getSetDisplayName(code);
+            if (!byName[name]) {
+                byName[name] = code;
+            } else {
+                // Keep the one with more collectible cards
+                const existingCount = collectibleCards.filter(c => c.set === byName[name]).length;
+                const newCount = collectibleCards.filter(c => c.set === code).length;
+                if (newCount > existingCount) {
+                    byName[name] = code;
+                }
+            }
+        }
         // Sort by French display name
-        return Array.from(sets).sort((a, b) => {
+        return Object.values(byName).sort((a, b) => {
             const nameA = getSetDisplayName(a);
             const nameB = getSetDisplayName(b);
             return nameA.localeCompare(nameB, 'fr');

@@ -162,7 +162,7 @@ const UI = (() => {
         const col = cellIndex % 3;
         const rowDisplay = PuzzleEngine.getCriterionDisplay(currentPuzzle.rowCriteria[row]);
         const colDisplay = PuzzleEngine.getCriterionDisplay(currentPuzzle.colCriteria[col]);
-        els.searchTitle.textContent = `${rowDisplay.icon} ${rowDisplay.label}  ×  ${colDisplay.icon} ${colDisplay.label}`;
+        els.searchTitle.innerHTML = `${rowDisplay.icon} ${rowDisplay.label} <span style="margin:0 0.3rem">×</span> ${colDisplay.icon} ${colDisplay.label}`;
         els.searchInput.value = '';
         els.searchResults.innerHTML = '';
         els.searchModal.classList.add('modal-overlay--visible');
