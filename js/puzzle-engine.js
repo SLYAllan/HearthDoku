@@ -90,31 +90,39 @@ const PuzzleEngine = (() => {
         const setsInPool = [...new Set(pool.map(c => c.set).filter(Boolean))];
         CATEGORY_VALUES.set = setsInPool;
 
+        // Adapt minimum card threshold based on pool size
+        const minCards = pool.length < 800 ? 5 : 10;
+
         // Pre-filter category values that actually have enough cards in the pool
         const viableValues = {};
         for (const cat of CATEGORIES) {
             viableValues[cat] = CATEGORY_VALUES[cat].filter(val => {
                 const count = pool.filter(c => HearthstoneAPI.cardMatchesCriterion(c, cat, val)).length;
-                return count >= 10;
+                return count >= minCards;
             });
         }
 
         // Only use categories that have at least 3 viable values
         const viableCategories = CATEGORIES.filter(c => viableValues[c].length >= 3);
 
+        if (viableCategories.length < 6) {
+            console.warn('HearthDoku: seulement', viableCategories.length, 'catégories viables pour', pool.length, 'cartes');
+        }
+
         const MAX_ATTEMPTS = 1000;
 
         for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-            const result = tryGeneratePuzzle(pool, viableCategories, viableValues);
+            const result = tryGeneratePuzzle(pool, viableCategories, viableValues, minCards);
             if (result) return result;
         }
 
         return null; // Failed to generate
     }
 
-    function tryGeneratePuzzle(pool, availableCategories, viableValues) {
+    function tryGeneratePuzzle(pool, availableCategories, viableValues, minCards) {
         const cats = availableCategories || CATEGORIES.filter(c => CATEGORY_VALUES[c].length > 0);
         const vals = viableValues || CATEGORY_VALUES;
+        const threshold = minCards || 10;
 
         // Pick 6 distinct categories: 3 for rows, 3 for columns
         const shuffledCats = shuffle(cats);
@@ -151,7 +159,7 @@ const PuzzleEngine = (() => {
                 }
 
                 const matching = getCardsForCell(pool, rowCriteria[r], colCriteria[c]);
-                if (matching.length < 10) return null;
+                if (matching.length < threshold) return null;
                 cellCards.push(matching);
             }
         }

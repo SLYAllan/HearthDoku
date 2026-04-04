@@ -91,7 +91,7 @@ const HearthstoneAPI = (() => {
         'CATACLYSM', 'CATA',
     ];
 
-    const CLASSIC_SETS = ['EXPERT1', 'CORE', 'BASIC', 'VANILLA'];
+    const CLASSIC_SETS = ['EXPERT1', 'CORE', 'BASIC', 'VANILLA', 'LEGACY'];
 
     // Sets to exclude from the game (non-real sets)
     const EXCLUDED_SET_PREFIXES = [
