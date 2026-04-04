@@ -12,24 +12,61 @@ const ExportManager = (() => {
             UI.showSolution();
         }
 
-        try {
-            const canvas = await html2canvas(container, {
-                backgroundColor: '#1a1a2e',
-                scale: 2,
-                useCORS: true,
-                allowTaint: true,
-                logging: false,
+        // Wait for images to load
+        const images = container.querySelectorAll('img');
+        await Promise.all(Array.from(images).map(img => {
+            if (img.complete) return Promise.resolve();
+            return new Promise(resolve => {
+                img.onload = resolve;
+                img.onerror = resolve;
             });
+        }));
+
+        try {
+            // Try with CORS first
+            let canvas;
+            try {
+                canvas = await html2canvas(container, {
+                    backgroundColor: '#1a1a2e',
+                    scale: 2,
+                    useCORS: true,
+                    logging: false,
+                    imageTimeout: 5000,
+                });
+            } catch {
+                // Fallback: allow tainted canvas (can render but may fail toDataURL)
+                canvas = await html2canvas(container, {
+                    backgroundColor: '#1a1a2e',
+                    scale: 2,
+                    allowTaint: true,
+                    logging: false,
+                    imageTimeout: 5000,
+                });
+            }
 
             const link = document.createElement('a');
             const today = new Date().toISOString().slice(0, 10);
             const suffix = withSolutions ? '-solutions' : '-vide';
             link.download = `hearthdoku-${today}${suffix}.png`;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
+
+            try {
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            } catch {
+                // Tainted canvas — open in new window instead
+                canvas.toBlob(blob => {
+                    if (blob) {
+                        const url = URL.createObjectURL(blob);
+                        window.open(url, '_blank');
+                        setTimeout(() => URL.revokeObjectURL(url), 10000);
+                    } else {
+                        alert('Export impossible : les images externes bloquent la capture.\nUtilisez une capture d\'écran (Win+Shift+S).');
+                    }
+                });
+            }
         } catch (err) {
             console.error('Export failed:', err);
-            alert('Erreur lors de l\'export. Veuillez réessayer.');
+            alert('Erreur lors de l\'export. Utilisez une capture d\'écran (Win+Shift+S) comme alternative.');
         }
     }
 

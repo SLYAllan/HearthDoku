@@ -61,19 +61,48 @@ const PuzzleEngine = (() => {
     // Backtracking solver: find at least one assignment of 9 distinct cards
     function hasSolution(cellCards) {
         const usedIds = new Set();
-        return backtrack(cellCards, 0, usedIds);
+        const solution = [];
+        const found = backtrack(cellCards, 0, usedIds, solution);
+        return found;
     }
 
-    function backtrack(cellCards, cellIndex, usedIds) {
+    // Find a complete solution with 9 distinct cards, prioritizing rarity
+    function findSolution(cellCards, alreadyUsedIds) {
+        const rarityOrder = { 'LEGENDARY': 5, 'EPIC': 4, 'RARE': 3, 'COMMON': 2, 'FREE': 1 };
+        const usedIds = new Set(alreadyUsedIds || []);
+        const solution = new Array(9).fill(null);
+
+        function solve(cellIndex) {
+            if (cellIndex === 9) return true;
+            // Sort candidates by rarity (best first) for nicer solutions
+            const candidates = [...cellCards[cellIndex]].sort((a, b) => {
+                return (rarityOrder[b.rarity] || 0) - (rarityOrder[a.rarity] || 0);
+            });
+            for (const card of candidates) {
+                const id = card.dbfId || card.id;
+                if (usedIds.has(id)) continue;
+                usedIds.add(id);
+                solution[cellIndex] = card;
+                if (solve(cellIndex + 1)) return true;
+                usedIds.delete(id);
+                solution[cellIndex] = null;
+            }
+            return false;
+        }
+
+        solve(0);
+        return solution;
+    }
+
+    function backtrack(cellCards, cellIndex, usedIds, solution) {
         if (cellIndex === 9) return true;
         const candidates = cellCards[cellIndex];
-        // Shuffle to avoid bias
         const shuffled = shuffle(candidates);
         for (const card of shuffled) {
             const id = card.dbfId || card.id;
             if (usedIds.has(id)) continue;
             usedIds.add(id);
-            if (backtrack(cellCards, cellIndex + 1, usedIds)) return true;
+            if (backtrack(cellCards, cellIndex + 1, usedIds, solution)) return true;
             usedIds.delete(id);
         }
         return false;
@@ -338,6 +367,7 @@ const PuzzleEngine = (() => {
         generatePuzzle,
         calculateScore,
         getBestSolutionCard,
+        findSolution,
         getCriterionDisplay,
         getCardsForCell,
         CATEGORIES,

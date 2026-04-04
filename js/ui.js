@@ -61,6 +61,10 @@ const UI = (() => {
             if (e.target === els.searchModal) closeSearchModal();
         });
         els.searchInput.addEventListener('input', onSearchInput);
+        // Export modal click outside
+        els.exportModal.addEventListener('click', (e) => {
+            if (e.target === els.exportModal) closeExportModal();
+        });
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 closeSearchModal();
@@ -322,10 +326,22 @@ const UI = (() => {
         gameFinished = true;
         clearInterval(timerInterval);
 
+        // Collect already used card IDs from correct answers
+        const alreadyUsedIds = [];
+        for (let i = 0; i < 9; i++) {
+            if (cellState[i] && cellState[i].correct) {
+                const id = cellState[i].card.dbfId || cellState[i].card.id;
+                alreadyUsedIds.push(id);
+            }
+        }
+
+        // Find a complete solution with 9 distinct cards
+        const solution = PuzzleEngine.findSolution(currentPuzzle.cellCards, alreadyUsedIds);
+
         for (let i = 0; i < 9; i++) {
             if (cellState[i] && cellState[i].correct) continue;
 
-            const card = PuzzleEngine.getBestSolutionCard(currentPuzzle.cellCards[i]);
+            const card = solution[i];
             if (!card) continue;
 
             const row = Math.floor(i / 3);
