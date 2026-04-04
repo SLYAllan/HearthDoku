@@ -10,11 +10,11 @@ const PuzzleEngine = (() => {
         mana: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10+'],
         health: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12+'],
         attack: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '12+'],
-        keyword: Object.keys(HearthstoneAPI.KEYWORD_FIELD_MAP),
-        type: Object.keys(HearthstoneAPI.TYPE_MAP),
-        race: Object.keys(HearthstoneAPI.RACE_MAP),
-        class: Object.keys(HearthstoneAPI.CLASS_MAP),
-        rarity: Object.keys(HearthstoneAPI.RARITY_MAP),
+        keyword: Object.keys(I18n.getMap('KEYWORD_FIELD_MAP')),
+        type: Object.keys(I18n.getMap('TYPE_MAP')),
+        race: Object.keys(I18n.getMap('RACE_MAP')),
+        class: Object.keys(I18n.getMap('CLASS_MAP')),
+        rarity: Object.keys(I18n.getMap('RARITY_MAP')),
         set: [], // Populated dynamically
     };
 
@@ -42,7 +42,6 @@ const PuzzleEngine = (() => {
 
     function areCriteriaCompatible(cat1, val1, cat2, val2) {
         for (const rule of INCOMPATIBILITIES) {
-            // Check both directions
             if (rule.cat1 === cat1 && rule.val1 === val1 && rule.cat2 === cat2) return false;
             if (rule.cat1 === cat2 && rule.val1 === val2 && rule.cat2 === cat1) return false;
             if (rule.cat1 === cat1 && rule.val1 === val1 && rule.cat2 === cat2 && (rule.val2 === undefined || rule.val2 === val2)) return false;
@@ -58,7 +57,6 @@ const PuzzleEngine = (() => {
         );
     }
 
-    // Backtracking solver: find at least one assignment of 9 distinct cards
     function hasSolution(cellCards) {
         const usedIds = new Set();
         const solution = [];
@@ -66,7 +64,6 @@ const PuzzleEngine = (() => {
         return found;
     }
 
-    // Find a complete solution with 9 distinct cards, prioritizing rarity
     function findSolution(cellCards, alreadyUsedIds) {
         const rarityOrder = { 'LEGENDARY': 5, 'EPIC': 4, 'RARE': 3, 'COMMON': 2, 'FREE': 1 };
         const usedIds = new Set(alreadyUsedIds || []);
@@ -74,7 +71,6 @@ const PuzzleEngine = (() => {
 
         function solve(cellIndex) {
             if (cellIndex === 9) return true;
-            // Sort candidates by rarity (best first) for nicer solutions
             const candidates = [...cellCards[cellIndex]].sort((a, b) => {
                 return (rarityOrder[b.rarity] || 0) - (rarityOrder[a.rarity] || 0);
             });
@@ -109,20 +105,16 @@ const PuzzleEngine = (() => {
     }
 
     function generatePuzzle(cards, allowedSets = null) {
-        // Filter by allowed sets
         let pool = cards;
         if (allowedSets && allowedSets.length > 0) {
             pool = cards.filter(c => allowedSets.includes(c.set));
         }
 
-        // Update dynamic set values based on actual pool
         const setsInPool = [...new Set(pool.map(c => c.set).filter(Boolean))];
         CATEGORY_VALUES.set = setsInPool;
 
-        // Adapt minimum card threshold based on pool size
         const minCards = pool.length < 800 ? 5 : 10;
 
-        // Pre-filter category values that actually have enough cards in the pool
         const viableValues = {};
         for (const cat of CATEGORIES) {
             viableValues[cat] = CATEGORY_VALUES[cat].filter(val => {
@@ -131,12 +123,7 @@ const PuzzleEngine = (() => {
             });
         }
 
-        // Only use categories that have at least 3 viable values
         const viableCategories = CATEGORIES.filter(c => viableValues[c].length >= 3);
-
-        if (viableCategories.length < 6) {
-            console.warn('HearthDoku: seulement', viableCategories.length, 'catégories viables pour', pool.length, 'cartes');
-        }
 
         const MAX_ATTEMPTS = 1000;
 
@@ -145,7 +132,7 @@ const PuzzleEngine = (() => {
             if (result) return result;
         }
 
-        return null; // Failed to generate
+        return null;
     }
 
     function tryGeneratePuzzle(pool, availableCategories, viableValues, minCards) {
@@ -153,14 +140,12 @@ const PuzzleEngine = (() => {
         const vals = viableValues || CATEGORY_VALUES;
         const threshold = minCards || 10;
 
-        // Pick 6 distinct categories: 3 for rows, 3 for columns
         const shuffledCats = shuffle(cats);
         if (shuffledCats.length < 6) return null;
 
         const rowCategories = shuffledCats.slice(0, 3);
         const colCategories = shuffledCats.slice(3, 6);
 
-        // Pick specific values for each (from viable values only)
         const rowCriteria = [];
         const colCriteria = [];
 
@@ -176,7 +161,6 @@ const PuzzleEngine = (() => {
             colCriteria.push({ category: cat, value: catVals[0] });
         }
 
-        // Check compatibility for all 9 intersections
         const cellCards = [];
         for (let r = 0; r < 3; r++) {
             for (let c = 0; c < 3; c++) {
@@ -193,10 +177,8 @@ const PuzzleEngine = (() => {
             }
         }
 
-        // Check solvability with 9 distinct cards
         if (!hasSolution(cellCards)) return null;
 
-        // Count unique cards across all cells
         const uniqueIds = new Set();
         cellCards.forEach(cards => cards.forEach(card => uniqueIds.add(card.dbfId || card.id)));
 
@@ -210,7 +192,6 @@ const PuzzleEngine = (() => {
 
     function calculateScore(card, cellCards) {
         const totalInCell = cellCards.length;
-        const percentage = (1 / totalInCell) * 100;
         let multiplier = 1;
 
         switch (card.rarity) {
@@ -223,7 +204,6 @@ const PuzzleEngine = (() => {
     }
 
     function getBestSolutionCard(cellCards) {
-        // Priority: Legendary > Epic > Rare > Common > Free
         const rarityOrder = { 'LEGENDARY': 5, 'EPIC': 4, 'RARE': 3, 'COMMON': 2, 'FREE': 1 };
         const sorted = [...cellCards].sort((a, b) => {
             return (rarityOrder[b.rarity] || 0) - (rarityOrder[a.rarity] || 0);
@@ -231,7 +211,6 @@ const PuzzleEngine = (() => {
         return sorted[0];
     }
 
-    // Helper: build an <img> tag for an icon, with emoji fallback
     function imgIcon(src, fallbackEmoji, alt) {
         if (src) {
             return `<img class="badge-icon-img" src="${src}" alt="${alt || ''}" onerror="this.outerHTML='${fallbackEmoji}'">`;
@@ -239,57 +218,62 @@ const PuzzleEngine = (() => {
         return fallbackEmoji;
     }
 
-    // Build display info for a criterion
     function getCriterionDisplay(criterion) {
         const { category, value } = criterion;
+        const kwMap = HearthstoneAPI.getKeywordMap();
+        const typeMap = HearthstoneAPI.getTypeMap();
+        const raceMap = HearthstoneAPI.getRaceMap();
+        const classMap = HearthstoneAPI.getClassMap();
+        const rarityMap = HearthstoneAPI.getRarityMap();
+
         switch (category) {
             case 'mana':
                 return {
-                    icon: imgIcon(HearthstoneAPI.getStatIcon('mana'), '💎', 'Mana'),
+                    icon: imgIcon(HearthstoneAPI.getStatIcon('mana'), '💎', I18n.t('altMana')),
                     label: value, bgClass: 'badge--mana',
-                    tooltip: `Coût en mana : ${value}`
+                    tooltip: `${I18n.t('tooltipMana')} : ${value}`
                 };
             case 'health':
                 return {
-                    icon: imgIcon(HearthstoneAPI.getStatIcon('health'), '❤️', 'PV'),
+                    icon: imgIcon(HearthstoneAPI.getStatIcon('health'), '❤️', I18n.t('altHealth')),
                     label: value, bgClass: 'badge--health',
-                    tooltip: `Points de vie : ${value}`
+                    tooltip: `${I18n.t('tooltipHealth')} : ${value}`
                 };
             case 'attack':
                 return {
-                    icon: imgIcon(HearthstoneAPI.getStatIcon('attack'), '⚔️', 'ATK'),
+                    icon: imgIcon(HearthstoneAPI.getStatIcon('attack'), '⚔️', I18n.t('altAttack')),
                     label: value, bgClass: 'badge--attack',
-                    tooltip: `Attaque : ${value}`
+                    tooltip: `${I18n.t('tooltipAttack')} : ${value}`
                 };
             case 'keyword':
                 return {
                     icon: getKeywordIcon(value),
-                    label: HearthstoneAPI.KEYWORD_FIELD_MAP[value] || value,
+                    label: kwMap[value] || value,
                     bgClass: 'badge--keyword',
-                    tooltip: HearthstoneAPI.KEYWORD_FIELD_MAP[value] || value
+                    tooltip: kwMap[value] || value
                 };
             case 'type':
                 return {
                     icon: getTypeIcon(value),
-                    label: HearthstoneAPI.TYPE_MAP[value] || value,
+                    label: typeMap[value] || value,
                     bgClass: 'badge--type',
-                    tooltip: `Type : ${HearthstoneAPI.TYPE_MAP[value] || value}`
+                    tooltip: `${I18n.t('tooltipType')} : ${typeMap[value] || value}`
                 };
             case 'race':
                 return {
                     icon: getRaceIcon(value),
-                    label: HearthstoneAPI.RACE_MAP[value] || value,
+                    label: raceMap[value] || value,
                     bgClass: 'badge--race',
-                    tooltip: `Race : ${HearthstoneAPI.RACE_MAP[value] || value}`
+                    tooltip: `${I18n.t('tooltipRace')} : ${raceMap[value] || value}`
                 };
             case 'class': {
                 const iconPath = HearthstoneAPI.getClassIcon(value);
                 const fallback = getClassFallback(value);
                 return {
-                    icon: imgIcon(iconPath, fallback, HearthstoneAPI.CLASS_MAP[value]),
-                    label: HearthstoneAPI.CLASS_MAP[value] || value,
+                    icon: imgIcon(iconPath, fallback, classMap[value]),
+                    label: classMap[value] || value,
                     bgClass: `badge--class badge--class-${value.toLowerCase()}`,
-                    tooltip: `Classe : ${HearthstoneAPI.CLASS_MAP[value] || value}`
+                    tooltip: `${I18n.t('tooltipClass')} : ${classMap[value] || value}`
                 };
             }
             case 'set': {
@@ -298,17 +282,17 @@ const PuzzleEngine = (() => {
                     icon: imgIcon(iconPath, '📦', HearthstoneAPI.getSetDisplayName(value)),
                     label: HearthstoneAPI.getSetDisplayName(value),
                     bgClass: 'badge--set',
-                    tooltip: `Extension : ${HearthstoneAPI.getSetDisplayName(value)}`
+                    tooltip: `${I18n.t('tooltipSet')} : ${HearthstoneAPI.getSetDisplayName(value)}`
                 };
             }
             case 'rarity': {
                 const iconPath = HearthstoneAPI.getRarityIcon(value);
                 const fallback = getRarityFallback(value);
                 return {
-                    icon: imgIcon(iconPath, fallback, HearthstoneAPI.RARITY_MAP[value]),
-                    label: HearthstoneAPI.RARITY_MAP[value] || value,
+                    icon: imgIcon(iconPath, fallback, rarityMap[value]),
+                    label: rarityMap[value] || value,
                     bgClass: `badge--rarity badge--rarity-${value.toLowerCase()}`,
-                    tooltip: `Rareté : ${HearthstoneAPI.RARITY_MAP[value] || value}`
+                    tooltip: `${I18n.t('tooltipRarity')} : ${rarityMap[value] || value}`
                 };
             }
             default:
@@ -316,7 +300,6 @@ const PuzzleEngine = (() => {
         }
     }
 
-    // Keyword icons (keep emojis — no logo files for these)
     function getKeywordIcon(kw) {
         const map = {
             'TAUNT': '🛡️', 'DIVINE_SHIELD': '✨', 'BATTLECRY': '📢', 'DEATHRATTLE': '💀',
@@ -329,13 +312,11 @@ const PuzzleEngine = (() => {
         return map[kw] || '🔑';
     }
 
-    // Type icons (keep emojis — no logo files for these)
     function getTypeIcon(type) {
         const map = { 'MINION': '🗡️', 'SPELL': '📖', 'WEAPON': '⚒️', 'HERO': '🪖', 'LOCATION': '🏰' };
         return map[type] || '📄';
     }
 
-    // Race icons (keep emojis — no logo files for these)
     function getRaceIcon(race) {
         const map = {
             'BEAST': '🐾', 'DRAGON': '🐉', 'MURLOC': '🐸', 'DEMON': '😈',
@@ -345,7 +326,6 @@ const PuzzleEngine = (() => {
         return map[race] || '🔘';
     }
 
-    // Fallback emojis for classes without icon files
     function getClassFallback(cls) {
         const map = {
             'MAGE': '🟣', 'WARRIOR': '🔴', 'PALADIN': '🟡', 'HUNTER': '🟢',
@@ -355,7 +335,6 @@ const PuzzleEngine = (() => {
         return map[cls] || '🔘';
     }
 
-    // Fallback emojis for rarities without icon files
     function getRarityFallback(rarity) {
         const map = {
             'FREE': '⬜', 'COMMON': '⬜', 'RARE': '🔷', 'EPIC': '🟪', 'LEGENDARY': '🟧',

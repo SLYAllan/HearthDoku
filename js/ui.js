@@ -4,7 +4,7 @@
 const UI = (() => {
     // State
     let currentPuzzle = null;
-    let cellState = Array(9).fill(null); // null = empty, { card, correct } = answered
+    let cellState = Array(9).fill(null);
     let score = 0;
     let pp = 9;
     let timerInterval = null;
@@ -43,25 +43,22 @@ const UI = (() => {
     }
 
     function bindEvents() {
-        // Cell clicks
         document.querySelectorAll('.grid-cell').forEach(cell => {
             cell.addEventListener('click', () => {
                 if (gameFinished) return;
                 const row = parseInt(cell.dataset.row);
                 const col = parseInt(cell.dataset.col);
                 const idx = row * 3 + col;
-                if (cellState[idx]) return; // Already answered
+                if (cellState[idx]) return;
                 openSearchModal(idx);
             });
         });
 
-        // Search modal
         els.searchClose.addEventListener('click', closeSearchModal);
         els.searchModal.addEventListener('click', (e) => {
             if (e.target === els.searchModal) closeSearchModal();
         });
         els.searchInput.addEventListener('input', onSearchInput);
-        // Export modal click outside
         els.exportModal.addEventListener('click', (e) => {
             if (e.target === els.exportModal) closeExportModal();
         });
@@ -72,12 +69,10 @@ const UI = (() => {
             }
         });
 
-        // Controls toggle
         els.controlsToggle.addEventListener('click', () => {
             els.controlsContent.classList.toggle('controls-content--open');
         });
 
-        // Filter search
         els.filterSearch.addEventListener('input', onFilterSearch);
     }
 
@@ -100,7 +95,6 @@ const UI = (() => {
         clearInterval(timerInterval);
         updateStats();
 
-        // Clear cell visuals
         document.querySelectorAll('.grid-cell').forEach(cell => {
             cell.innerHTML = '';
             cell.className = 'grid-cell';
@@ -126,27 +120,22 @@ const UI = (() => {
         currentPuzzle = puzzle;
         resetGame();
 
-        // Render column headers
         for (let c = 0; c < 3; c++) {
             const el = document.getElementById(`colHeader${c}`);
             el.innerHTML = renderBadge(puzzle.colCriteria[c]);
         }
 
-        // Render row headers
         for (let r = 0; r < 3; r++) {
             const el = document.getElementById(`rowHeader${r}`);
             el.innerHTML = renderBadge(puzzle.rowCriteria[r]);
         }
 
-        // Update unique count
         els.statUniq.textContent = puzzle.uniqueCount;
-
         startTimer();
     }
 
     function renderBadge(criterion) {
         const display = PuzzleEngine.getCriterionDisplay(criterion);
-        // icon may contain <img> HTML or emoji text
         return `<div class="badge ${display.bgClass}" title="${display.tooltip}">
             <span class="badge__icon">${display.icon}</span>
             <span class="badge__label">${display.label}</span>
@@ -159,7 +148,6 @@ const UI = (() => {
         els.statPP.classList.toggle('stat-value--danger', pp <= 3);
     }
 
-    // Search modal
     function openSearchModal(cellIndex) {
         activeCellIndex = cellIndex;
         const row = Math.floor(cellIndex / 3);
@@ -168,6 +156,7 @@ const UI = (() => {
         const colDisplay = PuzzleEngine.getCriterionDisplay(currentPuzzle.colCriteria[col]);
         els.searchTitle.innerHTML = `${rowDisplay.icon} ${rowDisplay.label} <span style="margin:0 0.3rem">×</span> ${colDisplay.icon} ${colDisplay.label}`;
         els.searchInput.value = '';
+        els.searchInput.placeholder = I18n.t('searchPlaceholder');
         els.searchResults.innerHTML = '';
         els.searchModal.classList.add('modal-overlay--visible');
         setTimeout(() => els.searchInput.focus(), 100);
@@ -187,7 +176,6 @@ const UI = (() => {
         }
 
         const allCards = HearthstoneAPI.getCollectibleCards();
-        // Filter by allowed sets if applicable
         const pool = App.getFilteredCards ? App.getFilteredCards() : allCards;
 
         CardSearch.debouncedSearch(query, pool, (results) => {
@@ -197,11 +185,10 @@ const UI = (() => {
 
     function renderSearchResults(results) {
         if (results.length === 0) {
-            els.searchResults.innerHTML = '<div class="search-empty">Aucune carte trouvée</div>';
+            els.searchResults.innerHTML = `<div class="search-empty">${I18n.t('noCardFound')}</div>`;
             return;
         }
 
-        // Only show card name — no stats, no set, no image (anti-spoil)
         els.searchResults.innerHTML = results.map(card => {
             const used = usedCardIds.has(card.dbfId || card.id);
 
@@ -209,11 +196,10 @@ const UI = (() => {
                 <div class="search-result__info">
                     <div class="search-result__name">${card.name}</div>
                 </div>
-                ${used ? '<div class="search-result__used-tag">Déjà utilisée</div>' : ''}
+                ${used ? `<div class="search-result__used-tag">${I18n.t('alreadyUsed')}</div>` : ''}
             </div>`;
         }).join('');
 
-        // Bind click events
         els.searchResults.querySelectorAll('.search-result:not(.search-result--used)').forEach(el => {
             el.addEventListener('click', () => {
                 const cardId = el.dataset.cardId;
@@ -236,7 +222,6 @@ const UI = (() => {
         const cellEl = document.querySelector(`.grid-cell[data-row="${row}"][data-col="${col}"]`);
 
         if (card) {
-            // Correct answer
             const cardScore = PuzzleEngine.calculateScore(card, validCards);
             score += cardScore;
             cellState[activeCellIndex] = { card, correct: true };
@@ -255,7 +240,6 @@ const UI = (() => {
             updateStats();
             checkVictory();
         } else {
-            // Incorrect
             pp--;
             cellEl.classList.add('grid-cell--wrong');
             const name = selectedCard ? selectedCard.name : cardId;
@@ -326,7 +310,6 @@ const UI = (() => {
         gameFinished = true;
         clearInterval(timerInterval);
 
-        // Collect already used card IDs from correct answers
         const alreadyUsedIds = [];
         for (let i = 0; i < 9; i++) {
             if (cellState[i] && cellState[i].correct) {
@@ -335,7 +318,6 @@ const UI = (() => {
             }
         }
 
-        // Find a complete solution with 9 distinct cards
         const solution = PuzzleEngine.findSolution(currentPuzzle.cellCards, alreadyUsedIds);
 
         for (let i = 0; i < 9; i++) {
@@ -351,7 +333,7 @@ const UI = (() => {
             cellEl.innerHTML = `<div class="cell-card cell-card--solution">
                 <img src="${renderUrl}" alt="${card.name}" onerror="this.parentElement.innerHTML='<span class=\\'cell-card__name\\'>${card.name}</span>'">
                 <div class="cell-card__name-overlay">${card.name}</div>
-                <div class="cell-card__solution-tag">Solution</div>
+                <div class="cell-card__solution-tag">${I18n.t('solution')}</div>
             </div>`;
             cellEl.classList.add('grid-cell--solution');
         }
@@ -359,7 +341,7 @@ const UI = (() => {
 
     function getShareText() {
         const today = new Date();
-        const dateStr = today.toLocaleDateString('fr-FR');
+        const dateStr = today.toLocaleDateString(I18n.t('shareDate'));
         const grid = [];
         for (let r = 0; r < 3; r++) {
             let row = '';
@@ -391,7 +373,6 @@ const UI = (() => {
         }
     }
 
-    // Extension filter
     function renderFilterList(sets) {
         const allowedSets = App.getAllowedSets ? App.getAllowedSets() : sets;
         els.filterList.innerHTML = sets.map(s => {
@@ -436,6 +417,72 @@ const UI = (() => {
         });
     }
 
+    // Update all static UI text based on current language
+    function updateUIText() {
+        document.documentElement.lang = I18n.getLang();
+
+        // Title bar
+        const subtitle = document.querySelector('.title-bar__subtitle');
+        if (subtitle) subtitle.textContent = I18n.t('subtitle');
+
+        // Controls
+        const controlsTitle = document.querySelector('.controls-title');
+        if (controlsTitle) controlsTitle.textContent = I18n.t('controls');
+
+        const toggle = document.getElementById('controlsToggle');
+        if (toggle) toggle.setAttribute('aria-label', I18n.t('toggleControls'));
+
+        // Action buttons
+        document.getElementById('btnNewPuzzle').textContent = '🎲 ' + I18n.t('newPuzzle');
+        document.getElementById('btnShowSolution').textContent = '👁️ ' + I18n.t('showSolution');
+        document.getElementById('btnExport').textContent = '📸 ' + I18n.t('exportPng');
+        document.getElementById('btnShare').textContent = '📋 ' + I18n.t('share');
+
+        // Filter section
+        const filterTitle = document.querySelector('.filter-title');
+        if (filterTitle) filterTitle.textContent = I18n.t('filterByExtensions');
+
+        document.querySelector('[data-preset="standard"]').textContent = I18n.t('standard');
+        document.querySelector('[data-preset="wild"]').textContent = I18n.t('wild');
+        document.querySelector('[data-preset="classic"]').textContent = I18n.t('classic');
+
+        document.getElementById('btnCheckAll').textContent = I18n.t('checkAll');
+        document.getElementById('btnUncheckAll').textContent = I18n.t('uncheckAll');
+
+        const filterSearch = document.getElementById('filterSearch');
+        if (filterSearch) filterSearch.placeholder = I18n.t('searchExtension');
+
+        // Search modal
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) searchInput.placeholder = I18n.t('searchPlaceholder');
+
+        // Loading
+        const loadingText = document.querySelector('.loading-text');
+        if (loadingText) loadingText.textContent = I18n.t('loading');
+
+        // Victory modal
+        const victoryTitle = document.querySelector('.victory-title');
+        if (victoryTitle) victoryTitle.innerHTML = '🎉 ' + I18n.t('victory');
+
+        const victoryLabels = document.querySelectorAll('.victory-stat__label');
+        if (victoryLabels.length >= 3) {
+            victoryLabels[0].textContent = I18n.t('score');
+            victoryLabels[1].textContent = I18n.t('time');
+            victoryLabels[2].textContent = I18n.t('ppRemaining');
+        }
+
+        document.getElementById('victoryShare').textContent = '📋 ' + I18n.t('share');
+        document.getElementById('victoryNewPuzzle').textContent = '🎲 ' + I18n.t('newPuzzle');
+        document.getElementById('victoryExport').textContent = '📸 ' + I18n.t('exportPng');
+
+        // Export modal
+        const exportTitle = document.querySelector('.export-title');
+        if (exportTitle) exportTitle.innerHTML = '📸 ' + I18n.t('exportTitle');
+
+        document.getElementById('exportEmpty').textContent = I18n.t('emptyPuzzle');
+        document.getElementById('exportSolutions').textContent = I18n.t('puzzleWithSolutions');
+    }
+
     return {
         init,
         showLoading,
@@ -452,6 +499,7 @@ const UI = (() => {
         setAllChecked,
         setPresetChecked,
         updateStats,
+        updateUIText,
         get currentPuzzle() { return currentPuzzle; },
         get score() { return score; },
         get pp() { return pp; },

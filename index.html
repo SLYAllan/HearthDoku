@@ -18,7 +18,15 @@
                 <img src="logo/Icon_Logo.webp" alt="Hearthstone" class="hs-logo" width="40" height="40">
                 <h1 class="title-bar__title">HearthDoku</h1>
             </div>
-            <div class="title-bar__subtitle">Hearthstone Sudoku</div>
+            <div class="title-bar__right">
+                <div class="title-bar__subtitle">Hearthstone Sudoku</div>
+                <div class="lang-switcher">
+                    <select id="langSelect" class="lang-select" aria-label="Language">
+                        <option value="fr">🇫🇷 Français</option>
+                        <option value="en">🇬🇧 English</option>
+                    </select>
+                </div>
+            </div>
         </header>
 
         <!-- Main Layout -->
@@ -168,6 +176,7 @@
         </div>
     </div>
 
+    <script src="js/i18n.js"></script>
     <script src="js/api.js"></script>
     <script src="js/puzzle-engine.js"></script>
     <script src="js/card-search.js"></script>
