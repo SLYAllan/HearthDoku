@@ -329,6 +329,8 @@ const HearthstoneAPI = (() => {
         // Misc
         'WONDERS': 'logo/extensions/TwistIcon.webp',
         'WON': 'logo/extensions/TwistIcon.webp',
+        'EVENT': 'logo/extensions/Event_-_SVG_logo.svg',
+        'EVE': 'logo/extensions/Event_-_SVG_logo.svg',
     };
 
     // Class icon paths
@@ -344,10 +346,12 @@ const HearthstoneAPI = (() => {
         'DRUID': 'logo/Class/Druid_icon.webp',
         'DEATHKNIGHT': 'logo/Class/Death_Knight_icon.webp',
         'DEMONHUNTER': 'logo/Class/Demon_Hunter_icon.webp',
+        'NEUTRAL': 'logo/Icon_Logo.webp',
     };
 
     // Rarity icon paths
     const RARITY_ICONS = {
+        'FREE': 'logo/Icon_Logo.webp',
         'COMMON': 'logo/rarity/Common.webp',
         'RARE': 'logo/rarity/Rare.webp',
         'EPIC': 'logo/rarity/Epic.webp',
