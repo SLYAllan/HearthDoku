@@ -1,0 +1,452 @@
+/**
+ * HearthDoku — UI rendering: grid, badges, modals, animations
+ */
+const UI = (() => {
+    // State
+    let currentPuzzle = null;
+    let cellState = Array(9).fill(null); // null = empty, { card, correct } = answered
+    let score = 0;
+    let pp = 9;
+    let timerInterval = null;
+    let timerSeconds = 0;
+    let usedCardIds = new Set();
+    let activeCellIndex = null;
+    let gameFinished = false;
+
+    // DOM references
+    const els = {};
+
+    function cacheElements() {
+        els.puzzleGrid = document.getElementById('puzzleGrid');
+        els.puzzleContainer = document.getElementById('puzzleContainer');
+        els.loadingOverlay = document.getElementById('loadingOverlay');
+        els.searchModal = document.getElementById('searchModal');
+        els.searchInput = document.getElementById('searchInput');
+        els.searchResults = document.getElementById('searchResults');
+        els.searchTitle = document.getElementById('searchTitle');
+        els.searchClose = document.getElementById('searchClose');
+        els.victoryModal = document.getElementById('victoryModal');
+        els.exportModal = document.getElementById('exportModal');
+        els.statUniq = document.getElementById('statUniq');
+        els.statPts = document.getElementById('statPts');
+        els.statPP = document.getElementById('statPP');
+        els.statTimer = document.getElementById('statTimer');
+        els.controlsToggle = document.getElementById('controlsToggle');
+        els.controlsContent = document.getElementById('controlsContent');
+        els.filterList = document.getElementById('filterList');
+        els.filterSearch = document.getElementById('filterSearch');
+    }
+
+    function init() {
+        cacheElements();
+        bindEvents();
+    }
+
+    function bindEvents() {
+        // Cell clicks
+        document.querySelectorAll('.grid-cell').forEach(cell => {
+            cell.addEventListener('click', () => {
+                if (gameFinished) return;
+                const row = parseInt(cell.dataset.row);
+                const col = parseInt(cell.dataset.col);
+                const idx = row * 3 + col;
+                if (cellState[idx]) return; // Already answered
+                openSearchModal(idx);
+            });
+        });
+
+        // Search modal
+        els.searchClose.addEventListener('click', closeSearchModal);
+        els.searchModal.addEventListener('click', (e) => {
+            if (e.target === els.searchModal) closeSearchModal();
+        });
+        els.searchInput.addEventListener('input', onSearchInput);
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeSearchModal();
+                closeExportModal();
+            }
+        });
+
+        // Controls toggle
+        els.controlsToggle.addEventListener('click', () => {
+            els.controlsContent.classList.toggle('controls-content--open');
+        });
+
+        // Filter search
+        els.filterSearch.addEventListener('input', onFilterSearch);
+    }
+
+    function showLoading() {
+        els.loadingOverlay.style.display = 'flex';
+    }
+
+    function hideLoading() {
+        els.loadingOverlay.style.display = 'none';
+    }
+
+    function resetGame() {
+        cellState = Array(9).fill(null);
+        score = 0;
+        pp = 9;
+        timerSeconds = 0;
+        usedCardIds = new Set();
+        activeCellIndex = null;
+        gameFinished = false;
+        clearInterval(timerInterval);
+        updateStats();
+
+        // Clear cell visuals
+        document.querySelectorAll('.grid-cell').forEach(cell => {
+            cell.innerHTML = '';
+            cell.className = 'grid-cell';
+        });
+    }
+
+    function startTimer() {
+        clearInterval(timerInterval);
+        timerSeconds = 0;
+        timerInterval = setInterval(() => {
+            timerSeconds++;
+            els.statTimer.textContent = formatTime(timerSeconds);
+        }, 1000);
+    }
+
+    function formatTime(seconds) {
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        return `${m}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function renderPuzzle(puzzle) {
+        currentPuzzle = puzzle;
+        resetGame();
+
+        // Render column headers
+        for (let c = 0; c < 3; c++) {
+            const el = document.getElementById(`colHeader${c}`);
+            el.innerHTML = renderBadge(puzzle.colCriteria[c]);
+        }
+
+        // Render row headers
+        for (let r = 0; r < 3; r++) {
+            const el = document.getElementById(`rowHeader${r}`);
+            el.innerHTML = renderBadge(puzzle.rowCriteria[r]);
+        }
+
+        // Update unique count
+        els.statUniq.textContent = puzzle.uniqueCount;
+
+        startTimer();
+    }
+
+    function renderBadge(criterion) {
+        const display = PuzzleEngine.getCriterionDisplay(criterion);
+        return `<div class="badge ${display.bgClass}" title="${display.tooltip}">
+            <span class="badge__icon">${display.icon}</span>
+            <span class="badge__label">${display.label}</span>
+        </div>`;
+    }
+
+    function updateStats() {
+        els.statPts.textContent = score;
+        els.statPP.textContent = `${pp}/9`;
+        els.statPP.classList.toggle('stat-value--danger', pp <= 3);
+    }
+
+    // Search modal
+    function openSearchModal(cellIndex) {
+        activeCellIndex = cellIndex;
+        const row = Math.floor(cellIndex / 3);
+        const col = cellIndex % 3;
+        const rowDisplay = PuzzleEngine.getCriterionDisplay(currentPuzzle.rowCriteria[row]);
+        const colDisplay = PuzzleEngine.getCriterionDisplay(currentPuzzle.colCriteria[col]);
+        els.searchTitle.textContent = `${rowDisplay.icon} ${rowDisplay.label}  ×  ${colDisplay.icon} ${colDisplay.label}`;
+        els.searchInput.value = '';
+        els.searchResults.innerHTML = '';
+        els.searchModal.classList.add('modal-overlay--visible');
+        setTimeout(() => els.searchInput.focus(), 100);
+    }
+
+    function closeSearchModal() {
+        els.searchModal.classList.remove('modal-overlay--visible');
+        activeCellIndex = null;
+        CardSearch.cancelSearch();
+    }
+
+    function onSearchInput() {
+        const query = els.searchInput.value.trim();
+        if (query.length < 2) {
+            els.searchResults.innerHTML = '';
+            return;
+        }
+
+        const allCards = HearthstoneAPI.getCollectibleCards();
+        // Filter by allowed sets if applicable
+        const pool = App.getFilteredCards ? App.getFilteredCards() : allCards;
+
+        CardSearch.debouncedSearch(query, pool, (results) => {
+            renderSearchResults(results);
+        });
+    }
+
+    function renderSearchResults(results) {
+        if (results.length === 0) {
+            els.searchResults.innerHTML = '<div class="search-empty">Aucune carte trouvée</div>';
+            return;
+        }
+
+        els.searchResults.innerHTML = results.map(card => {
+            const imgUrl = CardSearch.getCardImageUrl(card.id);
+            const cost = card.cost ?? '?';
+            const atk = card.attack ?? '-';
+            const hp = card.health ?? card.durability ?? '-';
+            const setName = HearthstoneAPI.getSetDisplayName(card.set);
+            const used = usedCardIds.has(card.dbfId || card.id);
+
+            return `<div class="search-result ${used ? 'search-result--used' : ''}" data-card-id="${card.id}" data-dbf-id="${card.dbfId}">
+                <img class="search-result__img" src="${imgUrl}" alt="${card.name}" loading="lazy" onerror="this.style.display='none'">
+                <div class="search-result__info">
+                    <div class="search-result__name">${card.name}</div>
+                    <div class="search-result__stats">
+                        <span>💎${cost}</span>
+                        <span>⚔️${atk}</span>
+                        <span>❤️${hp}</span>
+                    </div>
+                    <div class="search-result__set">${setName}</div>
+                </div>
+                ${used ? '<div class="search-result__used-tag">Déjà utilisée</div>' : ''}
+            </div>`;
+        }).join('');
+
+        // Bind click events
+        els.searchResults.querySelectorAll('.search-result:not(.search-result--used)').forEach(el => {
+            el.addEventListener('click', () => {
+                const cardId = el.dataset.cardId;
+                const dbfId = parseInt(el.dataset.dbfId);
+                selectCard(cardId, dbfId);
+            });
+        });
+    }
+
+    function selectCard(cardId, dbfId) {
+        if (activeCellIndex === null || !currentPuzzle) return;
+
+        const row = Math.floor(activeCellIndex / 3);
+        const col = activeCellIndex % 3;
+        const validCards = currentPuzzle.cellCards[activeCellIndex];
+        const card = validCards.find(c => (c.dbfId === dbfId) || (c.id === cardId));
+        const allCards = HearthstoneAPI.getCollectibleCards();
+        const selectedCard = allCards.find(c => c.id === cardId);
+
+        const cellEl = document.querySelector(`.grid-cell[data-row="${row}"][data-col="${col}"]`);
+
+        if (card) {
+            // Correct answer
+            const cardScore = PuzzleEngine.calculateScore(card, validCards);
+            score += cardScore;
+            cellState[activeCellIndex] = { card, correct: true };
+            usedCardIds.add(dbfId || cardId);
+
+            cellEl.innerHTML = `<div class="cell-card cell-card--correct">
+                <img src="${CardSearch.getCardImageUrl(cardId)}" alt="${card.name}" onerror="this.parentElement.innerHTML='<span class=\\'cell-card__name\\'>${card.name}</span>'">
+                <div class="cell-card__score">+${cardScore}</div>
+            </div>`;
+            cellEl.classList.add('grid-cell--correct');
+            animateCorrect(cellEl);
+
+            closeSearchModal();
+            updateStats();
+            checkVictory();
+        } else {
+            // Incorrect
+            pp--;
+            cellEl.classList.add('grid-cell--wrong');
+            const name = selectedCard ? selectedCard.name : cardId;
+            cellEl.innerHTML = `<div class="cell-card cell-card--wrong">
+                <span class="cell-card__x">✗</span>
+                <span class="cell-card__name">${name}</span>
+            </div>`;
+            cellState[activeCellIndex] = { card: selectedCard, correct: false };
+            animateWrong(cellEl);
+
+            closeSearchModal();
+            updateStats();
+
+            if (pp <= 0) {
+                endGame(false);
+            }
+        }
+    }
+
+    function animateCorrect(el) {
+        el.classList.add('anim-correct');
+        setTimeout(() => el.classList.remove('anim-correct'), 600);
+    }
+
+    function animateWrong(el) {
+        el.classList.add('anim-wrong');
+        setTimeout(() => el.classList.remove('anim-wrong'), 600);
+    }
+
+    function checkVictory() {
+        const correctCount = cellState.filter(s => s && s.correct).length;
+        if (correctCount === 9) {
+            endGame(true);
+        }
+    }
+
+    function endGame(victory) {
+        gameFinished = true;
+        clearInterval(timerInterval);
+
+        if (victory) {
+            showVictoryModal();
+        }
+    }
+
+    function showVictoryModal() {
+        document.getElementById('victoryScore').textContent = score;
+        document.getElementById('victoryTime').textContent = formatTime(timerSeconds);
+        document.getElementById('victoryPP').textContent = `${pp}/9`;
+        els.victoryModal.classList.add('modal-overlay--visible');
+        spawnConfetti();
+    }
+
+    function closeVictoryModal() {
+        els.victoryModal.classList.remove('modal-overlay--visible');
+    }
+
+    function showExportModal() {
+        els.exportModal.classList.add('modal-overlay--visible');
+    }
+
+    function closeExportModal() {
+        els.exportModal.classList.remove('modal-overlay--visible');
+    }
+
+    function showSolution() {
+        if (!currentPuzzle) return;
+        gameFinished = true;
+        clearInterval(timerInterval);
+
+        for (let i = 0; i < 9; i++) {
+            if (cellState[i] && cellState[i].correct) continue;
+
+            const card = PuzzleEngine.getBestSolutionCard(currentPuzzle.cellCards[i]);
+            if (!card) continue;
+
+            const row = Math.floor(i / 3);
+            const col = i % 3;
+            const cellEl = document.querySelector(`.grid-cell[data-row="${row}"][data-col="${col}"]`);
+            cellEl.innerHTML = `<div class="cell-card cell-card--solution">
+                <img src="${CardSearch.getCardImageUrl(card.id)}" alt="${card.name}" onerror="this.parentElement.innerHTML='<span class=\\'cell-card__name\\'>${card.name}</span>'">
+                <div class="cell-card__solution-tag">Solution</div>
+            </div>`;
+            cellEl.classList.add('grid-cell--solution');
+        }
+    }
+
+    function getShareText() {
+        const today = new Date();
+        const dateStr = today.toLocaleDateString('fr-FR');
+        const grid = [];
+        for (let r = 0; r < 3; r++) {
+            let row = '';
+            for (let c = 0; c < 3; c++) {
+                const idx = r * 3 + c;
+                const state = cellState[idx];
+                if (state && state.correct) row += '🟩';
+                else if (state) row += '🟥';
+                else row += '⬛';
+            }
+            grid.push(row);
+        }
+
+        return `🎴 HearthDoku — ${dateStr}\n${grid.join('\n')}\nScore: ${score} | PP: ${pp}/9 | ⏱️ ${formatTime(timerSeconds)}`;
+    }
+
+    function spawnConfetti() {
+        const container = document.getElementById('confettiContainer');
+        container.innerHTML = '';
+        const colors = ['#f39c12', '#e74c3c', '#2ecc71', '#3498db', '#9b59b6', '#1abc9c'];
+        for (let i = 0; i < 60; i++) {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+            confetti.style.left = Math.random() * 100 + '%';
+            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            confetti.style.animationDelay = Math.random() * 2 + 's';
+            confetti.style.animationDuration = (2 + Math.random() * 3) + 's';
+            container.appendChild(confetti);
+        }
+    }
+
+    // Extension filter
+    function renderFilterList(sets) {
+        const allowedSets = App.getAllowedSets ? App.getAllowedSets() : sets;
+        els.filterList.innerHTML = sets.map(s => {
+            const name = HearthstoneAPI.getSetDisplayName(s);
+            const checked = allowedSets.includes(s) ? 'checked' : '';
+            return `<label class="filter-item" data-set="${s}" data-name="${name.toLowerCase()}">
+                <input type="checkbox" value="${s}" ${checked}> ${name}
+            </label>`;
+        }).join('');
+
+        els.filterList.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+            cb.addEventListener('change', () => {
+                if (App.onSetFilterChange) App.onSetFilterChange();
+            });
+        });
+    }
+
+    function getCheckedSets() {
+        const checkboxes = els.filterList.querySelectorAll('input[type="checkbox"]:checked');
+        return Array.from(checkboxes).map(cb => cb.value);
+    }
+
+    function setAllChecked(checked) {
+        els.filterList.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+            if (cb.closest('.filter-item').style.display !== 'none') {
+                cb.checked = checked;
+            }
+        });
+    }
+
+    function setPresetChecked(sets) {
+        els.filterList.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+            cb.checked = sets.includes(cb.value);
+        });
+    }
+
+    function onFilterSearch() {
+        const query = CardSearch.normalizeString(els.filterSearch.value);
+        els.filterList.querySelectorAll('.filter-item').forEach(item => {
+            const name = item.dataset.name || '';
+            item.style.display = name.includes(query) ? '' : 'none';
+        });
+    }
+
+    return {
+        init,
+        showLoading,
+        hideLoading,
+        renderPuzzle,
+        resetGame,
+        showSolution,
+        showExportModal,
+        closeExportModal,
+        closeVictoryModal,
+        getShareText,
+        renderFilterList,
+        getCheckedSets,
+        setAllChecked,
+        setPresetChecked,
+        updateStats,
+        get currentPuzzle() { return currentPuzzle; },
+        get score() { return score; },
+        get pp() { return pp; },
+        get timerSeconds() { return timerSeconds; },
+        get gameFinished() { return gameFinished; },
+        formatTime,
+    };
+})();

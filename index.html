@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HearthDoku — Hearthstone Sudoku</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+</head>
+<body>
+    <div id="app">
+        <!-- Title Bar -->
+        <header class="title-bar">
+            <div class="title-bar__logo">
+                <svg class="hs-logo" viewBox="0 0 40 40" width="40" height="40">
+                    <defs>
+                        <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#f39c12"/>
+                            <stop offset="100%" style="stop-color:#e74c3c"/>
+                        </linearGradient>
+                    </defs>
+                    <path d="M20 4 C10 4 4 12 4 20 C4 28 10 36 20 36 C30 36 36 28 36 20 C36 12 30 4 20 4 Z M20 8 C16 8 12 14 14 20 C16 26 20 28 20 28 C20 28 24 26 26 20 C28 14 24 8 20 8 Z" fill="url(#logoGrad)"/>
+                    <circle cx="20" cy="18" r="4" fill="#fff" opacity="0.9"/>
+                </svg>
+                <h1 class="title-bar__title">HearthDoku</h1>
+            </div>
+            <div class="title-bar__subtitle">Hearthstone Sudoku</div>
+        </header>
+
+        <!-- Main Layout -->
+        <div class="main-layout">
+            <!-- Controls Panel -->
+            <aside class="controls-panel" id="controlsPanel">
+                <button class="controls-toggle" id="controlsToggle" aria-label="Afficher/masquer les contrôles">☰</button>
+                <div class="controls-content" id="controlsContent">
+                    <h2 class="controls-title">Contrôles</h2>
+
+                    <!-- Action Buttons -->
+                    <div class="action-buttons">
+                        <button class="btn btn--primary" id="btnNewPuzzle">🎲 Nouveau puzzle</button>
+                        <button class="btn btn--secondary" id="btnShowSolution">👁️ Voir la solution</button>
+                        <button class="btn btn--secondary" id="btnExport">📸 Exporter en PNG</button>
+                        <button class="btn btn--secondary" id="btnShare">📋 Partager</button>
+                    </div>
+
+                    <!-- Extension Filter -->
+                    <div class="filter-section">
+                        <h3 class="filter-title">Filtrer par extensions</h3>
+                        <div class="filter-presets">
+                            <button class="btn btn--small btn--preset" data-preset="standard">Standard</button>
+                            <button class="btn btn--small btn--preset" data-preset="wild">Wild</button>
+                            <button class="btn btn--small btn--preset" data-preset="classic">Classique</button>
+                        </div>
+                        <div class="filter-actions">
+                            <button class="btn btn--tiny" id="btnCheckAll">Tout cocher</button>
+                            <button class="btn btn--tiny" id="btnUncheckAll">Tout décocher</button>
+                        </div>
+                        <input type="text" class="filter-search" id="filterSearch" placeholder="Rechercher une extension...">
+                        <div class="filter-list" id="filterList">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Game Area -->
+            <main class="game-area">
+                <!-- Stats Panel -->
+                <div class="stats-panel">
+                    <div class="stat-item">
+                        <span class="stat-label">UNIQ</span>
+                        <span class="stat-value" id="statUniq">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">PTS</span>
+                        <span class="stat-value" id="statPts">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">PP</span>
+                        <span class="stat-value" id="statPP">9/9</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">⏱️</span>
+                        <span class="stat-value" id="statTimer">0:00</span>
+                    </div>
+                </div>
+
+                <!-- Puzzle Grid -->
+                <div class="puzzle-container" id="puzzleContainer">
+                    <div class="puzzle-grid" id="puzzleGrid">
+                        <!-- Corner cell -->
+                        <div class="grid-corner"></div>
+                        <!-- Column headers (3) -->
+                        <div class="grid-col-header" id="colHeader0"></div>
+                        <div class="grid-col-header" id="colHeader1"></div>
+                        <div class="grid-col-header" id="colHeader2"></div>
+                        <!-- Row 0 -->
+                        <div class="grid-row-header" id="rowHeader0"></div>
+                        <div class="grid-cell" data-row="0" data-col="0"></div>
+                        <div class="grid-cell" data-row="0" data-col="1"></div>
+                        <div class="grid-cell" data-row="0" data-col="2"></div>
+                        <!-- Row 1 -->
+                        <div class="grid-row-header" id="rowHeader1"></div>
+                        <div class="grid-cell" data-row="1" data-col="0"></div>
+                        <div class="grid-cell" data-row="1" data-col="1"></div>
+                        <div class="grid-cell" data-row="1" data-col="2"></div>
+                        <!-- Row 2 -->
+                        <div class="grid-row-header" id="rowHeader2"></div>
+                        <div class="grid-cell" data-row="2" data-col="0"></div>
+                        <div class="grid-cell" data-row="2" data-col="1"></div>
+                        <div class="grid-cell" data-row="2" data-col="2"></div>
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div class="loading-overlay" id="loadingOverlay">
+                    <div class="loading-spinner"></div>
+                    <p class="loading-text">Chargement des cartes...</p>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Search Modal -->
+    <div class="modal-overlay" id="searchModal">
+        <div class="modal-content search-modal">
+            <div class="search-header">
+                <h3 class="search-title" id="searchTitle">Chercher une carte</h3>
+                <button class="modal-close" id="searchClose">&times;</button>
+            </div>
+            <input type="text" class="search-input" id="searchInput" placeholder="Chercher une carte..." autocomplete="off">
+            <div class="search-results" id="searchResults">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Victory Modal -->
+    <div class="modal-overlay" id="victoryModal">
+        <div class="modal-content victory-modal">
+            <h2 class="victory-title">🎉 Victoire !</h2>
+            <div class="victory-stats">
+                <div class="victory-stat">
+                    <span class="victory-stat__label">Score</span>
+                    <span class="victory-stat__value" id="victoryScore">0</span>
+                </div>
+                <div class="victory-stat">
+                    <span class="victory-stat__label">Temps</span>
+                    <span class="victory-stat__value" id="victoryTime">0:00</span>
+                </div>
+                <div class="victory-stat">
+                    <span class="victory-stat__label">PP restants</span>
+                    <span class="victory-stat__value" id="victoryPP">9/9</span>
+                </div>
+            </div>
+            <div class="victory-actions">
+                <button class="btn btn--primary" id="victoryShare">📋 Partager</button>
+                <button class="btn btn--primary" id="victoryNewPuzzle">🎲 Nouveau puzzle</button>
+                <button class="btn btn--secondary" id="victoryExport">📸 Exporter</button>
+            </div>
+            <div class="confetti-container" id="confettiContainer"></div>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div class="modal-overlay" id="exportModal">
+        <div class="modal-content export-modal">
+            <h2 class="export-title">📸 Exporter en PNG</h2>
+            <div class="export-options">
+                <button class="btn btn--primary" id="exportEmpty">Puzzle vide</button>
+                <button class="btn btn--primary" id="exportSolutions">Puzzle avec solutions</button>
+            </div>
+            <button class="modal-close" id="exportClose">&times;</button>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/puzzle-engine.js"></script>
+    <script src="js/card-search.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/export.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
