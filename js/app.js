@@ -9,6 +9,27 @@ const App = (() => {
     async function init() {
         UI.init();
         UI.showLoading();
+        UI.updateUIText();
+
+        // Language switcher
+        const langSelect = document.getElementById('langSelect');
+        if (langSelect) {
+            langSelect.value = I18n.getLang();
+            langSelect.addEventListener('change', async () => {
+                const newLang = langSelect.value;
+                I18n.setLang(newLang);
+                UI.updateUIText();
+                UI.showLoading();
+
+                // Reload cards in the new language
+                allCards = await HearthstoneAPI.fetchCards();
+                allSets = HearthstoneAPI.getAllSets();
+                allowedSets = [...allSets];
+
+                UI.renderFilterList(allSets);
+                generateNewPuzzle();
+            });
+        }
 
         try {
             allCards = await HearthstoneAPI.fetchCards();
@@ -82,21 +103,20 @@ const App = (() => {
         } catch (err) {
             console.error('Init error:', err);
             UI.hideLoading();
-            alert('Erreur lors du chargement des cartes. Veuillez rafraîchir la page.');
+            alert(I18n.t('errorLoadCards'));
         }
     }
 
     function generateNewPuzzle() {
         UI.showLoading();
 
-        // Use setTimeout to let the loading overlay render
         setTimeout(() => {
             allowedSets = UI.getCheckedSets();
             const puzzle = PuzzleEngine.generatePuzzle(allCards, allowedSets.length > 0 ? allowedSets : null);
 
             if (!puzzle) {
                 UI.hideLoading();
-                alert('Impossible de générer un puzzle avec ces filtres. Essayez d\'activer plus d\'extensions.');
+                alert(I18n.t('errorGenerate'));
                 return;
             }
 

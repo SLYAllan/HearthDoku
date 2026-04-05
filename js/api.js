@@ -6,17 +6,21 @@ const HearthstoneAPI = (() => {
     const API_URL_EN = 'https://api.hearthstonejson.com/v1/latest/enUS/cards.json';
     const CACHE_KEY = 'hearthdoku_cards_cache';
     const CACHE_VERSION_KEY = 'hearthdoku_cache_version';
-    const CACHE_VERSION = '4';
+    const CACHE_VERSION = '5'; // Bumped: lang-aware cache
 
     let allCards = [];
     let collectibleCards = [];
     let setNames = {};
 
+    function getCacheKey() {
+        return CACHE_KEY + '_' + I18n.getApiLocale();
+    }
+
     function getCachedData() {
         try {
             const version = localStorage.getItem(CACHE_VERSION_KEY);
             if (version !== CACHE_VERSION) return null;
-            const raw = localStorage.getItem(CACHE_KEY);
+            const raw = localStorage.getItem(getCacheKey());
             if (!raw) return null;
             return JSON.parse(raw);
         } catch {
@@ -27,7 +31,7 @@ const HearthstoneAPI = (() => {
     function setCachedData(data) {
         try {
             localStorage.setItem(CACHE_VERSION_KEY, CACHE_VERSION);
-            localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+            localStorage.setItem(getCacheKey(), JSON.stringify(data));
         } catch {
             // localStorage full or unavailable
         }
@@ -41,12 +45,16 @@ const HearthstoneAPI = (() => {
             return collectibleCards;
         }
 
+        const locale = I18n.getApiLocale();
+        const primaryUrl = `https://api.hearthstonejson.com/v1/latest/${locale}/cards.json`;
+        const fallbackUrl = locale === 'frFR' ? API_URL_EN : API_URL_FR;
+
         try {
-            const resp = await fetch(API_URL_FR);
-            if (!resp.ok) throw new Error('FR fetch failed');
+            const resp = await fetch(primaryUrl);
+            if (!resp.ok) throw new Error('Primary fetch failed');
             allCards = await resp.json();
         } catch {
-            const resp = await fetch(API_URL_EN);
+            const resp = await fetch(fallbackUrl);
             if (!resp.ok) throw new Error('Failed to fetch card data');
             allCards = await resp.json();
         }
@@ -76,9 +84,10 @@ const HearthstoneAPI = (() => {
         });
     }
 
-    // Full card render image (shows the complete card with frame, in French)
+    // Full card render image (shows the complete card with frame)
     function getCardRenderUrl(cardId) {
-        return `https://art.hearthstonejson.com/v1/render/latest/frFR/256x/${cardId}.png`;
+        const locale = I18n.getRenderLocale();
+        return `https://art.hearthstonejson.com/v1/render/latest/${locale}/256x/${cardId}.png`;
     }
 
     // Standard sets (2026 rotation — Année du Scarabée)
@@ -100,122 +109,6 @@ const HearthstoneAPI = (() => {
         'TB', 'MERCENARIES', 'BATTLEGROUNDS', 'SLUSH', 'CHEAT', 'BLANK',
         'DEMO', 'NONE', 'INVALID', 'TEST', 'WILD_EVENT',
     ];
-
-    // Official French set names from HearthSim/hsdata Strings/frFR/GLOBAL.txt
-    // Covers ALL known API set codes (long + short)
-    const SET_DISPLAY_NAMES = {
-        // Ensembles de base
-        'CORE': 'Fondamental',
-        'BASIC': 'De base',
-        'EXPERT1': 'Classique',
-        'VANILLA': 'Classique',
-        'LEGACY': 'Héritage',
-        'HOF': 'Panthéon',
-        'PROMO': 'Promo',
-
-        // 2014
-        'NAXX': 'Naxxramas',
-        'FP1': 'Naxxramas',
-        'GVG': 'Gobelins et Gnomes',
-        'PE1': 'Gobelins et Gnomes',
-
-        // 2015
-        'BRM': 'Mont Rochenoire',
-        'FP2': 'Mont Rochenoire',
-        'TGT': 'Le Grand Tournoi',
-        'PE2': 'Le Grand Tournoi',
-        'LOE': 'La Ligue des explorateurs',
-
-        // 2016
-        'OG': 'Dieux très anciens',
-        'OG_RESERVE': 'Dieux très anciens',
-        'KARA': 'Une nuit à Karazhan',
-        'KARA_RESERVE': 'Une nuit à Karazhan',
-        'GANGS': 'Main basse sur Gadgetzan',
-        'GANGS_RESERVE': 'Main basse sur Gadgetzan',
-
-        // 2017
-        'UNGORO': "Voyage au centre d'Un'Goro",
-        'ICECROWN': 'Chevaliers du Trône de glace',
-        'LOOTAPALOOZA': 'Kobolds et Catacombes',
-
-        // 2018
-        'GILNEAS': 'Le Bois Maudit',
-        'BOOMSDAY': 'Projet Armageboum',
-        'TROLL': 'Les Jeux de Rastakhan',
-
-        // 2019
-        'DALARAN': "L'Éveil des ombres",
-        'ULDUM': "Les Aventuriers d'Uldum",
-        'DRAGONS': "L'Envol des Dragons",
-        'DRG': "L'Envol des Dragons",
-        'YEAR_OF_THE_DRAGON': 'Le Réveil de Galakrond',
-        'YOD': 'Le Réveil de Galakrond',
-
-        // 2020
-        'BLACK_TEMPLE': "Les Cendres de l'Outreterre",
-        'BT': "Les Cendres de l'Outreterre",
-        'DEMON_HUNTER_INITIATE': 'Initié chasseur de démons',
-        'DHI': 'Initié chasseur de démons',
-        'SCHOLOMANCE': "L'Académie Scholomance",
-        'SCH': "L'Académie Scholomance",
-        'DARKMOON_FAIRE': 'Folle journée à Sombrelune',
-        'DMF': 'Folle journée à Sombrelune',
-
-        // 2021
-        'THE_BARRENS': 'Forgés dans les Tarides',
-        'BAR': 'Forgés dans les Tarides',
-        'WAILING_CAVERNS': 'Les Cavernes des lamentations',
-        'STORMWIND': 'Unis à Hurlevent',
-        'SW': 'Unis à Hurlevent',
-        'ALTERAC_VALLEY': 'Divisés en Alterac',
-        'AV': 'Divisés en Alterac',
-
-        // 2022
-        'THE_SUNKEN_CITY': 'Au cœur de la cité engloutie',
-        'TSC': 'Au cœur de la cité engloutie',
-        'REVENDRETH': 'Meurtre au château Nathria',
-        'REVENDETH': 'Meurtre au château Nathria',
-        'REV': 'Meurtre au château Nathria',
-        'RETURN_OF_THE_LICH_KING': 'La marche du roi-liche',
-        'RLK': 'La marche du roi-liche',
-        'PATH_OF_ARTHAS': "Voie d'Arthas",
-        'PA': "Voie d'Arthas",
-
-        // 2023
-        'BATTLE_OF_THE_BANDS': 'La fête des légendes',
-        'ETC': 'La fête des légendes',
-        'TITANS': 'TITANS',
-        'TTN': 'TITANS',
-        'WILD_WEST': 'Rixe en terres Ingrates',
-        'WST': 'Rixe en terres Ingrates',
-        'WONDERS': 'Grottes du Temps',
-        'WON': 'Grottes du Temps',
-
-        // 2024
-        'WHIZBANGS_WORKSHOP': "L'Atelier de Mystifix",
-        'TOY': "L'Atelier de Mystifix",
-        'ISLAND_VACATION': 'Paradis en péril',
-        'VAC': 'Paradis en péril',
-        'GREAT_DARK_BEYOND': "La Ténèbre de l'Au-delà",
-        'GDB': "La Ténèbre de l'Au-delà",
-        'SPACE': "La Ténèbre de l'Au-delà",
-
-        // 2025
-        'EMERALD_DREAM': "Au cœur du Rêve d'émeraude",
-        'EDR': "Au cœur du Rêve d'émeraude",
-        'THE_LOST_CITY': "La cité perdue d'Un'Goro",
-        'TLC': "La cité perdue d'Un'Goro",
-        'CATACLYSM': 'CATACLYSME',
-        'CATA': 'CATACLYSME',
-        'TIME_TRAVEL': 'Par-delà les voies temporelles',
-        'TIME': 'Par-delà les voies temporelles',
-        'TAVERNS_OF_TIME': 'Par-delà les voies temporelles',
-
-        // Divers
-        'EVENT': 'Évènement',
-        'EVE': 'Évènement',
-    };
 
     // Icon paths for each set (relative to project root)
     const SET_ICONS = {
@@ -367,83 +260,17 @@ const HearthstoneAPI = (() => {
     function getRarityIcon(rarityCode) { return RARITY_ICONS[rarityCode] || null; }
     function getStatIcon(statType) { return STAT_ICONS[statType] || null; }
 
-    // Map English keyword mechanics to their field representation
-    const KEYWORD_FIELD_MAP = {
-        'TAUNT': 'Provocation',
-        'DIVINE_SHIELD': 'Bouclier divin',
-        'BATTLECRY': 'Cri de guerre',
-        'DEATHRATTLE': 'Râle d\'agonie',
-        'RUSH': 'Ruée',
-        'CHARGE': 'Charge',
-        'LIFESTEAL': 'Vol de vie',
-        'WINDFURY': 'Furie des vents',
-        'POISONOUS': 'Toxicité',
-        'STEALTH': 'Camouflage',
-        'SPELL_DAMAGE': 'Dégâts des sorts',
-        'DISCOVER': 'Découverte',
-        'MAGNETIC': 'Magnétisme',
-        'REBORN': 'Renaissance',
-        'OUTCAST': 'Paria',
-        'TRADEABLE': 'Échangeable',
-        'FREEZE': 'Gel',
-        'SILENCE': 'Silence',
-        'CHOOSE_ONE': 'Choix des armes',
-        'COMBO': 'Combo',
-        'OVERLOAD': 'Surcharge',
-        'SECRET': 'Secret',
-    };
-
-    // Card type mapping
-    const TYPE_MAP = {
-        'MINION': 'Serviteur',
-        'SPELL': 'Sort',
-        'WEAPON': 'Arme',
-        'HERO': 'Héros',
-        'LOCATION': 'Lieu',
-    };
-
-    // Race mapping
-    const RACE_MAP = {
-        'BEAST': 'Bête',
-        'DRAGON': 'Dragon',
-        'MURLOC': 'Murloc',
-        'DEMON': 'Démon',
-        'MECHANICAL': 'Méca',
-        'PIRATE': 'Pirate',
-        'ELEMENTAL': 'Élémentaire',
-        'TOTEM': 'Totem',
-        'UNDEAD': 'Mort-vivant',
-        'NAGA': 'Naga',
-        'ALL': 'Tout',
-    };
-
-    // Class mapping
-    const CLASS_MAP = {
-        'MAGE': 'Mage',
-        'WARRIOR': 'Guerrier',
-        'PALADIN': 'Paladin',
-        'HUNTER': 'Chasseur',
-        'ROGUE': 'Voleur',
-        'PRIEST': 'Prêtre',
-        'SHAMAN': 'Chaman',
-        'WARLOCK': 'Démoniste',
-        'DRUID': 'Druide',
-        'DEATHKNIGHT': 'Chevalier de la mort',
-        'DEMONHUNTER': 'Chasseur de démons',
-        'NEUTRAL': 'Neutre',
-    };
-
-    // Rarity mapping
-    const RARITY_MAP = {
-        'FREE': 'Basique',
-        'COMMON': 'Commune',
-        'RARE': 'Rare',
-        'EPIC': 'Épique',
-        'LEGENDARY': 'Légendaire',
-    };
+    // Dynamic accessors that read from I18n
+    function getKeywordMap() { return I18n.getMap('KEYWORD_FIELD_MAP'); }
+    function getTypeMap() { return I18n.getMap('TYPE_MAP'); }
+    function getRaceMap() { return I18n.getMap('RACE_MAP'); }
+    function getClassMap() { return I18n.getMap('CLASS_MAP'); }
+    function getRarityMap() { return I18n.getMap('RARITY_MAP'); }
+    function getSetDisplayNames() { return I18n.getMap('SET_DISPLAY_NAMES'); }
 
     function getSetDisplayName(setCode) {
-        return SET_DISPLAY_NAMES[setCode] || setCode;
+        const names = getSetDisplayNames();
+        return names[setCode] || setCode;
     }
 
     function getCollectibleCards() {
@@ -459,7 +286,7 @@ const HearthstoneAPI = (() => {
         collectibleCards.forEach(c => {
             if (c.set && !isExcludedSet(c.set)) sets.add(c.set);
         });
-        // Deduplicate sets that have the same French display name
+        // Deduplicate sets that have the same display name
         // Keep the set code with the most cards
         const byName = {};
         for (const code of sets) {
@@ -467,7 +294,6 @@ const HearthstoneAPI = (() => {
             if (!byName[name]) {
                 byName[name] = code;
             } else {
-                // Keep the one with more collectible cards
                 const existingCount = collectibleCards.filter(c => c.set === byName[name]).length;
                 const newCount = collectibleCards.filter(c => c.set === code).length;
                 if (newCount > existingCount) {
@@ -475,24 +301,20 @@ const HearthstoneAPI = (() => {
                 }
             }
         }
-        // Sort by French display name
+        // Sort by display name
+        const locale = I18n.getLang() === 'en' ? 'en' : 'fr';
         return Object.values(byName).sort((a, b) => {
             const nameA = getSetDisplayName(a);
             const nameB = getSetDisplayName(b);
-            return nameA.localeCompare(nameB, 'fr');
+            return nameA.localeCompare(nameB, locale);
         });
     }
 
     function cardHasKeyword(card, keyword) {
-        // Check mechanics array
         if (card.mechanics && card.mechanics.includes(keyword)) return true;
-        // For DISCOVER, FREEZE, CHOOSE_ONE, COMBO, OVERLOAD, SECRET — also check referencedTags
         if (card.referencedTags && card.referencedTags.includes(keyword)) return true;
-        // Special: SECRET is also indicated by card.secret === true
         if (keyword === 'SECRET' && card.secret === true) return true;
-        // OVERLOAD: check for overload field
         if (keyword === 'OVERLOAD' && card.overload && card.overload > 0) return true;
-        // SPELL_DAMAGE: check spellDamage field
         if (keyword === 'SPELL_DAMAGE' && card.spellDamage && card.spellDamage > 0) return true;
         return false;
     }
@@ -558,14 +380,13 @@ const HearthstoneAPI = (() => {
         getClassIcon,
         getRarityIcon,
         getStatIcon,
+        getKeywordMap,
+        getTypeMap,
+        getRaceMap,
+        getClassMap,
+        getRarityMap,
         STANDARD_SETS,
         CLASSIC_SETS,
-        KEYWORD_FIELD_MAP,
-        TYPE_MAP,
-        RACE_MAP,
-        CLASS_MAP,
-        RARITY_MAP,
-        SET_DISPLAY_NAMES,
         SET_ICONS,
         CLASS_ICONS,
         RARITY_ICONS,

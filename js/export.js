@@ -7,12 +7,10 @@ const ExportManager = (() => {
         const container = document.getElementById('puzzleContainer');
         if (!container) return;
 
-        // If with solutions, temporarily show them
         if (withSolutions && UI.currentPuzzle) {
             UI.showSolution();
         }
 
-        // Wait for images to load
         const images = container.querySelectorAll('img');
         await Promise.all(Array.from(images).map(img => {
             if (img.complete) return Promise.resolve();
@@ -23,7 +21,6 @@ const ExportManager = (() => {
         }));
 
         try {
-            // Try with CORS first
             let canvas;
             try {
                 canvas = await html2canvas(container, {
@@ -34,7 +31,6 @@ const ExportManager = (() => {
                     imageTimeout: 5000,
                 });
             } catch {
-                // Fallback: allow tainted canvas (can render but may fail toDataURL)
                 canvas = await html2canvas(container, {
                     backgroundColor: '#1a1a2e',
                     scale: 2,
@@ -46,27 +42,26 @@ const ExportManager = (() => {
 
             const link = document.createElement('a');
             const today = new Date().toISOString().slice(0, 10);
-            const suffix = withSolutions ? '-solutions' : '-vide';
+            const suffix = withSolutions ? '-solutions' : '-empty';
             link.download = `hearthdoku-${today}${suffix}.png`;
 
             try {
                 link.href = canvas.toDataURL('image/png');
                 link.click();
             } catch {
-                // Tainted canvas — open in new window instead
                 canvas.toBlob(blob => {
                     if (blob) {
                         const url = URL.createObjectURL(blob);
                         window.open(url, '_blank');
                         setTimeout(() => URL.revokeObjectURL(url), 10000);
                     } else {
-                        alert('Export impossible : les images externes bloquent la capture.\nUtilisez une capture d\'écran (Win+Shift+S).');
+                        alert(I18n.t('errorExportBlocked'));
                     }
                 });
             }
         } catch (err) {
             console.error('Export failed:', err);
-            alert('Erreur lors de l\'export. Utilisez une capture d\'écran (Win+Shift+S) comme alternative.');
+            alert(I18n.t('errorExport'));
         }
     }
 
@@ -76,7 +71,6 @@ const ExportManager = (() => {
             await navigator.clipboard.writeText(text);
             showCopyToast();
         } catch {
-            // Fallback
             const textarea = document.createElement('textarea');
             textarea.value = text;
             textarea.style.position = 'fixed';
@@ -92,7 +86,7 @@ const ExportManager = (() => {
     function showCopyToast() {
         const toast = document.createElement('div');
         toast.className = 'toast';
-        toast.textContent = '📋 Copié dans le presse-papier !';
+        toast.textContent = '📋 ' + I18n.t('copiedClipboard');
         document.body.appendChild(toast);
         requestAnimationFrame(() => toast.classList.add('toast--visible'));
         setTimeout(() => {
