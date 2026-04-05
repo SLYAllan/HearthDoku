@@ -359,18 +359,106 @@ const UI = (() => {
     }
 
     function spawnConfetti() {
-        const container = document.getElementById('confettiContainer');
-        container.innerHTML = '';
-        const colors = ['#f39c12', '#e74c3c', '#2ecc71', '#3498db', '#9b59b6', '#1abc9c'];
-        for (let i = 0; i < 60; i++) {
-            const confetti = document.createElement('div');
-            confetti.className = 'confetti';
-            confetti.style.left = Math.random() * 100 + '%';
-            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-            confetti.style.animationDelay = Math.random() * 2 + 's';
-            confetti.style.animationDuration = (2 + Math.random() * 3) + 's';
-            container.appendChild(confetti);
+        const canvas = document.getElementById('confettiCanvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        canvas.style.display = 'block';
+
+        const colors = [
+            '#f39c12', '#e74c3c', '#2ecc71', '#3498db', '#9b59b6',
+            '#1abc9c', '#f1c40f', '#e67e22', '#FF6B6B', '#4ECDC4',
+            '#FFE66D', '#A8E6CF', '#FF8C94', '#C3A6FF'
+        ];
+        const shapes = ['square', 'circle', 'triangle', 'ribbon'];
+
+        const TOTAL = 220;
+        const particles = [];
+
+        for (let i = 0; i < TOTAL; i++) {
+            const size = 6 + Math.random() * 9;
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: -20 - Math.random() * canvas.height * 0.6,
+                size,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                shape: shapes[Math.floor(Math.random() * shapes.length)],
+                speedY: 2.5 + Math.random() * 3.5,
+                speedX: (Math.random() - 0.5) * 2,
+                rotation: Math.random() * Math.PI * 2,
+                rotationSpeed: (Math.random() - 0.5) * 0.18,
+                opacity: 1,
+                sway: Math.random() * Math.PI * 2,
+                swaySpeed: 0.025 + Math.random() * 0.025,
+                swayAmount: 1.5 + Math.random() * 2.5,
+            });
         }
+
+        let rafId;
+
+        function drawParticle(p) {
+            ctx.save();
+            ctx.globalAlpha = p.opacity;
+            ctx.fillStyle = p.color;
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.rotation);
+
+            switch (p.shape) {
+                case 'square':
+                    ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+                    break;
+                case 'circle':
+                    ctx.beginPath();
+                    ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+                    ctx.fill();
+                    break;
+                case 'triangle':
+                    ctx.beginPath();
+                    ctx.moveTo(0, -p.size / 2);
+                    ctx.lineTo(p.size / 2, p.size / 2);
+                    ctx.lineTo(-p.size / 2, p.size / 2);
+                    ctx.closePath();
+                    ctx.fill();
+                    break;
+                case 'ribbon':
+                    ctx.fillRect(-p.size / 5, -p.size, p.size / 2.5, p.size * 2);
+                    break;
+            }
+            ctx.restore();
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            let alive = false;
+
+            for (const p of particles) {
+                if (p.opacity <= 0) continue;
+                alive = true;
+
+                p.sway += p.swaySpeed;
+                p.x += p.speedX + Math.sin(p.sway) * p.swayAmount;
+                p.y += p.speedY;
+                p.rotation += p.rotationSpeed;
+
+                if (p.y > canvas.height * 0.72) {
+                    p.opacity -= 0.025;
+                    if (p.opacity < 0) p.opacity = 0;
+                }
+
+                drawParticle(p);
+            }
+
+            if (alive) {
+                rafId = requestAnimationFrame(animate);
+            } else {
+                canvas.style.display = 'none';
+            }
+        }
+
+        if (rafId) cancelAnimationFrame(rafId);
+        animate();
     }
 
     function renderFilterList(sets) {
