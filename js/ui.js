@@ -66,7 +66,6 @@ const UI = (() => {
             if (e.key === 'Escape') {
                 closeSearchModal();
                 closeExportModal();
-                closeSolutionModal();
             }
         });
 
@@ -338,64 +337,6 @@ const UI = (() => {
             </div>`;
             cellEl.classList.add('grid-cell--solution');
         }
-
-        showSolutionPopup();
-    }
-
-    function showSolutionPopup() {
-        if (!currentPuzzle) return;
-
-        const modal = document.getElementById('solutionModal');
-        const grid = document.getElementById('solutionModalGrid');
-        const title = document.getElementById('solutionModalTitle');
-        const closeBtn = document.getElementById('solutionModalClose');
-
-        title.textContent = I18n.t('allSolutions');
-
-        let html = '';
-        for (let i = 0; i < 9; i++) {
-            const row = Math.floor(i / 3);
-            const col = i % 3;
-            const rowDisplay = PuzzleEngine.getCriterionDisplay(currentPuzzle.rowCriteria[row]);
-            const colDisplay = PuzzleEngine.getCriterionDisplay(currentPuzzle.colCriteria[col]);
-            const cards = currentPuzzle.cellCards[i];
-
-            html += `<div class="solution-cell">
-                <div class="solution-cell__header">
-                    <span class="solution-cell__criteria">${rowDisplay.icon} ${rowDisplay.label} × ${colDisplay.icon} ${colDisplay.label}</span>
-                    <span class="solution-cell__count">${cards.length} ${I18n.t('cardsAvailable')}</span>
-                </div>
-                <div class="solution-cell__cards">
-                    ${cards.map(card => {
-                        const renderUrl = HearthstoneAPI.getCardRenderUrl(card.id);
-                        return `<div class="solution-card" title="${card.name}">
-                            <img src="${renderUrl}" alt="${card.name}" onerror="this.parentElement.innerHTML='<span class=\\'solution-card__name\\'>${card.name}</span>'">
-                            <div class="solution-card__label">${card.name}</div>
-                        </div>`;
-                    }).join('')}
-                </div>
-            </div>`;
-        }
-
-        grid.innerHTML = html;
-        modal.classList.add('modal-overlay--visible');
-
-        const onClose = () => {
-            modal.classList.remove('modal-overlay--visible');
-            closeBtn.removeEventListener('click', onClose);
-            modal.removeEventListener('click', onModalClick);
-        };
-        const onModalClick = (e) => {
-            if (e.target === modal) onClose();
-        };
-
-        closeBtn.addEventListener('click', onClose);
-        modal.addEventListener('click', onModalClick);
-    }
-
-    function closeSolutionModal() {
-        const modal = document.getElementById('solutionModal');
-        if (modal) modal.classList.remove('modal-overlay--visible');
     }
 
     function getShareText() {
@@ -580,10 +521,10 @@ const UI = (() => {
         if (toggle) toggle.setAttribute('aria-label', I18n.t('toggleControls'));
 
         // Action buttons
-        document.getElementById('btnNewPuzzle').textContent = I18n.t('newPuzzle');
-        document.getElementById('btnShowSolution').textContent = I18n.t('showSolution');
-        document.getElementById('btnExport').textContent = I18n.t('exportPng');
-        document.getElementById('btnShare').textContent = I18n.t('share');
+        document.getElementById('btnNewPuzzle').textContent = '🎲 ' + I18n.t('newPuzzle');
+        document.getElementById('btnShowSolution').textContent = '👁️ ' + I18n.t('showSolution');
+        document.getElementById('btnExport').textContent = '📸 ' + I18n.t('exportPng');
+        document.getElementById('btnShare').textContent = '📋 ' + I18n.t('share');
 
         // Filter section
         const filterTitle = document.querySelector('.filter-title');
@@ -609,7 +550,7 @@ const UI = (() => {
 
         // Victory modal
         const victoryTitle = document.querySelector('.victory-title');
-        if (victoryTitle) victoryTitle.textContent = I18n.t('victory');
+        if (victoryTitle) victoryTitle.innerHTML = '🎉 ' + I18n.t('victory');
 
         const victoryLabels = document.querySelectorAll('.victory-stat__label');
         if (victoryLabels.length >= 3) {
@@ -618,13 +559,13 @@ const UI = (() => {
             victoryLabels[2].textContent = I18n.t('ppRemaining');
         }
 
-        document.getElementById('victoryShare').textContent = I18n.t('share');
-        document.getElementById('victoryNewPuzzle').textContent = I18n.t('newPuzzle');
-        document.getElementById('victoryExport').textContent = I18n.t('exportPng');
+        document.getElementById('victoryShare').textContent = '📋 ' + I18n.t('share');
+        document.getElementById('victoryNewPuzzle').textContent = '🎲 ' + I18n.t('newPuzzle');
+        document.getElementById('victoryExport').textContent = '📸 ' + I18n.t('exportPng');
 
         // Export modal
         const exportTitle = document.querySelector('.export-title');
-        if (exportTitle) exportTitle.textContent = I18n.t('exportTitle');
+        if (exportTitle) exportTitle.innerHTML = '📸 ' + I18n.t('exportTitle');
 
         document.getElementById('exportEmpty').textContent = I18n.t('emptyPuzzle');
         document.getElementById('exportSolutions').textContent = I18n.t('puzzleWithSolutions');
