@@ -923,6 +923,104 @@ body {
     background: var(--text-secondary);
 }
 
+/* ---------- Solution Popup Modal ---------- */
+.solution-modal {
+    max-width: 900px;
+    width: 95%;
+    max-height: 85vh;
+    overflow-y: auto;
+}
+
+.solution-modal__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.solution-modal__title {
+    font-family: var(--font-pixel);
+    font-size: 0.8rem;
+    color: var(--accent-gold);
+}
+
+.solution-modal__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.solution-cell {
+    background: var(--bg-cell);
+    border: 1px solid var(--border-cell);
+    border-radius: 8px;
+    padding: 0.75rem;
+    overflow: hidden;
+}
+
+.solution-cell__header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-cell);
+}
+
+.solution-cell__criteria {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--accent-gold);
+    line-height: 1.4;
+}
+
+.solution-cell__count {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+}
+
+.solution-cell__cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.solution-card {
+    width: 70px;
+    text-align: center;
+    cursor: default;
+}
+
+.solution-card img {
+    width: 100%;
+    height: auto;
+    border-radius: 4px;
+    transition: transform 0.15s;
+}
+
+.solution-card:hover img {
+    transform: scale(1.1);
+}
+
+.solution-card__label {
+    font-size: 0.5rem;
+    color: var(--text-secondary);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.solution-card__name {
+    font-size: 0.55rem;
+    text-align: center;
+    padding: 0.25rem;
+    word-break: break-word;
+    color: var(--text-primary);
+}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 900px) {
     .controls-panel {
@@ -971,6 +1069,14 @@ body {
 
     .badge__label {
         font-size: 0.65rem;
+    }
+
+    .solution-modal__grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .solution-card {
+        width: 60px;
     }
 }
 
@@ -1042,5 +1148,13 @@ body {
     .modal-content {
         padding: 1rem;
         width: 95%;
+    }
+
+    .solution-modal__grid {
+        grid-template-columns: 1fr;
+    }
+
+    .solution-card {
+        width: 55px;
     }
 }
