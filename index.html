@@ -39,10 +39,10 @@
 
                     <!-- Action Buttons -->
                     <div class="action-buttons">
-                        <button class="btn btn--primary" id="btnNewPuzzle">🎲 Nouveau puzzle</button>
-                        <button class="btn btn--secondary" id="btnShowSolution">👁️ Voir la solution</button>
-                        <button class="btn btn--secondary" id="btnExport">📸 Exporter en PNG</button>
-                        <button class="btn btn--secondary" id="btnShare">📋 Partager</button>
+                        <button class="btn btn--primary" id="btnNewPuzzle">Nouveau puzzle</button>
+                        <button class="btn btn--secondary" id="btnShowSolution">Voir la solution</button>
+                        <button class="btn btn--secondary" id="btnExport">Exporter en PNG</button>
+                        <button class="btn btn--secondary" id="btnShare">Partager</button>
                     </div>
 
                     <!-- Extension Filter -->
@@ -82,7 +82,7 @@
                         <span class="stat-value" id="statPP">9/9</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-label">⏱️</span>
+                        <span class="stat-label">TIME</span>
                         <span class="stat-value" id="statTimer">0:00</span>
                     </div>
                 </div>
@@ -140,7 +140,7 @@
     <!-- Victory Modal -->
     <div class="modal-overlay" id="victoryModal">
         <div class="modal-content victory-modal">
-            <h2 class="victory-title">🎉 Victoire !</h2>
+            <h2 class="victory-title">Victoire !</h2>
             <div class="victory-stats">
                 <div class="victory-stat">
                     <span class="victory-stat__label">Score</span>
@@ -156,9 +156,9 @@
                 </div>
             </div>
             <div class="victory-actions">
-                <button class="btn btn--primary" id="victoryShare">📋 Partager</button>
-                <button class="btn btn--primary" id="victoryNewPuzzle">🎲 Nouveau puzzle</button>
-                <button class="btn btn--secondary" id="victoryExport">📸 Exporter</button>
+                <button class="btn btn--primary" id="victoryShare">Partager</button>
+                <button class="btn btn--primary" id="victoryNewPuzzle">Nouveau puzzle</button>
+                <button class="btn btn--secondary" id="victoryExport">Exporter</button>
             </div>
         </div>
     </div>
@@ -169,12 +169,25 @@
     <!-- Export Modal -->
     <div class="modal-overlay" id="exportModal">
         <div class="modal-content export-modal">
-            <h2 class="export-title">📸 Exporter en PNG</h2>
+            <h2 class="export-title">Exporter en PNG</h2>
             <div class="export-options">
                 <button class="btn btn--primary" id="exportEmpty">Puzzle vide</button>
                 <button class="btn btn--primary" id="exportSolutions">Puzzle avec solutions</button>
             </div>
             <button class="modal-close" id="exportClose">&times;</button>
+        </div>
+    </div>
+
+    <!-- Solution Popup Modal -->
+    <div class="modal-overlay" id="solutionModal">
+        <div class="modal-content solution-modal">
+            <div class="solution-modal__header">
+                <h2 class="solution-modal__title" id="solutionModalTitle">Solutions possibles</h2>
+                <button class="modal-close" id="solutionModalClose">&times;</button>
+            </div>
+            <div class="solution-modal__grid" id="solutionModalGrid">
+                <!-- Populated dynamically -->
+            </div>
         </div>
     </div>
 
