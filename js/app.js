@@ -4,7 +4,16 @@
 const App = (() => {
     let allCards = [];
     let allowedSets = [];
+    let allowedRarities = [];
+    let allowedClasses = [];
     let allSets = [];
+
+    const ALL_RARITIES = ['LEGENDARY', 'EPIC', 'RARE', 'COMMON', 'FREE'];
+    const ALL_CLASSES = [
+        'DEATHKNIGHT', 'DEMONHUNTER', 'DRUID', 'HUNTER', 'MAGE',
+        'PALADIN', 'PRIEST', 'ROGUE', 'SHAMAN', 'WARLOCK',
+        'WARRIOR', 'NEUTRAL',
+    ];
 
     async function init() {
         UI.init();
@@ -25,8 +34,12 @@ const App = (() => {
                 allCards = await HearthstoneAPI.fetchCards();
                 allSets = HearthstoneAPI.getAllSets();
                 allowedSets = [...allSets];
+                allowedRarities = [...ALL_RARITIES];
+                allowedClasses = [...ALL_CLASSES];
 
                 UI.renderFilterList(allSets);
+                UI.renderRarityFilterList();
+                UI.renderClassFilterList();
                 generateNewPuzzle();
             });
         }
@@ -35,11 +48,15 @@ const App = (() => {
             allCards = await HearthstoneAPI.fetchCards();
             allSets = HearthstoneAPI.getAllSets();
 
-            // Default: all sets allowed
+            // Default: all allowed
             allowedSets = [...allSets];
+            allowedRarities = [...ALL_RARITIES];
+            allowedClasses = [...ALL_CLASSES];
 
-            // Render extension filter
+            // Render filters
             UI.renderFilterList(allSets);
+            UI.renderRarityFilterList();
+            UI.renderClassFilterList();
 
             // Bind buttons
             document.getElementById('btnNewPuzzle').addEventListener('click', generateNewPuzzle);
@@ -69,7 +86,7 @@ const App = (() => {
                 UI.showExportModal();
             });
 
-            // Preset buttons
+            // Preset buttons (extensions)
             document.querySelectorAll('[data-preset]').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const preset = btn.dataset.preset;
@@ -88,7 +105,7 @@ const App = (() => {
                 });
             });
 
-            // Check/uncheck all
+            // Check/uncheck all (extensions)
             document.getElementById('btnCheckAll').addEventListener('click', () => {
                 UI.setAllChecked(true);
                 onSetFilterChange();
@@ -96,6 +113,26 @@ const App = (() => {
             document.getElementById('btnUncheckAll').addEventListener('click', () => {
                 UI.setAllChecked(false);
                 onSetFilterChange();
+            });
+
+            // Check/uncheck all (rarities)
+            document.getElementById('btnCheckAllRarity').addEventListener('click', () => {
+                UI.setAllRarityChecked(true);
+                onRarityFilterChange();
+            });
+            document.getElementById('btnUncheckAllRarity').addEventListener('click', () => {
+                UI.setAllRarityChecked(false);
+                onRarityFilterChange();
+            });
+
+            // Check/uncheck all (classes)
+            document.getElementById('btnCheckAllClass').addEventListener('click', () => {
+                UI.setAllClassChecked(true);
+                onClassFilterChange();
+            });
+            document.getElementById('btnUncheckAllClass').addEventListener('click', () => {
+                UI.setAllClassChecked(false);
+                onClassFilterChange();
             });
 
             UI.hideLoading();
@@ -107,12 +144,40 @@ const App = (() => {
         }
     }
 
+    function cardMatchesClass(card, allowedCls) {
+        if (allowedCls.length === 0) return true;
+        if (allowedCls.includes('NEUTRAL')) {
+            if (card.cardClass === 'NEUTRAL' || (!card.cardClass && !card.classes)) return true;
+        }
+        if (card.cardClass && allowedCls.includes(card.cardClass)) return true;
+        if (Array.isArray(card.classes) && card.classes.some(c => allowedCls.includes(c))) return true;
+        return false;
+    }
+
+    function buildPool() {
+        let pool = allCards;
+        if (allowedSets.length > 0 && allowedSets.length !== allSets.length) {
+            pool = pool.filter(c => allowedSets.includes(c.set));
+        }
+        if (allowedRarities.length > 0 && allowedRarities.length !== ALL_RARITIES.length) {
+            pool = pool.filter(c => allowedRarities.includes(c.rarity));
+        }
+        if (allowedClasses.length > 0 && allowedClasses.length !== ALL_CLASSES.length) {
+            pool = pool.filter(c => cardMatchesClass(c, allowedClasses));
+        }
+        return pool;
+    }
+
     function generateNewPuzzle() {
         UI.showLoading();
 
         setTimeout(() => {
             allowedSets = UI.getCheckedSets();
-            const puzzle = PuzzleEngine.generatePuzzle(allCards, allowedSets.length > 0 ? allowedSets : null);
+            allowedRarities = UI.getCheckedRarities();
+            allowedClasses = UI.getCheckedClasses();
+
+            const pool = buildPool();
+            const puzzle = PuzzleEngine.generatePuzzle(pool, null);
 
             if (!puzzle) {
                 UI.hideLoading();
@@ -126,16 +191,31 @@ const App = (() => {
     }
 
     function getFilteredCards() {
-        if (!allowedSets || allowedSets.length === 0) return allCards;
-        return allCards.filter(c => allowedSets.includes(c.set));
+        return buildPool();
     }
 
     function getAllowedSets() {
         return allowedSets;
     }
 
+    function getAllowedRarities() {
+        return allowedRarities;
+    }
+
+    function getAllowedClasses() {
+        return allowedClasses;
+    }
+
     function onSetFilterChange() {
         allowedSets = UI.getCheckedSets();
+    }
+
+    function onRarityFilterChange() {
+        allowedRarities = UI.getCheckedRarities();
+    }
+
+    function onClassFilterChange() {
+        allowedClasses = UI.getCheckedClasses();
     }
 
     // Start
@@ -144,6 +224,10 @@ const App = (() => {
     return {
         getFilteredCards,
         getAllowedSets,
+        getAllowedRarities,
+        getAllowedClasses,
         onSetFilterChange,
+        onRarityFilterChange,
+        onClassFilterChange,
     };
 })();

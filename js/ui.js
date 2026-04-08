@@ -35,6 +35,8 @@ const UI = (() => {
         els.controlsContent = document.getElementById('controlsContent');
         els.filterList = document.getElementById('filterList');
         els.filterSearch = document.getElementById('filterSearch');
+        els.rarityFilterList = document.getElementById('rarityFilterList');
+        els.classFilterList = document.getElementById('classFilterList');
     }
 
     function init() {
@@ -192,10 +194,17 @@ const UI = (() => {
 
         els.searchResults.innerHTML = results.map(card => {
             const used = usedCardIds.has(card.dbfId || card.id);
+            const setCode = card.set || '';
+            const setIcon = HearthstoneAPI.getSetIcon(setCode);
+            const setName = HearthstoneAPI.getSetDisplayName(setCode);
+            const setIconHtml = setIcon
+                ? `<img class="search-result__set-icon" src="${setIcon}" alt="" onerror="this.style.display='none'">`
+                : '';
 
             return `<div class="search-result ${used ? 'search-result--used' : ''}" data-card-id="${card.id}" data-dbf-id="${card.dbfId}">
                 <div class="search-result__info">
                     <div class="search-result__name">${card.name}</div>
+                    <div class="search-result__set">${setIconHtml}<span>${setName}</span></div>
                 </div>
                 ${used ? `<div class="search-result__used-tag">${I18n.t('alreadyUsed')}</div>` : ''}
             </div>`;
@@ -525,8 +534,14 @@ const UI = (() => {
         els.filterList.innerHTML = sets.map(s => {
             const name = HearthstoneAPI.getSetDisplayName(s);
             const checked = allowedSets.includes(s) ? 'checked' : '';
+            const iconPath = HearthstoneAPI.getSetIcon(s);
+            const iconHtml = iconPath
+                ? `<img class="filter-item__icon" src="${iconPath}" alt="" onerror="this.style.display='none'">`
+                : '';
             return `<label class="filter-item" data-set="${s}" data-name="${name.toLowerCase()}">
-                <input type="checkbox" value="${s}" ${checked}> ${name}
+                <input type="checkbox" value="${s}" ${checked}>
+                ${iconHtml}
+                <span class="filter-item__label">${name}</span>
             </label>`;
         }).join('');
 
@@ -537,8 +552,79 @@ const UI = (() => {
         });
     }
 
+    function renderRarityFilterList() {
+        const rarityMap = HearthstoneAPI.getRarityMap();
+        // Display order: Legendary, Epic, Rare, Common, Free
+        const order = ['LEGENDARY', 'EPIC', 'RARE', 'COMMON', 'FREE'];
+        const rarities = order.filter(r => rarityMap[r]);
+        const allowed = App.getAllowedRarities ? App.getAllowedRarities() : rarities;
+
+        els.rarityFilterList.innerHTML = rarities.map(r => {
+            const name = rarityMap[r] || r;
+            const checked = allowed.includes(r) ? 'checked' : '';
+            const iconPath = HearthstoneAPI.getRarityIcon(r);
+            const iconHtml = iconPath
+                ? `<img class="filter-item__icon" src="${iconPath}" alt="" onerror="this.style.display='none'">`
+                : '';
+            return `<label class="filter-item filter-item--rarity filter-item--rarity-${r.toLowerCase()}">
+                <input type="checkbox" value="${r}" ${checked}>
+                ${iconHtml}
+                <span class="filter-item__label">${name}</span>
+            </label>`;
+        }).join('');
+
+        els.rarityFilterList.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+            cb.addEventListener('change', () => {
+                if (App.onRarityFilterChange) App.onRarityFilterChange();
+            });
+        });
+    }
+
+    function renderClassFilterList() {
+        const classMap = HearthstoneAPI.getClassMap();
+        const order = [
+            'DEATHKNIGHT', 'DEMONHUNTER', 'DRUID', 'HUNTER', 'MAGE',
+            'PALADIN', 'PRIEST', 'ROGUE', 'SHAMAN', 'WARLOCK',
+            'WARRIOR', 'NEUTRAL',
+        ];
+        const classes = order.filter(c => classMap[c]);
+        const allowed = App.getAllowedClasses ? App.getAllowedClasses() : classes;
+
+        els.classFilterList.innerHTML = classes.map(cls => {
+            const name = classMap[cls] || cls;
+            const checked = allowed.includes(cls) ? 'checked' : '';
+            const iconPath = HearthstoneAPI.getClassIcon(cls);
+            const iconHtml = iconPath
+                ? `<img class="filter-item__icon" src="${iconPath}" alt="" onerror="this.style.display='none'">`
+                : '';
+            return `<label class="filter-item filter-item--class filter-item--class-${cls.toLowerCase()}">
+                <input type="checkbox" value="${cls}" ${checked}>
+                ${iconHtml}
+                <span class="filter-item__label">${name}</span>
+            </label>`;
+        }).join('');
+
+        els.classFilterList.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+            cb.addEventListener('change', () => {
+                if (App.onClassFilterChange) App.onClassFilterChange();
+            });
+        });
+    }
+
     function getCheckedSets() {
         const checkboxes = els.filterList.querySelectorAll('input[type="checkbox"]:checked');
+        return Array.from(checkboxes).map(cb => cb.value);
+    }
+
+    function getCheckedRarities() {
+        if (!els.rarityFilterList) return [];
+        const checkboxes = els.rarityFilterList.querySelectorAll('input[type="checkbox"]:checked');
+        return Array.from(checkboxes).map(cb => cb.value);
+    }
+
+    function getCheckedClasses() {
+        if (!els.classFilterList) return [];
+        const checkboxes = els.classFilterList.querySelectorAll('input[type="checkbox"]:checked');
         return Array.from(checkboxes).map(cb => cb.value);
     }
 
@@ -547,6 +633,20 @@ const UI = (() => {
             if (cb.closest('.filter-item').style.display !== 'none') {
                 cb.checked = checked;
             }
+        });
+    }
+
+    function setAllRarityChecked(checked) {
+        if (!els.rarityFilterList) return;
+        els.rarityFilterList.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+            cb.checked = checked;
+        });
+    }
+
+    function setAllClassChecked(checked) {
+        if (!els.classFilterList) return;
+        els.classFilterList.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+            cb.checked = checked;
         });
     }
 
@@ -586,8 +686,13 @@ const UI = (() => {
         document.getElementById('btnShare').textContent = I18n.t('share');
 
         // Filter section
-        const filterTitle = document.querySelector('.filter-title');
-        if (filterTitle) filterTitle.textContent = I18n.t('filterByExtensions');
+        const filterTitles = document.querySelectorAll('.filter-title');
+        if (filterTitles[0]) filterTitles[0].textContent = I18n.t('filterByExtensions');
+
+        const filterRarityTitle = document.getElementById('filterRarityTitle');
+        if (filterRarityTitle) filterRarityTitle.textContent = I18n.t('filterByRarities');
+        const filterClassTitle = document.getElementById('filterClassTitle');
+        if (filterClassTitle) filterClassTitle.textContent = I18n.t('filterByClasses');
 
         document.querySelector('[data-preset="standard"]').textContent = I18n.t('standard');
         document.querySelector('[data-preset="wild"]').textContent = I18n.t('wild');
@@ -595,6 +700,14 @@ const UI = (() => {
 
         document.getElementById('btnCheckAll').textContent = I18n.t('checkAll');
         document.getElementById('btnUncheckAll').textContent = I18n.t('uncheckAll');
+        const btnCheckAllRarity = document.getElementById('btnCheckAllRarity');
+        if (btnCheckAllRarity) btnCheckAllRarity.textContent = I18n.t('checkAll');
+        const btnUncheckAllRarity = document.getElementById('btnUncheckAllRarity');
+        if (btnUncheckAllRarity) btnUncheckAllRarity.textContent = I18n.t('uncheckAll');
+        const btnCheckAllClass = document.getElementById('btnCheckAllClass');
+        if (btnCheckAllClass) btnCheckAllClass.textContent = I18n.t('checkAll');
+        const btnUncheckAllClass = document.getElementById('btnUncheckAllClass');
+        if (btnUncheckAllClass) btnUncheckAllClass.textContent = I18n.t('uncheckAll');
 
         const filterSearch = document.getElementById('filterSearch');
         if (filterSearch) filterSearch.placeholder = I18n.t('searchExtension');
@@ -642,8 +755,14 @@ const UI = (() => {
         closeVictoryModal,
         getShareText,
         renderFilterList,
+        renderRarityFilterList,
+        renderClassFilterList,
         getCheckedSets,
+        getCheckedRarities,
+        getCheckedClasses,
         setAllChecked,
+        setAllRarityChecked,
+        setAllClassChecked,
         setPresetChecked,
         updateStats,
         updateUIText,
