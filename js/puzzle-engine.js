@@ -104,16 +104,27 @@ const PuzzleEngine = (() => {
         return false;
     }
 
+    function computeMinCards(poolSize) {
+        if (poolSize < 150) return 1;
+        if (poolSize < 300) return 2;
+        if (poolSize < 500) return 3;
+        if (poolSize < 800) return 5;
+        return 10;
+    }
+
     function generatePuzzle(cards, allowedSets = null) {
         let pool = cards;
         if (allowedSets && allowedSets.length > 0) {
             pool = cards.filter(c => allowedSets.includes(c.set));
         }
 
+        if (pool.length < 9) return null;
+
         const setsInPool = [...new Set(pool.map(c => c.set).filter(Boolean))];
         CATEGORY_VALUES.set = setsInPool;
 
-        const minCards = pool.length < 800 ? 5 : 10;
+        // Adaptive threshold based on pool size — allows single-extension puzzles
+        const minCards = computeMinCards(pool.length);
 
         const viableValues = {};
         for (const cat of CATEGORIES) {
@@ -123,9 +134,17 @@ const PuzzleEngine = (() => {
             });
         }
 
-        const viableCategories = CATEGORIES.filter(c => viableValues[c].length >= 3);
+        // Each used category only needs >= 1 viable value (one criterion per row/col).
+        // Exclude 'set' when only one set is in pool (would be a trivial no-op constraint).
+        const viableCategories = CATEGORIES.filter(c => {
+            if (viableValues[c].length < 1) return false;
+            if (c === 'set' && setsInPool.length < 2) return false;
+            return true;
+        });
 
-        const MAX_ATTEMPTS = 1000;
+        if (viableCategories.length < 6) return null;
+
+        const MAX_ATTEMPTS = 2000;
 
         for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
             const result = tryGeneratePuzzle(pool, viableCategories, viableValues, minCards);

@@ -357,6 +357,39 @@ body {
 
 .filter-item input[type="checkbox"] {
     accent-color: var(--lemon-500);
+    flex-shrink: 0;
+}
+
+.filter-item__icon {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    flex-shrink: 0;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+.filter-item__label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.filter-list--compact {
+    max-height: none;
+    overflow-y: visible;
+}
+
+.filter-item--rarity-legendary .filter-item__label {
+    color: var(--lemon-500);
+    font-weight: 600;
+}
+.filter-item--rarity-epic .filter-item__label {
+    color: var(--ube-800);
+    font-weight: 600;
+}
+.filter-item--rarity-rare .filter-item__label {
+    color: var(--blueberry-800);
+    font-weight: 600;
 }
 
 /* ---------- Game Area ---------- */
@@ -876,6 +909,26 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.search-result__set {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.7rem;
+    color: var(--text-tertiary);
+    margin-top: 0.15rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.search-result__set-icon {
+    width: 14px;
+    height: 14px;
+    object-fit: contain;
+    flex-shrink: 0;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
 }
 
 .search-result__used-tag {
