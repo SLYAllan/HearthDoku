@@ -157,15 +157,17 @@ body {
 /* ---------- Main Layout ---------- */
 .main-layout {
     display: flex;
+    flex-direction: column;
     min-height: calc(100vh - 70px);
 }
 
 /* ---------- Controls Panel ---------- */
 .controls-panel {
-    width: 280px;
+    order: 2;
+    width: 100%;
     background: var(--bg-surface);
-    border-right: 1px solid var(--border-oat-light);
-    padding: 1rem;
+    border-top: 1px solid var(--border-oat-light);
+    padding: 1rem 1.5rem;
     overflow-y: auto;
     flex-shrink: 0;
 }
@@ -187,6 +189,19 @@ body {
 .controls-toggle:hover {
     border-color: var(--lemon-500);
     background: var(--bg-cell-hover);
+}
+
+.controls-content {
+    display: grid;
+    grid-template-columns: minmax(180px, 240px) repeat(3, minmax(180px, 1fr));
+    gap: 1.25rem;
+    align-items: start;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.controls-content > .controls-title {
+    grid-column: 1 / -1;
 }
 
 .controls-title {
@@ -394,10 +409,12 @@ body {
 
 /* ---------- Game Area ---------- */
 .game-area {
+    order: 1;
     flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     padding: 1.5rem;
     position: relative;
     background: var(--bg-canvas);
@@ -1174,27 +1191,8 @@ body {
 
 /* ---------- Responsive ---------- */
 @media (max-width: 900px) {
-    .controls-panel {
-        position: fixed;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        width: 280px;
-        z-index: 50;
-        transform: translateX(-100%);
-        transition: transform 0.3s;
-    }
-
-    .controls-panel:has(.controls-content--open) {
-        transform: translateX(0);
-    }
-
-    .controls-toggle {
-        display: block;
-        position: fixed;
-        top: 80px;
-        left: 0.5rem;
-        z-index: 51;
+    .controls-content {
+        grid-template-columns: 1fr 1fr;
     }
 
     .puzzle-grid {
@@ -1228,6 +1226,10 @@ body {
 }
 
 @media (max-width: 520px) {
+    .controls-content {
+        grid-template-columns: 1fr;
+    }
+
     .title-bar {
         padding: 0.75rem 1rem;
     }
