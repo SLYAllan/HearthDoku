@@ -77,6 +77,12 @@ const UI = (() => {
         });
 
         els.filterSearch.addEventListener('input', onFilterSearch);
+
+        window.addEventListener('resize', () => {
+            if (els.victoryModal && els.victoryModal.classList.contains('modal-overlay--visible')) {
+                centerModalOnPuzzle(els.victoryModal);
+            }
+        });
     }
 
     function showLoading() {
@@ -303,12 +309,27 @@ const UI = (() => {
         document.getElementById('victoryScore').textContent = score;
         document.getElementById('victoryTime').textContent = formatTime(timerSeconds);
         document.getElementById('victoryPP').textContent = `${pp}/9`;
+        if (els.puzzleContainer) {
+            els.puzzleContainer.scrollIntoView({ block: 'center', behavior: 'auto' });
+        }
         els.victoryModal.classList.add('modal-overlay--visible');
+        centerModalOnPuzzle(els.victoryModal);
         spawnConfetti();
     }
 
     function closeVictoryModal() {
         els.victoryModal.classList.remove('modal-overlay--visible');
+        els.victoryModal.style.removeProperty('--anchor-x');
+        els.victoryModal.style.removeProperty('--anchor-y');
+    }
+
+    function centerModalOnPuzzle(overlay) {
+        if (!els.puzzleContainer) return;
+        const rect = els.puzzleContainer.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        overlay.style.setProperty('--anchor-x', `${cx}px`);
+        overlay.style.setProperty('--anchor-y', `${cy}px`);
     }
 
     function showExportModal() {
