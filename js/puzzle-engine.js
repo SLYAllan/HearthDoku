@@ -123,8 +123,12 @@ const PuzzleEngine = (() => {
         const setsInPool = [...new Set(pool.map(c => c.set).filter(Boolean))];
         CATEGORY_VALUES.set = setsInPool;
 
-        // Adaptive threshold based on pool size — allows single-extension puzzles
-        const minCards = computeMinCards(pool.length);
+        // Adaptive threshold based on pool size.
+        // For single-extension pools, cap at 2: cell intersections within one set
+        // are much smaller than across multiple sets, making a higher threshold impossible.
+        const minCards = setsInPool.length <= 1
+            ? Math.min(computeMinCards(pool.length), 2)
+            : computeMinCards(pool.length);
 
         const viableValues = {};
         for (const cat of CATEGORIES) {

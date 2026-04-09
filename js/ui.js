@@ -192,11 +192,15 @@ const UI = (() => {
             return;
         }
 
+        // Sets that share identical card names across versions — always show their set badge
+        const AMBIGUOUS_SETS = new Set(['CORE', 'LEGACY', 'EXPERT1', 'VANILLA']);
+
         els.searchResults.innerHTML = results.map(card => {
             const used = usedCardIds.has(card.dbfId || card.id);
             const setCode = card.set || '';
-            const setIcon = HearthstoneAPI.getSetIcon(setCode);
-            const setName = HearthstoneAPI.getSetDisplayName(setCode);
+            const showSetBadge = AMBIGUOUS_SETS.has(setCode);
+            const setIcon = showSetBadge ? HearthstoneAPI.getSetIcon(setCode) : null;
+            const setName = showSetBadge ? HearthstoneAPI.getSetDisplayName(setCode) : '';
             const setIconHtml = setIcon
                 ? `<img class="search-result__set-icon" src="${setIcon}" alt="" onerror="this.style.display='none'">`
                 : '';
@@ -204,7 +208,7 @@ const UI = (() => {
             return `<div class="search-result ${used ? 'search-result--used' : ''}" data-card-id="${card.id}" data-dbf-id="${card.dbfId}">
                 <div class="search-result__info">
                     <div class="search-result__name">${card.name}</div>
-                    <div class="search-result__set">${setIconHtml}<span>${setName}</span></div>
+                    ${showSetBadge ? `<div class="search-result__set">${setIconHtml}<span>${setName}</span></div>` : ''}
                 </div>
                 ${used ? `<div class="search-result__used-tag">${I18n.t('alreadyUsed')}</div>` : ''}
             </div>`;
