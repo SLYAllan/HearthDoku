@@ -92,28 +92,27 @@
 
             <!-- Game Area -->
             <main class="game-area">
-                <!-- Stats Panel -->
-                <div class="stats-panel">
-                    <div class="stat-item">
-                        <span class="stat-label">UNIQ</span>
-                        <span class="stat-value" id="statUniq">0</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">PTS</span>
-                        <span class="stat-value" id="statPts">0</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">PP</span>
-                        <span class="stat-value" id="statPP">9/9</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">TIME</span>
-                        <span class="stat-value" id="statTimer">0:00</span>
-                    </div>
-                </div>
-
                 <!-- Puzzle Grid -->
                 <div class="puzzle-container" id="puzzleContainer">
+                    <!-- Stats Panel (on the side) -->
+                    <div class="stats-panel">
+                        <div class="stat-item">
+                            <span class="stat-label">UNIQ</span>
+                            <span class="stat-value" id="statUniq">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">PTS</span>
+                            <span class="stat-value" id="statPts">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">ERR</span>
+                            <span class="stat-value" id="statPP">0/3</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">TIME</span>
+                            <span class="stat-value" id="statTimer">0:00</span>
+                        </div>
+                    </div>
                     <div class="puzzle-grid" id="puzzleGrid">
                         <!-- Corner cell -->
                         <div class="grid-corner"></div>
@@ -176,8 +175,8 @@
                     <span class="victory-stat__value" id="victoryTime">0:00</span>
                 </div>
                 <div class="victory-stat">
-                    <span class="victory-stat__label">PP restants</span>
-                    <span class="victory-stat__value" id="victoryPP">9/9</span>
+                    <span class="victory-stat__label">Erreurs</span>
+                    <span class="victory-stat__value" id="victoryPP">0/3</span>
                 </div>
             </div>
             <div class="victory-actions">

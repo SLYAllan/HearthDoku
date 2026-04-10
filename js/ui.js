@@ -6,7 +6,8 @@ const UI = (() => {
     let currentPuzzle = null;
     let cellState = Array(9).fill(null);
     let score = 0;
-    let pp = 9;
+    let errors = 0;
+    const MAX_ERRORS = 3;
     let timerInterval = null;
     let timerSeconds = 0;
     let usedCardIds = new Set();
@@ -77,6 +78,12 @@ const UI = (() => {
         });
 
         els.filterSearch.addEventListener('input', onFilterSearch);
+
+        window.addEventListener('resize', () => {
+            if (els.victoryModal && els.victoryModal.classList.contains('modal-overlay--visible')) {
+                centerModalOnPuzzle(els.victoryModal);
+            }
+        });
     }
 
     function showLoading() {
@@ -90,7 +97,7 @@ const UI = (() => {
     function resetGame() {
         cellState = Array(9).fill(null);
         score = 0;
-        pp = 9;
+        errors = 0;
         timerSeconds = 0;
         usedCardIds = new Set();
         activeCellIndex = null;
@@ -147,8 +154,8 @@ const UI = (() => {
 
     function updateStats() {
         els.statPts.textContent = score;
-        els.statPP.textContent = `${pp}/9`;
-        els.statPP.classList.toggle('stat-value--danger', pp <= 3);
+        els.statPP.textContent = `${errors}/${MAX_ERRORS}`;
+        els.statPP.classList.toggle('stat-value--danger', errors >= 2);
     }
 
     function openSearchModal(cellIndex) {
@@ -254,7 +261,7 @@ const UI = (() => {
             updateStats();
             checkVictory();
         } else {
-            pp--;
+            errors++;
             cellEl.classList.add('grid-cell--wrong');
             const name = selectedCard ? selectedCard.name : cardId;
             cellEl.innerHTML = `<div class="cell-card cell-card--wrong">
@@ -267,7 +274,7 @@ const UI = (() => {
             closeSearchModal();
             updateStats();
 
-            if (pp <= 0) {
+            if (errors >= MAX_ERRORS) {
                 endGame(false);
             }
         }
@@ -302,13 +309,28 @@ const UI = (() => {
     function showVictoryModal() {
         document.getElementById('victoryScore').textContent = score;
         document.getElementById('victoryTime').textContent = formatTime(timerSeconds);
-        document.getElementById('victoryPP').textContent = `${pp}/9`;
+        document.getElementById('victoryPP').textContent = `${errors}/${MAX_ERRORS}`;
+        if (els.puzzleContainer) {
+            els.puzzleContainer.scrollIntoView({ block: 'center', behavior: 'auto' });
+        }
         els.victoryModal.classList.add('modal-overlay--visible');
+        centerModalOnPuzzle(els.victoryModal);
         spawnConfetti();
     }
 
     function closeVictoryModal() {
         els.victoryModal.classList.remove('modal-overlay--visible');
+        els.victoryModal.style.removeProperty('--anchor-x');
+        els.victoryModal.style.removeProperty('--anchor-y');
+    }
+
+    function centerModalOnPuzzle(overlay) {
+        if (!els.puzzleContainer) return;
+        const rect = els.puzzleContainer.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        overlay.style.setProperty('--anchor-x', `${cx}px`);
+        overlay.style.setProperty('--anchor-y', `${cy}px`);
     }
 
     function showExportModal() {
@@ -427,7 +449,7 @@ const UI = (() => {
             grid.push(row);
         }
 
-        return `🎴 HearthDoku — ${dateStr}\n${grid.join('\n')}\nScore: ${score} | PP: ${pp}/9 | ⏱️ ${formatTime(timerSeconds)}`;
+        return `🎴 HearthDoku — ${dateStr}\n${grid.join('\n')}\nScore: ${score} | ❌ ${errors}/${MAX_ERRORS} | ⏱️ ${formatTime(timerSeconds)}`;
     }
 
     function spawnConfetti() {
@@ -772,7 +794,8 @@ const UI = (() => {
         updateUIText,
         get currentPuzzle() { return currentPuzzle; },
         get score() { return score; },
-        get pp() { return pp; },
+        get errors() { return errors; },
+        get maxErrors() { return MAX_ERRORS; },
         get timerSeconds() { return timerSeconds; },
         get gameFinished() { return gameFinished; },
         formatTime,
