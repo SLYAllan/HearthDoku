@@ -472,9 +472,9 @@ body {
 }
 
 .puzzle-grid {
-    --cell-size: min(200px, 17vh, 25vw);
-    --header-w: min(160px, 14vh, 20vw);
-    --header-h: min(120px, 10vh, 15vw);
+    --cell-size: min(260px, 26vh, 22vw);
+    --header-w: min(200px, 20vh, 18vw);
+    --header-h: min(140px, 14vh, 14vw);
     display: grid;
     grid-template-columns: var(--header-w) repeat(3, var(--cell-size));
     grid-template-rows: var(--header-h) repeat(3, var(--cell-size));
