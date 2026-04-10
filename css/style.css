@@ -420,11 +420,13 @@ body {
 
 /* ---------- Stats Panel ---------- */
 .stats-panel {
+    position: absolute;
+    left: calc(100% + 1.5rem);
+    top: 50%;
+    transform: translateY(-50%);
     display: flex;
-    gap: 1.5rem;
-    margin-bottom: 0.75rem;
-    flex-wrap: wrap;
-    justify-content: center;
+    flex-direction: column;
+    gap: 0.75rem;
 }
 
 .stat-item {
@@ -1255,6 +1257,11 @@ body {
     }
 
     .stats-panel {
+        position: static;
+        transform: none;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
         gap: 0.5rem;
         margin-bottom: 1rem;
     }
