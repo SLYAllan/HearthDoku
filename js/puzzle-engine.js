@@ -2,6 +2,18 @@
  * HearthDoku — Puzzle generation, validation, and backtracking solver
  */
 const PuzzleEngine = (() => {
+    // Seeded RNG (mulberry32) — swappable for deterministic daily puzzles
+    let rng = Math.random;
+
+    function mulberry32(seed) {
+        return function() {
+            seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+            var t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+            t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+            return ((t ^ t >>> 14) >>> 0) / 4294967296;
+        };
+    }
+
     // All criterion categories
     const CATEGORIES = ['mana', 'health', 'attack', 'keyword', 'type', 'race', 'class', 'set', 'rarity'];
 
@@ -34,7 +46,7 @@ const PuzzleEngine = (() => {
     function shuffle(arr) {
         const a = [...arr];
         for (let i = a.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
+            const j = Math.floor(rng() * (i + 1));
             [a[i], a[j]] = [a[j], a[i]];
         }
         return a;
@@ -140,9 +152,12 @@ const PuzzleEngine = (() => {
 
         // Each used category only needs >= 1 viable value (one criterion per row/col).
         // Exclude 'set' when only one set is in pool (would be a trivial no-op constraint).
+        // Exclude 'rarity'/'class' when only one value exists in the pool (same logic).
         const viableCategories = CATEGORIES.filter(c => {
             if (viableValues[c].length < 1) return false;
             if (c === 'set' && setsInPool.length < 2) return false;
+            if (c === 'rarity' && viableValues[c].length < 2) return false;
+            if (c === 'class' && viableValues[c].length < 2) return false;
             return true;
         });
 
@@ -365,6 +380,9 @@ const PuzzleEngine = (() => {
         return map[rarity] || '⬜';
     }
 
+    function setRng(fn) { rng = fn; }
+    function resetRng() { rng = Math.random; }
+
     return {
         generatePuzzle,
         calculateScore,
@@ -372,6 +390,9 @@ const PuzzleEngine = (() => {
         findSolution,
         getCriterionDisplay,
         getCardsForCell,
+        setRng,
+        resetRng,
+        mulberry32,
         CATEGORIES,
         CATEGORY_VALUES,
     };

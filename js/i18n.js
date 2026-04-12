@@ -44,6 +44,10 @@ const I18n = (() => {
             errorExport: "Erreur lors de l'export. Utilisez une capture d'écran (Win+Shift+S) comme alternative.",
             errorExportBlocked: "Export impossible : les images externes bloquent la capture.\nUtilisez une capture d'écran (Win+Shift+S).",
             toggleControls: 'Afficher/masquer les contrôles',
+            modeUnlimited: 'Illimité',
+            modeDaily: 'Journalier',
+            dailyTitle: 'Journalier #',
+            dailyAlreadyPlayed: 'Déjà joué aujourd\'hui',
 
             // Tooltips
             tooltipMana: 'Coût en mana',
@@ -254,6 +258,10 @@ const I18n = (() => {
             errorExport: 'Export error. Use a screenshot (Win+Shift+S) as an alternative.',
             errorExportBlocked: 'Export blocked: external images prevent capture.\nUse a screenshot (Win+Shift+S).',
             toggleControls: 'Show/hide controls',
+            modeUnlimited: 'Unlimited',
+            modeDaily: 'Daily',
+            dailyTitle: 'Daily #',
+            dailyAlreadyPlayed: 'Already played today',
 
             // Tooltips
             tooltipMana: 'Mana cost',

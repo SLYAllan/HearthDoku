@@ -99,6 +99,42 @@ body {
     color: var(--lemon-500);
 }
 
+.title-bar__modes {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn--mode {
+    font-family: var(--font-heading);
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+    border: 1px solid var(--border-oat);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.02em;
+}
+
+.btn--mode:hover {
+    color: var(--text-primary);
+    border-color: var(--lemon-500);
+}
+
+.btn--mode--active {
+    background: var(--lemon-500);
+    color: #000;
+    border-color: var(--lemon-500);
+}
+
+.btn--mode--active:hover {
+    background: var(--lemon-400, #f8cc65);
+    border-color: var(--lemon-400, #f8cc65);
+}
+
 .title-bar__right {
     display: flex;
     align-items: center;
@@ -756,6 +792,23 @@ body {
     80% { transform: translateX(3px); }
 }
 
+/* ---------- Daily Badge ---------- */
+.daily-badge {
+    text-align: center;
+    padding: 0.5rem 1rem;
+    margin-bottom: 0.5rem;
+    font-family: var(--font-heading);
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #000;
+    background: var(--lemon-500);
+    border-radius: 999px;
+    display: inline-block;
+    align-self: center;
+}
+
 /* ---------- Loading ---------- */
 .loading-overlay {
     position: absolute;
@@ -1320,4 +1373,27 @@ body {
     .solution-cell__cards {
         grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
     }
+}
+
+/* ---------- Site Footer ---------- */
+.site-footer {
+    text-align: center;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border-oat-light);
+}
+
+.footer-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--text-tertiary);
+    text-decoration: none;
+    font-family: var(--font-heading);
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.footer-link:hover {
+    color: var(--text-primary);
 }
