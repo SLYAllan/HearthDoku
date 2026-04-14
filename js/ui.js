@@ -13,6 +13,7 @@ const UI = (() => {
     let usedCardIds = new Set();
     let activeCellIndex = null;
     let gameFinished = false;
+    let dailyOptions = null; // { daily, dayNum, dateStr, saveFn }
 
     // DOM references
     const els = {};
@@ -81,6 +82,12 @@ const UI = (() => {
         });
 
         els.filterSearch.addEventListener('input', onFilterSearch);
+
+        window.addEventListener('resize', () => {
+            if (els.victoryModal && els.victoryModal.classList.contains('modal-overlay--visible')) {
+                centerModalOnPuzzle(els.victoryModal);
+            }
+        });
     }
 
     function showLoading() {
@@ -123,8 +130,9 @@ const UI = (() => {
         return `${m}:${s.toString().padStart(2, '0')}`;
     }
 
-    function renderPuzzle(puzzle) {
+    function renderPuzzle(puzzle, opts) {
         currentPuzzle = puzzle;
+        dailyOptions = opts || null;
         resetGame();
 
         for (let c = 0; c < 3; c++) {
@@ -191,39 +199,69 @@ const UI = (() => {
     }
 
     function renderSearchResults(results) {
+        els.searchResults.innerHTML = '';
+
         if (results.length === 0) {
-            els.searchResults.innerHTML = `<div class="search-empty">${I18n.t('noCardFound')}</div>`;
+            const empty = document.createElement('div');
+            empty.className = 'search-empty';
+            empty.textContent = I18n.t('noCardFound');
+            els.searchResults.appendChild(empty);
             return;
         }
 
         // Sets that share identical card names across versions — always show their set badge
         const AMBIGUOUS_SETS = new Set(['CORE', 'LEGACY', 'EXPERT1', 'VANILLA']);
 
-        els.searchResults.innerHTML = results.map(card => {
+        results.forEach(card => {
             const used = usedCardIds.has(card.dbfId || card.id);
             const setCode = card.set || '';
             const showSetBadge = AMBIGUOUS_SETS.has(setCode);
-            const setIcon = showSetBadge ? HearthstoneAPI.getSetIcon(setCode) : null;
-            const setName = showSetBadge ? HearthstoneAPI.getSetDisplayName(setCode) : '';
-            const setIconHtml = setIcon
-                ? `<img class="search-result__set-icon" src="${setIcon}" alt="" onerror="this.style.display='none'">`
-                : '';
 
-            return `<div class="search-result ${used ? 'search-result--used' : ''}" data-card-id="${card.id}" data-dbf-id="${card.dbfId}">
-                <div class="search-result__info">
-                    <div class="search-result__name">${card.name}</div>
-                    ${showSetBadge ? `<div class="search-result__set">${setIconHtml}<span>${setName}</span></div>` : ''}
-                </div>
-                ${used ? `<div class="search-result__used-tag">${I18n.t('alreadyUsed')}</div>` : ''}
-            </div>`;
-        }).join('');
+            const row = document.createElement('div');
+            row.className = `search-result${used ? ' search-result--used' : ''}`;
+            row.dataset.cardId = card.id;
+            row.dataset.dbfId = card.dbfId;
 
-        els.searchResults.querySelectorAll('.search-result:not(.search-result--used)').forEach(el => {
-            el.addEventListener('click', () => {
-                const cardId = el.dataset.cardId;
-                const dbfId = parseInt(el.dataset.dbfId);
-                selectCard(cardId, dbfId);
-            });
+            const info = document.createElement('div');
+            info.className = 'search-result__info';
+
+            const nameEl = document.createElement('div');
+            nameEl.className = 'search-result__name';
+            nameEl.textContent = card.name;
+            info.appendChild(nameEl);
+
+            if (showSetBadge) {
+                const setEl = document.createElement('div');
+                setEl.className = 'search-result__set';
+                const setIcon = HearthstoneAPI.getSetIcon(setCode);
+                if (setIcon) {
+                    const img = document.createElement('img');
+                    img.className = 'search-result__set-icon';
+                    img.src = setIcon;
+                    img.alt = '';
+                    img.onerror = () => { img.style.display = 'none'; };
+                    setEl.appendChild(img);
+                }
+                const setSpan = document.createElement('span');
+                setSpan.textContent = HearthstoneAPI.getSetDisplayName(setCode);
+                setEl.appendChild(setSpan);
+                info.appendChild(setEl);
+            }
+
+            row.appendChild(info);
+
+            if (used) {
+                const usedTag = document.createElement('div');
+                usedTag.className = 'search-result__used-tag';
+                usedTag.textContent = I18n.t('alreadyUsed');
+                row.appendChild(usedTag);
+            } else {
+                row.addEventListener('click', () => {
+                    selectCard(card.id, card.dbfId);
+                });
+            }
+
+            els.searchResults.appendChild(row);
         });
     }
 
@@ -246,11 +284,26 @@ const UI = (() => {
             usedCardIds.add(dbfId || cardId);
 
             const renderUrl = HearthstoneAPI.getCardRenderUrl(cardId);
-            cellEl.innerHTML = `<div class="cell-card cell-card--correct">
-                <img src="${renderUrl}" alt="${card.name}" onerror="this.parentElement.innerHTML='<span class=\\'cell-card__name\\'>${card.name}</span>'">
-                <div class="cell-card__name-overlay">${card.name}</div>
-                <div class="cell-card__score">+${cardScore}</div>
-            </div>`;
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'cell-card cell-card--correct';
+            const img = document.createElement('img');
+            img.src = renderUrl;
+            img.alt = card.name;
+            img.onerror = () => {
+                const fallback = document.createElement('span');
+                fallback.className = 'cell-card__name';
+                fallback.textContent = card.name;
+                cardDiv.replaceChild(fallback, img);
+            };
+            const nameOverlay = document.createElement('div');
+            nameOverlay.className = 'cell-card__name-overlay';
+            nameOverlay.textContent = card.name;
+            const scoreEl = document.createElement('div');
+            scoreEl.className = 'cell-card__score';
+            scoreEl.textContent = `+${cardScore}`;
+            cardDiv.append(img, nameOverlay, scoreEl);
+            cellEl.innerHTML = '';
+            cellEl.appendChild(cardDiv);
             cellEl.classList.add('grid-cell--correct');
             animateCorrect(cellEl);
 
@@ -261,10 +314,17 @@ const UI = (() => {
             errors++;
             cellEl.classList.add('grid-cell--wrong');
             const name = selectedCard ? selectedCard.name : cardId;
-            cellEl.innerHTML = `<div class="cell-card cell-card--wrong">
-                <span class="cell-card__x">✗</span>
-                <span class="cell-card__name">${name}</span>
-            </div>`;
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'cell-card cell-card--wrong';
+            const xSpan = document.createElement('span');
+            xSpan.className = 'cell-card__x';
+            xSpan.textContent = '✗';
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'cell-card__name';
+            nameSpan.textContent = name;
+            cardDiv.append(xSpan, nameSpan);
+            cellEl.innerHTML = '';
+            cellEl.appendChild(cardDiv);
             cellState[activeCellIndex] = { card: selectedCard, correct: false };
             animateWrong(cellEl);
 
@@ -298,6 +358,10 @@ const UI = (() => {
         gameFinished = true;
         clearInterval(timerInterval);
 
+        if (dailyOptions && dailyOptions.saveFn) {
+            dailyOptions.saveFn(score, timerSeconds, errors);
+        }
+
         if (victory) {
             showVictoryModal();
         } else {
@@ -309,12 +373,27 @@ const UI = (() => {
         document.getElementById('victoryScore').textContent = score;
         document.getElementById('victoryTime').textContent = formatTime(timerSeconds);
         document.getElementById('victoryPP').textContent = `${errors}/${MAX_ERRORS}`;
+        if (els.puzzleContainer) {
+            els.puzzleContainer.scrollIntoView({ block: 'center', behavior: 'auto' });
+        }
         els.victoryModal.classList.add('modal-overlay--visible');
+        centerModalOnPuzzle(els.victoryModal);
         spawnConfetti();
     }
 
     function closeVictoryModal() {
         els.victoryModal.classList.remove('modal-overlay--visible');
+        els.victoryModal.style.removeProperty('--anchor-x');
+        els.victoryModal.style.removeProperty('--anchor-y');
+    }
+
+    function centerModalOnPuzzle(overlay) {
+        if (!els.puzzleContainer) return;
+        const rect = els.puzzleContainer.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        overlay.style.setProperty('--anchor-x', `${cx}px`);
+        overlay.style.setProperty('--anchor-y', `${cy}px`);
     }
 
     function showDefeatModal() {
@@ -437,8 +516,6 @@ const UI = (() => {
     }
 
     function getShareText() {
-        const today = new Date();
-        const dateStr = today.toLocaleDateString(I18n.t('shareDate'));
         const grid = [];
         for (let r = 0; r < 3; r++) {
             let row = '';
@@ -452,7 +529,33 @@ const UI = (() => {
             grid.push(row);
         }
 
-        return `🎴 HearthDoku — ${dateStr}\n${grid.join('\n')}\nScore: ${score} | Erreurs: ${errors}/${MAX_ERRORS} | ⏱️ ${formatTime(timerSeconds)}`;
+        if (dailyOptions && dailyOptions.daily) {
+            const header = `🎴 HearthDoku ${I18n.t('dailyTitle')}${dailyOptions.dayNum} — ${dailyOptions.dateStr}`;
+            return `${header}\n${grid.join('\n')}\nScore: ${score} | ❌ ${errors}/${MAX_ERRORS} | ⏱️ ${formatTime(timerSeconds)}`;
+        }
+
+        const today = new Date();
+        const dateStr = today.toLocaleDateString(I18n.t('shareDate'));
+        return `🎴 HearthDoku — ${dateStr}\n${grid.join('\n')}\nScore: ${score} | ❌ ${errors}/${MAX_ERRORS} | ⏱️ ${formatTime(timerSeconds)}`;
+    }
+
+    function showDailyBadge(text) {
+        const el = document.getElementById('dailyBadge');
+        if (!el) return;
+        el.textContent = text;
+        el.style.display = 'inline-block';
+    }
+
+    function hideDailyBadge() {
+        const el = document.getElementById('dailyBadge');
+        if (el) el.style.display = 'none';
+    }
+
+    function markDailyAlreadyPlayed() {
+        const el = document.getElementById('dailyBadge');
+        if (!el) return;
+        el.title = I18n.t('dailyAlreadyPlayed');
+        el.style.opacity = '0.7';
     }
 
     function spawnConfetti() {
@@ -704,6 +807,12 @@ const UI = (() => {
         const toggle = document.getElementById('controlsToggle');
         if (toggle) toggle.setAttribute('aria-label', I18n.t('toggleControls'));
 
+        // Mode buttons
+        const btnModeUnlimited = document.getElementById('btnModeUnlimited');
+        if (btnModeUnlimited) btnModeUnlimited.textContent = I18n.t('modeUnlimited');
+        const btnModeDaily = document.getElementById('btnModeDaily');
+        if (btnModeDaily) btnModeDaily.textContent = I18n.t('modeDaily');
+
         // Action buttons
         document.getElementById('btnNewPuzzle').textContent = I18n.t('newPuzzle');
         document.getElementById('btnShowSolution').textContent = I18n.t('showSolution');
@@ -804,6 +913,9 @@ const UI = (() => {
         closeDefeatModal,
         setModeBar,
         getShareText,
+        showDailyBadge,
+        hideDailyBadge,
+        markDailyAlreadyPlayed,
         renderFilterList,
         renderRarityFilterList,
         renderClassFilterList,
@@ -819,6 +931,7 @@ const UI = (() => {
         get currentPuzzle() { return currentPuzzle; },
         get score() { return score; },
         get errors() { return errors; },
+        get maxErrors() { return MAX_ERRORS; },
         get timerSeconds() { return timerSeconds; },
         get gameFinished() { return gameFinished; },
         formatTime,

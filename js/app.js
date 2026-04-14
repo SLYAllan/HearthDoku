@@ -9,42 +9,107 @@ const App = (() => {
     let allSets = [];
     let isDailyMode = false;
 
-    function getDailySeed() {
-        const now = new Date();
-        const y = now.getFullYear();
-        const m = String(now.getMonth() + 1).padStart(2, '0');
-        const d = String(now.getDate()).padStart(2, '0');
-        return parseInt(`${y}${m}${d}`, 10);
-    }
-
-    function getDailyDateLabel() {
-        return new Date().toLocaleDateString(I18n.t('shareDate'), {
-            day: 'numeric', month: 'long', year: 'numeric',
-        });
-    }
-
-    function generateDailyPuzzle() {
-        isDailyMode = true;
-        UI.showLoading();
-        setTimeout(() => {
-            const puzzle = PuzzleEngine.generatePuzzle(allCards, null, getDailySeed());
-            if (!puzzle) {
-                UI.hideLoading();
-                alert(I18n.t('errorGenerate'));
-                return;
-            }
-            UI.renderPuzzle(puzzle);
-            UI.setModeBar(true, getDailyDateLabel());
-            UI.hideLoading();
-        }, 50);
-    }
-
     const ALL_RARITIES = ['LEGENDARY', 'EPIC', 'RARE', 'COMMON', 'FREE'];
     const ALL_CLASSES = [
         'DEATHKNIGHT', 'DEMONHUNTER', 'DRUID', 'HUNTER', 'MAGE',
         'PALADIN', 'PRIEST', 'ROGUE', 'SHAMAN', 'WARLOCK',
         'WARRIOR', 'NEUTRAL',
     ];
+
+    // ---------- Daily mode helpers ----------
+
+    function getDailyDateStr() {
+        const d = new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    }
+
+    function getDailySeed() {
+        // djb2 hash of YYYYMMDD string (local time)
+        const str = getDailyDateStr().replace(/-/g, '');
+        let hash = 5381;
+        for (let i = 0; i < str.length; i++) {
+            hash = ((hash << 5) + hash) + str.charCodeAt(i);
+            hash |= 0;
+        }
+        return hash;
+    }
+
+    function getDailyNumber() {
+        const epoch = new Date('2025-01-01T00:00:00');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return Math.max(1, Math.floor((today - epoch) / (1000 * 60 * 60 * 24)) + 1);
+    }
+
+    function getDailyStorageKey() {
+        return `hearthdoku_daily_${getDailyDateStr()}`;
+    }
+
+    function saveDailyResult(score, time, errors) {
+        try {
+            localStorage.setItem(getDailyStorageKey(), JSON.stringify({ completed: true, score, time, errors }));
+        } catch { /* localStorage unavailable */ }
+    }
+
+    function getDailyResult() {
+        try {
+            const raw = localStorage.getItem(getDailyStorageKey());
+            return raw ? JSON.parse(raw) : null;
+        } catch { return null; }
+    }
+
+    // ---------- Mode switching ----------
+
+    function enterDailyMode() {
+        isDailyMode = true;
+        document.getElementById('btnModeDaily').classList.add('btn--mode--active');
+        document.getElementById('btnModeUnlimited').classList.remove('btn--mode--active');
+        document.getElementById('btnNewPuzzle').style.display = 'none';
+        document.querySelectorAll('.filter-section').forEach(el => { el.style.display = 'none'; });
+        generateDailyPuzzle();
+    }
+
+    function enterUnlimitedMode() {
+        isDailyMode = false;
+        document.getElementById('btnModeUnlimited').classList.add('btn--mode--active');
+        document.getElementById('btnModeDaily').classList.remove('btn--mode--active');
+        document.getElementById('btnNewPuzzle').style.display = '';
+        document.querySelectorAll('.filter-section').forEach(el => { el.style.display = ''; });
+        UI.hideDailyBadge();
+        generateNewPuzzle();
+    }
+
+    function generateDailyPuzzle() {
+        UI.showLoading();
+
+        setTimeout(() => {
+            const seed = getDailySeed();
+            PuzzleEngine.setRng(PuzzleEngine.mulberry32(seed));
+
+            const puzzle = PuzzleEngine.generatePuzzle(allCards, null);
+            PuzzleEngine.resetRng();
+
+            if (!puzzle) {
+                UI.hideLoading();
+                alert(I18n.t('errorGenerate'));
+                return;
+            }
+
+            const dayNum = getDailyNumber();
+            const dateStr = getDailyDateStr().split('-').reverse().join('/');
+            UI.showDailyBadge(`${I18n.t('dailyTitle')}${dayNum} — ${dateStr}`);
+            UI.renderPuzzle(puzzle, { daily: true, dayNum, dateStr, saveFn: saveDailyResult });
+            UI.hideLoading();
+
+            const prev = getDailyResult();
+            if (prev) {
+                UI.markDailyAlreadyPlayed();
+            }
+        }, 50);
+    }
 
     async function init() {
         UI.init();
@@ -71,7 +136,12 @@ const App = (() => {
                 UI.renderFilterList(allSets);
                 UI.renderRarityFilterList();
                 UI.renderClassFilterList();
-                generateNewPuzzle();
+
+                if (isDailyMode) {
+                    generateDailyPuzzle();
+                } else {
+                    generateNewPuzzle();
+                }
             });
         }
 
@@ -88,6 +158,16 @@ const App = (() => {
             UI.renderFilterList(allSets);
             UI.renderRarityFilterList();
             UI.renderClassFilterList();
+
+            // Mode buttons
+            document.getElementById('btnModeUnlimited').addEventListener('click', () => {
+                if (!isDailyMode) return;
+                enterUnlimitedMode();
+            });
+            document.getElementById('btnModeDaily').addEventListener('click', () => {
+                if (isDailyMode) return;
+                enterDailyMode();
+            });
 
             // Bind buttons
             document.getElementById('btnDailyPuzzle').addEventListener('click', generateDailyPuzzle);
@@ -121,7 +201,11 @@ const App = (() => {
             document.getElementById('victoryShare').addEventListener('click', () => ExportManager.shareToClipboard());
             document.getElementById('victoryNewPuzzle').addEventListener('click', () => {
                 UI.closeVictoryModal();
-                generateNewPuzzle();
+                if (isDailyMode) {
+                    generateDailyPuzzle();
+                } else {
+                    generateNewPuzzle();
+                }
             });
             document.getElementById('victoryExport').addEventListener('click', () => {
                 UI.closeVictoryModal();
@@ -250,6 +334,10 @@ const App = (() => {
         return allowedClasses;
     }
 
+    function getIsDailyMode() {
+        return isDailyMode;
+    }
+
     function onSetFilterChange() {
         allowedSets = UI.getCheckedSets();
     }
@@ -270,6 +358,7 @@ const App = (() => {
         getAllowedSets,
         getAllowedRarities,
         getAllowedClasses,
+        getIsDailyMode,
         onSetFilterChange,
         onRarityFilterChange,
         onClassFilterChange,

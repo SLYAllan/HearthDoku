@@ -31,7 +31,7 @@ const I18n = (() => {
             victory: 'Victoire !',
             score: 'Score',
             time: 'Temps',
-            ppRemaining: 'PP restants',
+            ppRemaining: 'Erreurs',
             errorsLabel: 'Erreurs',
             defeat: 'Défaite !',
             defeatMessage: '3 erreurs — la grille est dévoilée.',
@@ -50,6 +50,10 @@ const I18n = (() => {
             errorExport: "Erreur lors de l'export. Utilisez une capture d'écran (Win+Shift+S) comme alternative.",
             errorExportBlocked: "Export impossible : les images externes bloquent la capture.\nUtilisez une capture d'écran (Win+Shift+S).",
             toggleControls: 'Afficher/masquer les contrôles',
+            modeUnlimited: 'Illimité',
+            modeDaily: 'Journalier',
+            dailyTitle: 'Journalier #',
+            dailyAlreadyPlayed: 'Déjà joué aujourd\'hui',
 
             // Tooltips
             tooltipMana: 'Coût en mana',
@@ -247,7 +251,7 @@ const I18n = (() => {
             victory: 'Victory!',
             score: 'Score',
             time: 'Time',
-            ppRemaining: 'PP remaining',
+            ppRemaining: 'Errors',
             errorsLabel: 'Errors',
             defeat: 'Defeat!',
             defeatMessage: '3 errors — the grid is revealed.',
@@ -266,6 +270,10 @@ const I18n = (() => {
             errorExport: 'Export error. Use a screenshot (Win+Shift+S) as an alternative.',
             errorExportBlocked: 'Export blocked: external images prevent capture.\nUse a screenshot (Win+Shift+S).',
             toggleControls: 'Show/hide controls',
+            modeUnlimited: 'Unlimited',
+            modeDaily: 'Daily',
+            dailyTitle: 'Daily #',
+            dailyAlreadyPlayed: 'Already played today',
 
             // Tooltips
             tooltipMana: 'Mana cost',

@@ -104,6 +104,48 @@ body {
     color: var(--lemon-500);
 }
 
+.title-bar__modes {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn--mode {
+    font-family: var(--font-heading);
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+    border: 1px solid var(--border-oat);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.02em;
+}
+
+.btn--mode:hover {
+    color: var(--text-primary);
+    border-color: var(--lemon-500);
+}
+
+.btn--mode--active {
+    background: var(--lemon-500);
+    color: #000;
+    border-color: var(--lemon-500);
+}
+
+.btn--mode--active:hover {
+    background: var(--lemon-400, #f8cc65);
+    border-color: var(--lemon-400, #f8cc65);
+}
+
+.title-bar__right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
 /* ---------- Buy Me a Coffee button ---------- */
 .btn-coffee {
     display: flex;
@@ -186,15 +228,17 @@ body {
 /* ---------- Main Layout ---------- */
 .main-layout {
     display: flex;
+    flex-direction: column;
     min-height: calc(100vh - 70px);
 }
 
 /* ---------- Controls Panel ---------- */
 .controls-panel {
-    width: 280px;
+    order: 2;
+    width: 100%;
     background: var(--bg-surface);
-    border-right: 1px solid var(--border-oat-light);
-    padding: 1rem;
+    border-top: 1px solid var(--border-oat-light);
+    padding: 0.75rem 1.5rem;
     overflow-y: auto;
     flex-shrink: 0;
 }
@@ -218,6 +262,19 @@ body {
     background: var(--bg-cell-hover);
 }
 
+.controls-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 1rem;
+    align-items: start;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.controls-content > .controls-title {
+    display: none;
+}
+
 .controls-title {
     font-family: var(--font-heading);
     font-size: 0.75rem;
@@ -232,8 +289,7 @@ body {
 .action-buttons {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
-    margin-bottom: 1.5rem;
+    gap: 0.4rem;
 }
 
 .btn {
@@ -325,8 +381,7 @@ body {
 
 /* ---------- Filter Section ---------- */
 .filter-section {
-    border-top: 1px dashed var(--border-oat-light);
-    padding-top: 1rem;
+    padding-top: 0.25rem;
 }
 
 .filter-title {
@@ -375,7 +430,7 @@ body {
 }
 
 .filter-list {
-    max-height: 300px;
+    max-height: 22vh;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
@@ -437,11 +492,13 @@ body {
 
 /* ---------- Game Area ---------- */
 .game-area {
+    order: 1;
     flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 1.5rem;
+    justify-content: center;
+    padding: 1rem 1.5rem;
     position: relative;
     background: var(--bg-canvas);
 }
@@ -480,11 +537,13 @@ body {
 
 /* ---------- Stats Panel ---------- */
 .stats-panel {
+    position: absolute;
+    left: calc(100% + 1.5rem);
+    top: 50%;
+    transform: translateY(-50%);
     display: flex;
-    gap: 1.5rem;
-    margin-bottom: 1.5rem;
-    flex-wrap: wrap;
-    justify-content: center;
+    flex-direction: column;
+    gap: 0.75rem;
 }
 
 .stat-item {
@@ -532,9 +591,12 @@ body {
 }
 
 .puzzle-grid {
+    --cell-size: min(260px, 26vh, 22vw);
+    --header-w: min(200px, 20vh, 18vw);
+    --header-h: min(140px, 14vh, 14vw);
     display: grid;
-    grid-template-columns: 160px repeat(3, 200px);
-    grid-template-rows: 120px repeat(3, 200px);
+    grid-template-columns: var(--header-w) repeat(3, var(--cell-size));
+    grid-template-rows: var(--header-h) repeat(3, var(--cell-size));
     gap: 6px;
 }
 
@@ -811,6 +873,23 @@ body {
     80% { transform: translateX(3px); }
 }
 
+/* ---------- Daily Badge ---------- */
+.daily-badge {
+    text-align: center;
+    padding: 0.5rem 1rem;
+    margin-bottom: 0.5rem;
+    font-family: var(--font-heading);
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #000;
+    background: var(--lemon-500);
+    border-radius: 999px;
+    display: inline-block;
+    align-self: center;
+}
+
 /* ---------- Loading ---------- */
 .loading-overlay {
     position: absolute;
@@ -1023,6 +1102,14 @@ body {
 }
 
 /* ---------- Victory Modal ---------- */
+#victoryModal .victory-modal {
+    position: absolute;
+    left: var(--anchor-x, 50vw);
+    top: var(--anchor-y, 50vh);
+    transform: translate(-50%, -50%);
+    max-width: min(420px, 90vw);
+}
+
 .victory-modal {
     text-align: center;
     overflow: visible;
@@ -1294,32 +1381,8 @@ body {
 
 /* ---------- Responsive ---------- */
 @media (max-width: 900px) {
-    .controls-panel {
-        position: fixed;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        width: 280px;
-        z-index: 50;
-        transform: translateX(-100%);
-        transition: transform 0.3s;
-    }
-
-    .controls-panel:has(.controls-content--open) {
-        transform: translateX(0);
-    }
-
-    .controls-toggle {
-        display: block;
-        position: fixed;
-        top: 80px;
-        left: 0.5rem;
-        z-index: 51;
-    }
-
-    .puzzle-grid {
-        grid-template-columns: 120px repeat(3, 150px);
-        grid-template-rows: 100px repeat(3, 150px);
+    .controls-content {
+        grid-template-columns: 1fr 1fr;
     }
 
     .badge {
@@ -1348,6 +1411,10 @@ body {
 }
 
 @media (max-width: 520px) {
+    .controls-content {
+        grid-template-columns: 1fr;
+    }
+
     .title-bar {
         padding: 0.75rem 1rem;
     }
@@ -1373,6 +1440,11 @@ body {
     }
 
     .stats-panel {
+        position: static;
+        transform: none;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
         gap: 0.5rem;
         margin-bottom: 1rem;
     }
@@ -1391,8 +1463,6 @@ body {
     }
 
     .puzzle-grid {
-        grid-template-columns: 90px repeat(3, 100px);
-        grid-template-rows: 75px repeat(3, 100px);
         gap: 3px;
     }
 
@@ -1433,4 +1503,27 @@ body {
     .solution-cell__cards {
         grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
     }
+}
+
+/* ---------- Site Footer ---------- */
+.site-footer {
+    text-align: center;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border-oat-light);
+}
+
+.footer-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--text-tertiary);
+    text-decoration: none;
+    font-family: var(--font-heading);
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.footer-link:hover {
+    color: var(--text-primary);
 }

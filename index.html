@@ -3,23 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com https://cdnjs.buymeacoffee.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://art.hearthstonejson.com https://cdnjs.buymeacoffee.com; connect-src 'self' https://api.hearthstonejson.com; frame-ancestors 'none';">
     <title>HearthDoku — Hearthstone Sudoku</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"
+            integrity="sha384-ZZ1pncU3bQe8y31yfZdMFdSpttDoPmOZg2wguVK9almUodir1PghgT0eY7Mrty8H"
+            crossorigin="anonymous" defer></script>
 </head>
 <body>
     <div id="app">
         <!-- Title Bar -->
         <header class="title-bar">
-            <div class="title-bar__left">
-                <div class="title-bar__logo">
-                    <img src="logo/Icon_Logo.webp" alt="Hearthstone" class="hs-logo" width="40" height="40">
-                    <h1 class="title-bar__title">HearthDoku</h1>
-                </div>
+            <div class="title-bar__logo">
+                <img src="logo/Icon_Logo.webp" alt="Hearthstone" class="hs-logo" width="40" height="40">
+                <h1 class="title-bar__title">HearthDoku</h1>
+            </div>
+            <div class="title-bar__modes">
+                <button class="btn btn--mode btn--mode--active" id="btnModeUnlimited">Illimité</button>
+                <button class="btn btn--mode" id="btnModeDaily">Journalier</button>
+            </div>
+            <div class="title-bar__right">
+                <div class="title-bar__subtitle">Hearthstone Sudoku</div>
                 <div class="lang-switcher">
                     <select id="langSelect" class="lang-select" aria-label="Language">
                         <option value="fr">🇫🇷 Français</option>
@@ -110,28 +118,29 @@
                 <!-- Mode Bar -->
                 <div class="puzzle-mode-bar" id="puzzleModeBar"></div>
 
-                <!-- Stats Panel -->
-                <div class="stats-panel">
-                    <div class="stat-item">
-                        <span class="stat-label">UNIQ</span>
-                        <span class="stat-value" id="statUniq">0</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">PTS</span>
-                        <span class="stat-value" id="statPts">0</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label" id="statErrorsLabel">ERREURS</span>
-                        <span class="stat-value" id="statPP">0/3</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">TIME</span>
-                        <span class="stat-value" id="statTimer">0:00</span>
-                    </div>
-                </div>
-
+                <!-- Daily Badge -->
+                <div class="daily-badge" id="dailyBadge" style="display:none"></div>
                 <!-- Puzzle Grid -->
                 <div class="puzzle-container" id="puzzleContainer">
+                    <!-- Stats Panel (on the side) -->
+                    <div class="stats-panel">
+                        <div class="stat-item">
+                            <span class="stat-label">UNIQ</span>
+                            <span class="stat-value" id="statUniq">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">PTS</span>
+                            <span class="stat-value" id="statPts">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label" id="statErrorsLabel">ERR</span>
+                            <span class="stat-value" id="statPP">0/3</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">TIME</span>
+                            <span class="stat-value" id="statTimer">0:00</span>
+                        </div>
+                    </div>
                     <div class="puzzle-grid" id="puzzleGrid">
                         <!-- Corner cell -->
                         <div class="grid-corner"></div>
@@ -164,6 +173,16 @@
                 </div>
             </main>
         </div>
+
+        <!-- Footer -->
+        <footer class="site-footer">
+            <a href="https://x.com/Solary_Allan" target="_blank" rel="noopener noreferrer" class="footer-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.259 5.63L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z"/>
+                </svg>
+                @Solary_Allan
+            </a>
+        </footer>
     </div>
 
     <!-- Search Modal -->
@@ -216,8 +235,8 @@
                     <span class="victory-stat__value" id="victoryTime">0:00</span>
                 </div>
                 <div class="victory-stat">
-                    <span class="victory-stat__label">PP restants</span>
-                    <span class="victory-stat__value" id="victoryPP">9/9</span>
+                    <span class="victory-stat__label">Erreurs</span>
+                    <span class="victory-stat__value" id="victoryPP">0/3</span>
                 </div>
             </div>
             <div class="victory-actions">
@@ -263,5 +282,8 @@
     <script src="js/ui.js"></script>
     <script src="js/export.js"></script>
     <script src="js/app.js"></script>
+
+    <!-- Buy Me A Coffee -->
+    <script type="text/javascript" src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js" data-name="bmc-button" data-slug="SLYAllan" data-color="#40DCA5" data-emoji=""  data-font="Cookie" data-text="Buy me a coffee" data-outline-color="#000000" data-font-color="#ffffff" data-coffee-color="#FFDD00" ></script>
 </body>
 </html>
