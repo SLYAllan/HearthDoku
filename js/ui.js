@@ -672,10 +672,6 @@ const UI = (() => {
     function updateUIText() {
         document.documentElement.lang = I18n.getLang();
 
-        // Title bar
-        const subtitle = document.querySelector('.title-bar__subtitle');
-        if (subtitle) subtitle.textContent = I18n.t('subtitle');
-
         // Controls
         const controlsTitle = document.querySelector('.controls-title');
         if (controlsTitle) controlsTitle.textContent = I18n.t('controls');

@@ -68,7 +68,6 @@ body {
     color: var(--text-primary);
     min-height: 100vh;
     overflow-x: hidden;
-    font-feature-settings: "ss03", "ss10", "ss11", "ss12";
 }
 
 /* ---------- Title Bar ---------- */
@@ -79,6 +78,12 @@ body {
     padding: 1rem 1.5rem;
     border-bottom: 1px solid var(--border-oat-light);
     background: var(--bg-surface);
+}
+
+.title-bar__left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
 }
 
 .title-bar__logo {
@@ -99,19 +104,43 @@ body {
     color: var(--lemon-500);
 }
 
-.title-bar__right {
+/* ---------- Buy Me a Coffee button ---------- */
+.btn-coffee {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.5rem;
+    padding: 0.45rem 0.9rem;
+    background: var(--bg-cell);
+    border: 1px solid var(--border-oat);
+    border-radius: 12px;
+    color: var(--text-secondary);
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    box-shadow: var(--shadow-clay);
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
-.title-bar__subtitle {
-    font-family: var(--font-heading);
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--text-tertiary);
-    letter-spacing: 1.08px;
-    text-transform: uppercase;
+.btn-coffee:hover {
+    background: var(--bg-cell-hover);
+    border-color: var(--lemon-700);
+    color: var(--lemon-500);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-hard);
+}
+
+.btn-coffee__icon {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.btn-coffee__label {
+    letter-spacing: -0.16px;
 }
 
 /* ---------- Language Switcher ---------- */
@@ -783,15 +812,24 @@ body {
     right: 0;
     bottom: 0;
     background: rgba(0, 0, 0, 0.6);
-    display: none;
+    display: flex;
     align-items: center;
     justify-content: center;
     z-index: 100;
     backdrop-filter: blur(8px);
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    /* Fade out: opacity first, then hide visibility after transition */
+    transition: opacity 0.2s ease, visibility 0s linear 0.2s;
 }
 
 .modal-overlay--visible {
-    display: flex;
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    /* Fade in: show visibility instantly, then transition opacity */
+    transition: opacity 0.2s ease, visibility 0s linear 0s;
 }
 
 .modal-content {
@@ -1232,16 +1270,20 @@ body {
         padding: 0.75rem 1rem;
     }
 
+    .title-bar__left {
+        gap: 0.6rem;
+    }
+
     .title-bar__title {
         font-size: 1.1rem;
     }
 
-    .title-bar__subtitle {
+    .btn-coffee__label {
         display: none;
     }
 
-    .title-bar__right {
-        gap: 0.5rem;
+    .btn-coffee {
+        padding: 0.45rem 0.6rem;
     }
 
     .game-area {

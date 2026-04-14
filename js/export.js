@@ -7,6 +7,11 @@ const ExportManager = (() => {
         const container = document.getElementById('puzzleContainer');
         if (!container) return;
 
+        if (typeof html2canvas === 'undefined') {
+            alert(I18n.t('errorExport'));
+            return;
+        }
+
         if (withSolutions && UI.currentPuzzle) {
             UI.showSolution();
         }
