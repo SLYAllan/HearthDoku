@@ -5,8 +5,9 @@ const UI = (() => {
     // State
     let currentPuzzle = null;
     let cellState = Array(9).fill(null);
+    const MAX_ERRORS = 3;
     let score = 0;
-    let pp = 9;
+    let errors = 0;
     let timerInterval = null;
     let timerSeconds = 0;
     let usedCardIds = new Set();
@@ -26,6 +27,8 @@ const UI = (() => {
         els.searchTitle = document.getElementById('searchTitle');
         els.searchClose = document.getElementById('searchClose');
         els.victoryModal = document.getElementById('victoryModal');
+        els.defeatModal = document.getElementById('defeatModal');
+        els.puzzleModeBar = document.getElementById('puzzleModeBar');
         els.exportModal = document.getElementById('exportModal');
         els.statUniq = document.getElementById('statUniq');
         els.statPts = document.getElementById('statPts');
@@ -69,6 +72,7 @@ const UI = (() => {
                 closeSearchModal();
                 closeExportModal();
                 closeSolutionModal();
+                closeDefeatModal();
             }
         });
 
@@ -90,7 +94,7 @@ const UI = (() => {
     function resetGame() {
         cellState = Array(9).fill(null);
         score = 0;
-        pp = 9;
+        errors = 0;
         timerSeconds = 0;
         usedCardIds = new Set();
         activeCellIndex = null;
@@ -147,8 +151,8 @@ const UI = (() => {
 
     function updateStats() {
         els.statPts.textContent = score;
-        els.statPP.textContent = `${pp}/9`;
-        els.statPP.classList.toggle('stat-value--danger', pp <= 3);
+        els.statPP.textContent = `${errors}/${MAX_ERRORS}`;
+        els.statPP.classList.toggle('stat-value--danger', errors >= MAX_ERRORS - 1);
     }
 
     function openSearchModal(cellIndex) {
@@ -254,7 +258,7 @@ const UI = (() => {
             updateStats();
             checkVictory();
         } else {
-            pp--;
+            errors++;
             cellEl.classList.add('grid-cell--wrong');
             const name = selectedCard ? selectedCard.name : cardId;
             cellEl.innerHTML = `<div class="cell-card cell-card--wrong">
@@ -267,7 +271,7 @@ const UI = (() => {
             closeSearchModal();
             updateStats();
 
-            if (pp <= 0) {
+            if (errors >= MAX_ERRORS) {
                 endGame(false);
             }
         }
@@ -296,19 +300,40 @@ const UI = (() => {
 
         if (victory) {
             showVictoryModal();
+        } else {
+            showDefeatModal();
         }
     }
 
     function showVictoryModal() {
         document.getElementById('victoryScore').textContent = score;
         document.getElementById('victoryTime').textContent = formatTime(timerSeconds);
-        document.getElementById('victoryPP').textContent = `${pp}/9`;
+        document.getElementById('victoryPP').textContent = `${errors}/${MAX_ERRORS}`;
         els.victoryModal.classList.add('modal-overlay--visible');
         spawnConfetti();
     }
 
     function closeVictoryModal() {
         els.victoryModal.classList.remove('modal-overlay--visible');
+    }
+
+    function showDefeatModal() {
+        document.getElementById('defeatScore').textContent = score;
+        document.getElementById('defeatTime').textContent = formatTime(timerSeconds);
+        els.defeatModal.classList.add('modal-overlay--visible');
+    }
+
+    function closeDefeatModal() {
+        els.defeatModal.classList.remove('modal-overlay--visible');
+    }
+
+    function setModeBar(isDaily, dateLabel) {
+        if (!els.puzzleModeBar) return;
+        const text = isDaily
+            ? `${I18n.t('dailyMode')} — ${dateLabel}`
+            : I18n.t('freeMode');
+        const cls = isDaily ? 'puzzle-mode-badge--daily' : 'puzzle-mode-badge--free';
+        els.puzzleModeBar.innerHTML = `<span class="puzzle-mode-badge ${cls}">${text}</span>`;
     }
 
     function showExportModal() {
@@ -427,7 +452,7 @@ const UI = (() => {
             grid.push(row);
         }
 
-        return `🎴 HearthDoku — ${dateStr}\n${grid.join('\n')}\nScore: ${score} | PP: ${pp}/9 | ⏱️ ${formatTime(timerSeconds)}`;
+        return `🎴 HearthDoku — ${dateStr}\n${grid.join('\n')}\nScore: ${score} | Erreurs: ${errors}/${MAX_ERRORS} | ⏱️ ${formatTime(timerSeconds)}`;
     }
 
     function spawnConfetti() {
@@ -728,8 +753,30 @@ const UI = (() => {
         if (victoryLabels.length >= 3) {
             victoryLabels[0].textContent = I18n.t('score');
             victoryLabels[1].textContent = I18n.t('time');
-            victoryLabels[2].textContent = I18n.t('ppRemaining');
+            victoryLabels[2].textContent = I18n.t('errorsLabel');
         }
+
+        // Stat label errors
+        const statErrorsLabel = document.getElementById('statErrorsLabel');
+        if (statErrorsLabel) statErrorsLabel.textContent = I18n.t('errorsLabel').toUpperCase();
+
+        // Defeat modal
+        const defeatTitle = document.getElementById('defeatTitle');
+        if (defeatTitle) defeatTitle.textContent = I18n.t('defeat');
+        const defeatMsg = document.getElementById('defeatMessage');
+        if (defeatMsg) defeatMsg.textContent = I18n.t('defeatMessage');
+        const defeatScoreLabel = document.getElementById('defeatScoreLabel');
+        if (defeatScoreLabel) defeatScoreLabel.textContent = I18n.t('score');
+        const defeatTimeLabel = document.getElementById('defeatTimeLabel');
+        if (defeatTimeLabel) defeatTimeLabel.textContent = I18n.t('time');
+        const defeatShowSol = document.getElementById('defeatShowSolution');
+        if (defeatShowSol) defeatShowSol.textContent = I18n.t('showSolution');
+        const defeatNewP = document.getElementById('defeatNewPuzzle');
+        if (defeatNewP) defeatNewP.textContent = I18n.t('newPuzzle');
+
+        // Daily puzzle button
+        const btnDailyPuzzle = document.getElementById('btnDailyPuzzle');
+        if (btnDailyPuzzle) btnDailyPuzzle.textContent = I18n.t('dailyPuzzle');
 
         document.getElementById('victoryShare').textContent = I18n.t('share');
         document.getElementById('victoryNewPuzzle').textContent = I18n.t('newPuzzle');
@@ -753,6 +800,9 @@ const UI = (() => {
         showExportModal,
         closeExportModal,
         closeVictoryModal,
+        showDefeatModal,
+        closeDefeatModal,
+        setModeBar,
         getShareText,
         renderFilterList,
         renderRarityFilterList,
@@ -768,7 +818,7 @@ const UI = (() => {
         updateUIText,
         get currentPuzzle() { return currentPuzzle; },
         get score() { return score; },
-        get pp() { return pp; },
+        get errors() { return errors; },
         get timerSeconds() { return timerSeconds; },
         get gameFinished() { return gameFinished; },
         formatTime,

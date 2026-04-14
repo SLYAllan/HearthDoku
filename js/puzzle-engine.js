@@ -40,6 +40,26 @@ const PuzzleEngine = (() => {
         return a;
     }
 
+    // Seeded PRNG (mulberry32) — used for the daily puzzle
+    function mulberry32(seed) {
+        let s = seed >>> 0;
+        return function () {
+            s = (s + 0x6D2B79F5) | 0;
+            let t = Math.imul(s ^ (s >>> 15), s | 1);
+            t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+            return ((t ^ (t >>> 14)) >>> 0) / 0x100000000;
+        };
+    }
+
+    function shuffleWithRng(arr, rng) {
+        const a = [...arr];
+        for (let i = a.length - 1; i > 0; i--) {
+            const j = Math.floor(rng() * (i + 1));
+            [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+    }
+
     function areCriteriaCompatible(cat1, val1, cat2, val2) {
         for (const rule of INCOMPATIBILITIES) {
             if (rule.cat1 === cat1 && rule.val1 === val1 && rule.cat2 === cat2) return false;
@@ -112,7 +132,7 @@ const PuzzleEngine = (() => {
         return 10;
     }
 
-    function generatePuzzle(cards, allowedSets = null) {
+    function generatePuzzle(cards, allowedSets = null, seed = null) {
         let pool = cards;
         if (allowedSets && allowedSets.length > 0) {
             pool = cards.filter(c => allowedSets.includes(c.set));
@@ -149,21 +169,23 @@ const PuzzleEngine = (() => {
         if (viableCategories.length < 6) return null;
 
         const MAX_ATTEMPTS = 2000;
+        const rng = seed != null ? mulberry32(seed) : null;
 
         for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-            const result = tryGeneratePuzzle(pool, viableCategories, viableValues, minCards);
+            const result = tryGeneratePuzzle(pool, viableCategories, viableValues, minCards, rng);
             if (result) return result;
         }
 
         return null;
     }
 
-    function tryGeneratePuzzle(pool, availableCategories, viableValues, minCards) {
+    function tryGeneratePuzzle(pool, availableCategories, viableValues, minCards, rng = null) {
+        const sf = rng ? (a) => shuffleWithRng(a, rng) : shuffle;
         const cats = availableCategories || CATEGORIES.filter(c => CATEGORY_VALUES[c].length > 0);
         const vals = viableValues || CATEGORY_VALUES;
         const threshold = minCards || 10;
 
-        const shuffledCats = shuffle(cats);
+        const shuffledCats = sf(cats);
         if (shuffledCats.length < 6) return null;
 
         const rowCategories = shuffledCats.slice(0, 3);
@@ -173,13 +195,13 @@ const PuzzleEngine = (() => {
         const colCriteria = [];
 
         for (const cat of rowCategories) {
-            const catVals = shuffle(vals[cat] || CATEGORY_VALUES[cat]);
+            const catVals = sf(vals[cat] || CATEGORY_VALUES[cat]);
             if (catVals.length === 0) return null;
             rowCriteria.push({ category: cat, value: catVals[0] });
         }
 
         for (const cat of colCategories) {
-            const catVals = shuffle(vals[cat] || CATEGORY_VALUES[cat]);
+            const catVals = sf(vals[cat] || CATEGORY_VALUES[cat]);
             if (catVals.length === 0) return null;
             colCriteria.push({ category: cat, value: catVals[0] });
         }

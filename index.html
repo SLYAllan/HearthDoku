@@ -54,6 +54,7 @@
 
                     <!-- Action Buttons -->
                     <div class="action-buttons">
+                        <button class="btn btn--daily" id="btnDailyPuzzle">📅 Puzzle du jour</button>
                         <button class="btn btn--primary" id="btnNewPuzzle">Nouveau puzzle</button>
                         <button class="btn btn--secondary" id="btnShowSolution">Voir la solution</button>
                         <button class="btn btn--secondary" id="btnExport">Exporter en PNG</button>
@@ -106,6 +107,9 @@
 
             <!-- Game Area -->
             <main class="game-area">
+                <!-- Mode Bar -->
+                <div class="puzzle-mode-bar" id="puzzleModeBar"></div>
+
                 <!-- Stats Panel -->
                 <div class="stats-panel">
                     <div class="stat-item">
@@ -117,8 +121,8 @@
                         <span class="stat-value" id="statPts">0</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-label">PP</span>
-                        <span class="stat-value" id="statPP">9/9</span>
+                        <span class="stat-label" id="statErrorsLabel">ERREURS</span>
+                        <span class="stat-value" id="statPP">0/3</span>
                     </div>
                     <div class="stat-item">
                         <span class="stat-label">TIME</span>
@@ -172,6 +176,28 @@
             <input type="text" class="search-input" id="searchInput" placeholder="Chercher une carte..." autocomplete="off">
             <div class="search-results" id="searchResults">
                 <!-- Populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Defeat Modal -->
+    <div class="modal-overlay" id="defeatModal">
+        <div class="modal-content defeat-modal">
+            <h2 class="defeat-title" id="defeatTitle">Défaite !</h2>
+            <p class="defeat-message" id="defeatMessage">3 erreurs — la grille est dévoilée.</p>
+            <div class="defeat-stats">
+                <div class="victory-stat">
+                    <span class="victory-stat__label" id="defeatScoreLabel">Score</span>
+                    <span class="victory-stat__value" id="defeatScore">0</span>
+                </div>
+                <div class="victory-stat">
+                    <span class="victory-stat__label" id="defeatTimeLabel">Temps</span>
+                    <span class="victory-stat__value" id="defeatTime">0:00</span>
+                </div>
+            </div>
+            <div class="defeat-actions">
+                <button class="btn btn--secondary" id="defeatShowSolution">Voir la solution</button>
+                <button class="btn btn--primary" id="defeatNewPuzzle">Nouveau puzzle</button>
             </div>
         </div>
     </div>

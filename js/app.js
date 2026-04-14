@@ -7,6 +7,37 @@ const App = (() => {
     let allowedRarities = [];
     let allowedClasses = [];
     let allSets = [];
+    let isDailyMode = false;
+
+    function getDailySeed() {
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const d = String(now.getDate()).padStart(2, '0');
+        return parseInt(`${y}${m}${d}`, 10);
+    }
+
+    function getDailyDateLabel() {
+        return new Date().toLocaleDateString(I18n.t('shareDate'), {
+            day: 'numeric', month: 'long', year: 'numeric',
+        });
+    }
+
+    function generateDailyPuzzle() {
+        isDailyMode = true;
+        UI.showLoading();
+        setTimeout(() => {
+            const puzzle = PuzzleEngine.generatePuzzle(allCards, null, getDailySeed());
+            if (!puzzle) {
+                UI.hideLoading();
+                alert(I18n.t('errorGenerate'));
+                return;
+            }
+            UI.renderPuzzle(puzzle);
+            UI.setModeBar(true, getDailyDateLabel());
+            UI.hideLoading();
+        }, 50);
+    }
 
     const ALL_RARITIES = ['LEGENDARY', 'EPIC', 'RARE', 'COMMON', 'FREE'];
     const ALL_CLASSES = [
@@ -59,6 +90,7 @@ const App = (() => {
             UI.renderClassFilterList();
 
             // Bind buttons
+            document.getElementById('btnDailyPuzzle').addEventListener('click', generateDailyPuzzle);
             document.getElementById('btnNewPuzzle').addEventListener('click', generateNewPuzzle);
             document.getElementById('btnShowSolution').addEventListener('click', () => UI.showSolution());
             document.getElementById('btnExport').addEventListener('click', () => UI.showExportModal());
@@ -74,6 +106,16 @@ const App = (() => {
                 UI.closeExportModal();
             });
             document.getElementById('exportClose').addEventListener('click', () => UI.closeExportModal());
+
+            // Defeat modal buttons
+            document.getElementById('defeatNewPuzzle').addEventListener('click', () => {
+                UI.closeDefeatModal();
+                generateNewPuzzle();
+            });
+            document.getElementById('defeatShowSolution').addEventListener('click', () => {
+                UI.closeDefeatModal();
+                UI.showSolution();
+            });
 
             // Victory modal buttons
             document.getElementById('victoryShare').addEventListener('click', () => ExportManager.shareToClipboard());
@@ -136,7 +178,7 @@ const App = (() => {
             });
 
             UI.hideLoading();
-            generateNewPuzzle();
+            generateDailyPuzzle();
         } catch (err) {
             console.error('Init error:', err);
             UI.hideLoading();
@@ -169,6 +211,7 @@ const App = (() => {
     }
 
     function generateNewPuzzle() {
+        isDailyMode = false;
         UI.showLoading();
 
         setTimeout(() => {
@@ -186,6 +229,7 @@ const App = (() => {
             }
 
             UI.renderPuzzle(puzzle);
+            UI.setModeBar(false, null);
             UI.hideLoading();
         }, 50);
     }

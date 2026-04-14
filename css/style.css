@@ -309,6 +309,20 @@ body {
     background: var(--ube-800);
 }
 
+.btn--daily {
+    background: rgba(251, 189, 65, 0.12);
+    color: var(--lemon-500);
+    border: 1px solid rgba(251, 189, 65, 0.3);
+    box-shadow: var(--shadow-clay);
+}
+
+.btn--daily:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hard);
+    background: rgba(251, 189, 65, 0.22);
+    border-color: var(--lemon-500);
+}
+
 /* ---------- Filter Section ---------- */
 .filter-section {
     border-top: 1px dashed var(--border-oat-light);
@@ -430,6 +444,38 @@ body {
     padding: 1.5rem;
     position: relative;
     background: var(--bg-canvas);
+}
+
+/* ---------- Puzzle Mode Bar ---------- */
+.puzzle-mode-bar {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 0.75rem;
+    min-height: 28px;
+}
+
+.puzzle-mode-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    box-shadow: var(--shadow-clay);
+}
+
+.puzzle-mode-badge--daily {
+    background: rgba(251, 189, 65, 0.1);
+    border: 1px solid rgba(251, 189, 65, 0.25);
+    color: var(--lemon-500);
+}
+
+.puzzle-mode-badge--free {
+    background: rgba(59, 211, 253, 0.08);
+    border: 1px solid rgba(59, 211, 253, 0.2);
+    color: var(--slushie-500);
 }
 
 /* ---------- Stats Panel ---------- */
@@ -1023,6 +1069,42 @@ body {
 }
 
 .victory-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* ---------- Defeat Modal ---------- */
+.defeat-modal {
+    text-align: center;
+    border: 1px solid rgba(252, 121, 129, 0.3);
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4), 0 0 40px rgba(252, 121, 129, 0.08);
+}
+
+.defeat-title {
+    font-family: var(--font-heading);
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--pomegranate-400);
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.64px;
+}
+
+.defeat-message {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+}
+
+.defeat-stats {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.defeat-actions {
     display: flex;
     gap: 0.75rem;
     justify-content: center;
