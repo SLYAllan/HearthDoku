@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com https://cdnjs.buymeacoffee.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://art.hearthstonejson.com https://cdnjs.buymeacoffee.com; connect-src 'self' https://api.hearthstonejson.com; frame-ancestors 'none';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://art.hearthstonejson.com; connect-src 'self' https://api.hearthstonejson.com; frame-ancestors 'none';">
     <title>HearthDoku — Hearthstone Sudoku</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,22 +18,21 @@
     <div id="app">
         <!-- Title Bar -->
         <header class="title-bar">
-            <div class="title-bar__logo">
-                <img src="logo/Icon_Logo.webp" alt="Hearthstone" class="hs-logo" width="40" height="40">
-                <h1 class="title-bar__title">HearthDoku</h1>
-            </div>
-            <div class="title-bar__modes">
-                <button class="btn btn--mode btn--mode--active" id="btnModeUnlimited">Illimité</button>
-                <button class="btn btn--mode" id="btnModeDaily">Journalier</button>
-            </div>
-            <div class="title-bar__right">
-                <div class="title-bar__subtitle">Hearthstone Sudoku</div>
+            <div class="title-bar__left">
+                <div class="title-bar__logo">
+                    <img src="logo/Icon_Logo.webp" alt="Hearthstone" class="hs-logo" width="40" height="40">
+                    <h1 class="title-bar__title">HearthDoku</h1>
+                </div>
                 <div class="lang-switcher">
                     <select id="langSelect" class="lang-select" aria-label="Language">
                         <option value="fr">🇫🇷 Français</option>
                         <option value="en">🇬🇧 English</option>
                     </select>
                 </div>
+            </div>
+            <div class="title-bar__modes">
+                <button class="btn btn--mode btn--mode--active" id="btnModeUnlimited">Illimité</button>
+                <button class="btn btn--mode" id="btnModeDaily">Journalier</button>
             </div>
             <a
                 class="btn-coffee"
@@ -282,8 +281,5 @@
     <script src="js/ui.js"></script>
     <script src="js/export.js"></script>
     <script src="js/app.js"></script>
-
-    <!-- Buy Me A Coffee -->
-    <script type="text/javascript" src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js" data-name="bmc-button" data-slug="SLYAllan" data-color="#40DCA5" data-emoji=""  data-font="Cookie" data-text="Buy me a coffee" data-outline-color="#000000" data-font-color="#ffffff" data-coffee-color="#FFDD00" ></script>
 </body>
 </html>
