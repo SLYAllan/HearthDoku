@@ -60,6 +60,15 @@ const PuzzleEngine = (() => {
         return a;
     }
 
+    function shuffleWithRng(arr, rng) {
+        const a = [...arr];
+        for (let i = a.length - 1; i > 0; i--) {
+            const j = Math.floor(rng() * (i + 1));
+            [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+    }
+
     function areCriteriaCompatible(cat1, val1, cat2, val2) {
         for (const rule of INCOMPATIBILITIES) {
             if (rule.cat1 === cat1 && rule.val1 === val1 && rule.cat2 === cat2) return false;
