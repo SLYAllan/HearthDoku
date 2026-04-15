@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com https://cdnjs.buymeacoffee.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://art.hearthstonejson.com https://cdnjs.buymeacoffee.com; connect-src 'self' https://api.hearthstonejson.com; frame-ancestors 'none';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://art.hearthstonejson.com; connect-src 'self' https://api.hearthstonejson.com; frame-ancestors 'none';">
     <title>HearthDoku — Hearthstone Sudoku</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,22 +18,46 @@
     <div id="app">
         <!-- Title Bar -->
         <header class="title-bar">
-            <div class="title-bar__logo">
-                <img src="logo/Icon_Logo.webp" alt="Hearthstone" class="hs-logo" width="40" height="40">
-                <h1 class="title-bar__title">HearthDoku</h1>
-            </div>
-            <div class="title-bar__modes">
-                <button class="btn btn--mode btn--mode--active" id="btnModeUnlimited">Illimité</button>
-                <button class="btn btn--mode" id="btnModeDaily">Journalier</button>
-            </div>
-            <div class="title-bar__right">
-                <div class="title-bar__subtitle">Hearthstone Sudoku</div>
+            <div class="title-bar__left">
+                <div class="title-bar__logo">
+                    <img src="logo/Icon_Logo.webp" alt="Hearthstone" class="hs-logo" width="40" height="40">
+                    <h1 class="title-bar__title">HearthDoku</h1>
+                </div>
                 <div class="lang-switcher">
                     <select id="langSelect" class="lang-select" aria-label="Language">
                         <option value="fr">🇫🇷 Français</option>
                         <option value="en">🇬🇧 English</option>
                     </select>
                 </div>
+            </div>
+            <div class="title-bar__right">
+                <a
+                    class="btn-twitter"
+                    href="https://x.com/Solary_Allan"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Twitter @Solary_Allan"
+                >
+                    <svg class="btn-twitter__icon" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.259 5.63L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z"/>
+                    </svg>
+                    <span class="btn-twitter__label">@Solary_Allan</span>
+                </a>
+                <a
+                    class="btn-coffee"
+                    href="https://buymeacoffee.com/slyallan"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    <svg class="btn-coffee__icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M18 8h1a4 4 0 0 1 0 8h-1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <line x1="6" y1="1" x2="6" y2="4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="10" y1="1" x2="10" y2="4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="14" y1="1" x2="14" y2="4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <span class="btn-coffee__label">Buy me a coffee</span>
+                </a>
             </div>
         </header>
 
@@ -47,6 +71,7 @@
 
                     <!-- Action Buttons -->
                     <div class="action-buttons">
+                        <button class="btn btn--daily" id="btnDailyPuzzle">📅 Puzzle du jour</button>
                         <button class="btn btn--primary" id="btnNewPuzzle">Nouveau puzzle</button>
                         <button class="btn btn--secondary" id="btnShowSolution">Voir la solution</button>
                         <button class="btn btn--secondary" id="btnExport">Exporter en PNG</button>
@@ -99,29 +124,31 @@
 
             <!-- Game Area -->
             <main class="game-area">
-                <!-- Daily Badge -->
-                <div class="daily-badge" id="dailyBadge" style="display:none"></div>
+                <!-- Mode Bar -->
+                <div class="puzzle-mode-bar" id="puzzleModeBar"></div>
+
+                <!-- Stats Panel -->
+                <div class="stats-panel">
+                    <div class="stat-item">
+                        <span class="stat-label">UNIQ</span>
+                        <span class="stat-value" id="statUniq">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">PTS</span>
+                        <span class="stat-value" id="statPts">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label" id="statErrorsLabel">ERREURS</span>
+                        <span class="stat-value" id="statPP">0/3</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">TIME</span>
+                        <span class="stat-value" id="statTimer">0:00</span>
+                    </div>
+                </div>
+
                 <!-- Puzzle Grid -->
                 <div class="puzzle-container" id="puzzleContainer">
-                    <!-- Stats Panel (on the side) -->
-                    <div class="stats-panel">
-                        <div class="stat-item">
-                            <span class="stat-label">UNIQ</span>
-                            <span class="stat-value" id="statUniq">0</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">PTS</span>
-                            <span class="stat-value" id="statPts">0</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">ERR</span>
-                            <span class="stat-value" id="statPP">0/3</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">TIME</span>
-                            <span class="stat-value" id="statTimer">0:00</span>
-                        </div>
-                    </div>
                     <div class="puzzle-grid" id="puzzleGrid">
                         <!-- Corner cell -->
                         <div class="grid-corner"></div>
@@ -154,16 +181,6 @@
                 </div>
             </main>
         </div>
-
-        <!-- Footer -->
-        <footer class="site-footer">
-            <a href="https://x.com/Solary_Allan" target="_blank" rel="noopener noreferrer" class="footer-link">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.259 5.63L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z"/>
-                </svg>
-                @Solary_Allan
-            </a>
-        </footer>
     </div>
 
     <!-- Search Modal -->
@@ -176,6 +193,28 @@
             <input type="text" class="search-input" id="searchInput" placeholder="Chercher une carte..." autocomplete="off">
             <div class="search-results" id="searchResults">
                 <!-- Populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Defeat Modal -->
+    <div class="modal-overlay" id="defeatModal">
+        <div class="modal-content defeat-modal">
+            <h2 class="defeat-title" id="defeatTitle">Défaite !</h2>
+            <p class="defeat-message" id="defeatMessage">3 erreurs — la grille est dévoilée.</p>
+            <div class="defeat-stats">
+                <div class="victory-stat">
+                    <span class="victory-stat__label" id="defeatScoreLabel">Score</span>
+                    <span class="victory-stat__value" id="defeatScore">0</span>
+                </div>
+                <div class="victory-stat">
+                    <span class="victory-stat__label" id="defeatTimeLabel">Temps</span>
+                    <span class="victory-stat__value" id="defeatTime">0:00</span>
+                </div>
+            </div>
+            <div class="defeat-actions">
+                <button class="btn btn--secondary" id="defeatShowSolution">Voir la solution</button>
+                <button class="btn btn--primary" id="defeatNewPuzzle">Nouveau puzzle</button>
             </div>
         </div>
     </div>
@@ -194,8 +233,8 @@
                     <span class="victory-stat__value" id="victoryTime">0:00</span>
                 </div>
                 <div class="victory-stat">
-                    <span class="victory-stat__label">Erreurs</span>
-                    <span class="victory-stat__value" id="victoryPP">0/3</span>
+                    <span class="victory-stat__label">PP restants</span>
+                    <span class="victory-stat__value" id="victoryPP">9/9</span>
                 </div>
             </div>
             <div class="victory-actions">
@@ -241,8 +280,5 @@
     <script src="js/ui.js"></script>
     <script src="js/export.js"></script>
     <script src="js/app.js"></script>
-
-    <!-- Buy Me A Coffee -->
-    <script type="text/javascript" src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js" data-name="bmc-button" data-slug="SLYAllan" data-color="#40DCA5" data-emoji=""  data-font="Cookie" data-text="Buy me a coffee" data-outline-color="#000000" data-font-color="#ffffff" data-coffee-color="#FFDD00" ></script>
 </body>
 </html>

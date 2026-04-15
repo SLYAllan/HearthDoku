@@ -16,7 +16,7 @@ const App = (() => {
         'WARRIOR', 'NEUTRAL',
     ];
 
-    // ---------- Daily mode helpers ----------
+    // ---------- Daily helpers ----------
 
     function getDailyDateStr() {
         const d = new Date();
@@ -27,21 +27,14 @@ const App = (() => {
     }
 
     function getDailySeed() {
-        // djb2 hash of YYYYMMDD string (local time)
         const str = getDailyDateStr().replace(/-/g, '');
-        let hash = 5381;
-        for (let i = 0; i < str.length; i++) {
-            hash = ((hash << 5) + hash) + str.charCodeAt(i);
-            hash |= 0;
-        }
-        return hash;
+        return parseInt(str, 10);
     }
 
-    function getDailyNumber() {
-        const epoch = new Date('2025-01-01T00:00:00');
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        return Math.max(1, Math.floor((today - epoch) / (1000 * 60 * 60 * 24)) + 1);
+    function getDailyDateLabel() {
+        return new Date().toLocaleDateString(I18n.t('shareDate'), {
+            day: 'numeric', month: 'long', year: 'numeric',
+        });
     }
 
     function getDailyStorageKey() {
@@ -61,47 +54,20 @@ const App = (() => {
         } catch { return null; }
     }
 
-    // ---------- Mode switching ----------
-
-    function enterDailyMode() {
-        isDailyMode = true;
-        document.getElementById('btnModeDaily').classList.add('btn--mode--active');
-        document.getElementById('btnModeUnlimited').classList.remove('btn--mode--active');
-        document.getElementById('btnNewPuzzle').style.display = 'none';
-        document.querySelectorAll('.filter-section').forEach(el => { el.style.display = 'none'; });
-        generateDailyPuzzle();
-    }
-
-    function enterUnlimitedMode() {
-        isDailyMode = false;
-        document.getElementById('btnModeUnlimited').classList.add('btn--mode--active');
-        document.getElementById('btnModeDaily').classList.remove('btn--mode--active');
-        document.getElementById('btnNewPuzzle').style.display = '';
-        document.querySelectorAll('.filter-section').forEach(el => { el.style.display = ''; });
-        UI.hideDailyBadge();
-        generateNewPuzzle();
-    }
+    // ---------- Puzzle generation ----------
 
     function generateDailyPuzzle() {
+        isDailyMode = true;
         UI.showLoading();
-
         setTimeout(() => {
-            const seed = getDailySeed();
-            PuzzleEngine.setRng(PuzzleEngine.mulberry32(seed));
-
-            const puzzle = PuzzleEngine.generatePuzzle(allCards, null);
-            PuzzleEngine.resetRng();
-
+            const puzzle = PuzzleEngine.generatePuzzle(allCards, null, getDailySeed());
             if (!puzzle) {
                 UI.hideLoading();
                 alert(I18n.t('errorGenerate'));
                 return;
             }
-
-            const dayNum = getDailyNumber();
-            const dateStr = getDailyDateStr().split('-').reverse().join('/');
-            UI.showDailyBadge(`${I18n.t('dailyTitle')}${dayNum} — ${dateStr}`);
-            UI.renderPuzzle(puzzle, { daily: true, dayNum, dateStr, saveFn: saveDailyResult });
+            UI.renderPuzzle(puzzle, { daily: true, saveFn: saveDailyResult });
+            UI.setModeBar(true, getDailyDateLabel());
             UI.hideLoading();
 
             const prev = getDailyResult();
@@ -159,17 +125,8 @@ const App = (() => {
             UI.renderRarityFilterList();
             UI.renderClassFilterList();
 
-            // Mode buttons
-            document.getElementById('btnModeUnlimited').addEventListener('click', () => {
-                if (!isDailyMode) return;
-                enterUnlimitedMode();
-            });
-            document.getElementById('btnModeDaily').addEventListener('click', () => {
-                if (isDailyMode) return;
-                enterDailyMode();
-            });
-
             // Bind buttons
+            document.getElementById('btnDailyPuzzle').addEventListener('click', generateDailyPuzzle);
             document.getElementById('btnNewPuzzle').addEventListener('click', generateNewPuzzle);
             document.getElementById('btnShowSolution').addEventListener('click', () => UI.showSolution());
             document.getElementById('btnExport').addEventListener('click', () => UI.showExportModal());
@@ -185,6 +142,16 @@ const App = (() => {
                 UI.closeExportModal();
             });
             document.getElementById('exportClose').addEventListener('click', () => UI.closeExportModal());
+
+            // Defeat modal buttons
+            document.getElementById('defeatNewPuzzle').addEventListener('click', () => {
+                UI.closeDefeatModal();
+                generateNewPuzzle();
+            });
+            document.getElementById('defeatShowSolution').addEventListener('click', () => {
+                UI.closeDefeatModal();
+                UI.showSolution();
+            });
 
             // Victory modal buttons
             document.getElementById('victoryShare').addEventListener('click', () => ExportManager.shareToClipboard());
@@ -251,7 +218,7 @@ const App = (() => {
             });
 
             UI.hideLoading();
-            generateNewPuzzle();
+            generateDailyPuzzle();
         } catch (err) {
             console.error('Init error:', err);
             UI.hideLoading();
@@ -284,6 +251,7 @@ const App = (() => {
     }
 
     function generateNewPuzzle() {
+        isDailyMode = false;
         UI.showLoading();
 
         setTimeout(() => {
@@ -301,6 +269,7 @@ const App = (() => {
             }
 
             UI.renderPuzzle(puzzle);
+            UI.setModeBar(false, null);
             UI.hideLoading();
         }, 50);
     }
@@ -319,10 +288,6 @@ const App = (() => {
 
     function getAllowedClasses() {
         return allowedClasses;
-    }
-
-    function getIsDailyMode() {
-        return isDailyMode;
     }
 
     function onSetFilterChange() {
@@ -345,7 +310,6 @@ const App = (() => {
         getAllowedSets,
         getAllowedRarities,
         getAllowedClasses,
-        getIsDailyMode,
         onSetFilterChange,
         onRarityFilterChange,
         onClassFilterChange,
