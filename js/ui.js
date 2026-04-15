@@ -127,8 +127,8 @@ const UI = (() => {
 
     function renderPuzzle(puzzle, opts = {}) {
         currentPuzzle = puzzle;
-        dailyOpts = opts.daily ? opts : null;
         resetGame();
+        dailyOpts = opts.daily ? opts : null; // set AFTER resetGame to avoid being cleared
 
         for (let c = 0; c < 3; c++) {
             const el = document.getElementById(`colHeader${c}`);
@@ -364,25 +364,6 @@ const UI = (() => {
         if (els.puzzleContainer) {
             els.puzzleContainer.classList.add('puzzle-container--locked');
         }
-    }
-
-    function showDefeatModal() {
-        document.getElementById('defeatScore').textContent = score;
-        document.getElementById('defeatTime').textContent = formatTime(timerSeconds);
-        els.defeatModal.classList.add('modal-overlay--visible');
-    }
-
-    function closeDefeatModal() {
-        els.defeatModal.classList.remove('modal-overlay--visible');
-    }
-
-    function setModeBar(isDaily, dateLabel) {
-        if (!els.puzzleModeBar) return;
-        const text = isDaily
-            ? `${I18n.t('dailyMode')} — ${dateLabel}`
-            : I18n.t('freeMode');
-        const cls = isDaily ? 'puzzle-mode-badge--daily' : 'puzzle-mode-badge--free';
-        els.puzzleModeBar.innerHTML = `<span class="puzzle-mode-badge ${cls}">${text}</span>`;
     }
 
     function showExportModal() {

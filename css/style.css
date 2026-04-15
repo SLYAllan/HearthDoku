@@ -112,43 +112,35 @@ body {
     flex-shrink: 0;
 }
 
-/* ---------- Twitter / X button ---------- */
+/* ---------- Twitter / X link ---------- */
 .btn-twitter {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
-    padding: 0.45rem 0.9rem;
-    background: var(--bg-cell);
-    border: 1px solid var(--border-oat);
-    border-radius: 12px;
+    gap: 0.35rem;
     color: var(--text-secondary);
     font-family: var(--font-body);
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     font-weight: 500;
     text-decoration: none;
-    cursor: pointer;
-    box-shadow: var(--shadow-clay);
-    transition: all 0.2s ease;
+    transition: color 0.2s ease;
     white-space: nowrap;
     flex-shrink: 0;
+    opacity: 0.75;
 }
 
 .btn-twitter:hover {
-    background: var(--bg-cell-hover);
-    border-color: var(--text-primary);
     color: var(--text-primary);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-hard);
+    opacity: 1;
 }
 
 .btn-twitter__icon {
-    width: 14px;
-    height: 14px;
+    width: 13px;
+    height: 13px;
     flex-shrink: 0;
 }
 
 .btn-twitter__label {
-    letter-spacing: -0.16px;
+    letter-spacing: -0.1px;
 }
 
 /* ---------- Buy Me a Coffee button ---------- */
@@ -546,6 +538,7 @@ body {
     margin-bottom: 1.5rem;
     flex-wrap: wrap;
     justify-content: center;
+    width: 100%;
 }
 
 .stat-item {
@@ -1354,7 +1347,7 @@ body {
 }
 
 /* ---------- Responsive ---------- */
-@media (max-width: 900px) {
+@media (max-width: 768px) {
     .controls-panel {
         position: fixed;
         top: 0;
