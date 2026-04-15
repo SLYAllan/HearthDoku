@@ -379,6 +379,11 @@ const UI = (() => {
         gameFinished = true;
         clearInterval(timerInterval);
 
+        // Save daily result on give-up (win/loss paths already save via endGame)
+        if (dailyOpts && dailyOpts.saveFn) {
+            dailyOpts.saveFn(score, formatTime(timerSeconds), errors);
+        }
+
         const alreadyUsedIds = [];
         for (let i = 0; i < 9; i++) {
             if (cellState[i] && cellState[i].correct) {
