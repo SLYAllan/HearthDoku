@@ -14,7 +14,7 @@
     "icons": [
         {
             "src": "logo/Icon_Logo.webp",
-            "sizes": "any",
+            "sizes": "120x120",
             "type": "image/webp",
             "purpose": "any"
         }
