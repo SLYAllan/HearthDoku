@@ -122,6 +122,10 @@ const UI = (() => {
         clearInterval(timerInterval);
         updateStats();
 
+        if (els.puzzleContainer) {
+            els.puzzleContainer.classList.remove('puzzle-container--locked');
+        }
+
         document.querySelectorAll('.grid-cell').forEach(cell => {
             cell.innerHTML = '';
             cell.className = 'grid-cell';
