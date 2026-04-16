@@ -3,93 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://art.hearthstonejson.com https://www.googletagmanager.com https://www.google-analytics.com; connect-src 'self' https://api.hearthstonejson.com https://www.googletagmanager.com https://www.google-analytics.com https://region1.google-analytics.com; frame-src https://www.googletagmanager.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
-
-    <title>HearthDoku — Hearthstone Sudoku quotidien</title>
-    <meta name="description" content="HearthDoku est un sudoku quotidien basé sur les cartes Hearthstone : trouvez la carte qui correspond à chaque combinaison de critères sur une grille 3×3. Jouez gratuitement en français ou en anglais.">
-    <meta name="author" content="Solary_Allan">
-    <meta name="robots" content="index, follow, max-image-preview:large">
-    <meta name="theme-color" content="#1c1917">
-    <meta name="color-scheme" content="dark">
-
-    <link rel="canonical" href="https://hearthdoku.fr/">
-
-    <!-- Icons / PWA -->
-    <link rel="icon" type="image/webp" href="logo/Icon_Logo.webp">
-    <link rel="apple-touch-icon" href="logo/Icon_Logo.webp">
-    <link rel="manifest" href="manifest.json">
-
-    <!-- Open Graph -->
-    <meta property="og:type" content="website">
-    <meta property="og:site_name" content="HearthDoku">
-    <meta property="og:title" content="HearthDoku — Hearthstone Sudoku quotidien">
-    <meta property="og:description" content="Sudoku quotidien basé sur les cartes Hearthstone. Grille 3×3, score, 3 erreurs max, disponible en FR/EN.">
-    <meta property="og:url" content="https://hearthdoku.fr/">
-    <meta property="og:image" content="https://hearthdoku.fr/logo/Icon_Logo.webp">
-    <meta property="og:image:alt" content="Logo HearthDoku">
-    <meta property="og:locale" content="fr_FR">
-    <meta property="og:locale:alternate" content="en_US">
-
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="HearthDoku — Hearthstone Sudoku quotidien">
-    <meta name="twitter:description" content="Sudoku quotidien basé sur les cartes Hearthstone. Grille 3×3, score, 3 erreurs max, FR/EN.">
-    <meta name="twitter:image" content="https://hearthdoku.fr/logo/Icon_Logo.webp">
-    <meta name="twitter:creator" content="@Solary_Allan">
-
-    <!-- Fonts: single request for both families -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com https://www.googletagmanager.com https://www.google-analytics.com 'sha256-6WJL4HyiPu815KzyQXMWJGNtlfy0LHsfZlXkULuQlU8='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://art.hearthstonejson.com https://www.googletagmanager.com https://www.google-analytics.com; connect-src 'self' https://api.hearthstonejson.com https://www.googletagmanager.com https://www.google-analytics.com https://region1.google-analytics.com; frame-src https://www.googletagmanager.com; frame-ancestors 'none';">
+    <title>HearthDoku — Hearthstone Sudoku</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
-
-    <!-- html2canvas (pinned with SRI, loaded deferred) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"
             integrity="sha384-ZZ1pncU3bQe8y31yfZdMFdSpttDoPmOZg2wguVK9almUodir1PghgT0eY7Mrty8H"
             crossorigin="anonymous" defer></script>
-
-    <!-- Structured data: WebApplication / Game -->
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "Game",
-        "name": "HearthDoku",
-        "alternateName": "Hearthstone Sudoku",
-        "description": "Sudoku quotidien basé sur les cartes Hearthstone.",
-        "url": "https://hearthdoku.fr/",
-        "image": "https://hearthdoku.fr/logo/Icon_Logo.webp",
-        "inLanguage": ["fr", "en"],
-        "genre": ["Puzzle", "Card Game"],
-        "applicationCategory": "Game",
-        "operatingSystem": "Web",
-        "author": {
-            "@type": "Person",
-            "name": "Solary_Allan",
-            "url": "https://x.com/Solary_Allan"
-        },
-        "offers": {
-            "@type": "Offer",
-            "price": "0",
-            "priceCurrency": "EUR"
-        }
-    }
-    </script>
+    <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-TD9R8ZXZ');</script>
+    <!-- End Google Tag Manager -->
 </head>
 <body>
-    <a class="skip-link" href="#mainContent">Aller au contenu principal</a>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-TD9R8ZXZ"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
     <div id="app">
         <!-- Title Bar -->
         <header class="title-bar">
             <div class="title-bar__left">
                 <div class="title-bar__logo">
-                    <img src="logo/Icon_Logo.webp" alt="" class="hs-logo" width="40" height="40">
+                    <img src="logo/Icon_Logo.webp" alt="Hearthstone" class="hs-logo" width="40" height="40">
                     <h1 class="title-bar__title">HearthDoku</h1>
                 </div>
                 <div class="lang-switcher">
-                    <label for="langSelect" class="visually-hidden">Langue / Language</label>
-                    <select id="langSelect" class="lang-select">
-                        <option value="fr">FR — Français</option>
-                        <option value="en">EN — English</option>
+                    <select id="langSelect" class="lang-select" aria-label="Language">
+                        <option value="fr">🇫🇷 Français</option>
+                        <option value="en">🇬🇧 English</option>
                     </select>
                 </div>
             </div>
@@ -127,8 +75,8 @@
         <!-- Main Layout -->
         <div class="main-layout">
             <!-- Controls Panel -->
-            <aside class="controls-panel" id="controlsPanel" aria-label="Contrôles du jeu">
-                <button class="controls-toggle" id="controlsToggle" aria-label="Afficher/masquer les contrôles" aria-expanded="false" aria-controls="controlsContent">☰</button>
+            <aside class="controls-panel" id="controlsPanel">
+                <button class="controls-toggle" id="controlsToggle" aria-label="Afficher/masquer les contrôles">☰</button>
                 <div class="controls-content" id="controlsContent">
                     <h2 class="controls-title">Contrôles</h2>
 
@@ -153,7 +101,6 @@
                             <button class="btn btn--tiny" id="btnCheckAll">Tout cocher</button>
                             <button class="btn btn--tiny" id="btnUncheckAll">Tout décocher</button>
                         </div>
-                        <label for="filterSearch" class="visually-hidden">Rechercher une extension</label>
                         <input type="text" class="filter-search" id="filterSearch" placeholder="Rechercher une extension...">
                         <div class="filter-list" id="filterList">
                             <!-- Populated dynamically -->
@@ -187,12 +134,12 @@
             </aside>
 
             <!-- Game Area -->
-            <main class="game-area" id="mainContent">
+            <main class="game-area">
                 <!-- Mode Bar -->
                 <div class="puzzle-mode-bar" id="puzzleModeBar"></div>
 
                 <!-- Stats Panel -->
-                <div class="stats-panel" aria-label="Statistiques de la partie">
+                <div class="stats-panel">
                     <div class="stat-item">
                         <span class="stat-label">UNIQ</span>
                         <span class="stat-value" id="statUniq">0</span>
@@ -213,7 +160,7 @@
 
                 <!-- Puzzle Grid -->
                 <div class="puzzle-container" id="puzzleContainer">
-                    <div class="puzzle-grid" id="puzzleGrid" role="grid" aria-label="Grille HearthDoku 3×3">
+                    <div class="puzzle-grid" id="puzzleGrid">
                         <!-- Corner cell -->
                         <div class="grid-corner"></div>
                         <!-- Column headers (3) -->
@@ -239,36 +186,21 @@
                 </div>
 
                 <!-- Loading State -->
-                <div class="loading-overlay" id="loadingOverlay" role="status" aria-live="polite">
+                <div class="loading-overlay" id="loadingOverlay">
                     <div class="loading-spinner"></div>
                     <p class="loading-text">Chargement des cartes...</p>
                 </div>
             </main>
         </div>
-
-        <!-- Footer -->
-        <footer class="site-footer">
-            <p class="site-footer__text">
-                Projet non officiel. Hearthstone et les cartes associées sont la propriété de Blizzard Entertainment.
-            </p>
-            <nav class="site-footer__links" aria-label="Liens légaux">
-                <a href="privacy.html">Mentions légales &amp; confidentialité</a>
-                <span aria-hidden="true">·</span>
-                <button type="button" class="site-footer__link-btn" id="btnReopenConsent">Gérer mes cookies</button>
-                <span aria-hidden="true">·</span>
-                <a href="https://github.com/SLYAllan/HearthDoku" target="_blank" rel="noopener noreferrer">Code source</a>
-            </nav>
-        </footer>
     </div>
 
     <!-- Search Modal -->
-    <div class="modal-overlay" id="searchModal" role="dialog" aria-modal="true" aria-labelledby="searchTitle" aria-hidden="true">
+    <div class="modal-overlay" id="searchModal">
         <div class="modal-content search-modal">
             <div class="search-header">
                 <h3 class="search-title" id="searchTitle">Chercher une carte</h3>
-                <button class="modal-close" id="searchClose" aria-label="Fermer">&times;</button>
+                <button class="modal-close" id="searchClose">&times;</button>
             </div>
-            <label for="searchInput" class="visually-hidden">Chercher une carte</label>
             <input type="text" class="search-input" id="searchInput" placeholder="Chercher une carte..." autocomplete="off">
             <div class="search-results" id="searchResults">
                 <!-- Populated dynamically -->
@@ -277,7 +209,7 @@
     </div>
 
     <!-- Defeat Modal -->
-    <div class="modal-overlay" id="defeatModal" role="dialog" aria-modal="true" aria-labelledby="defeatTitle" aria-hidden="true">
+    <div class="modal-overlay" id="defeatModal">
         <div class="modal-content defeat-modal">
             <h2 class="defeat-title" id="defeatTitle">Défaite !</h2>
             <p class="defeat-message" id="defeatMessage">3 erreurs — la grille est dévoilée.</p>
@@ -299,9 +231,9 @@
     </div>
 
     <!-- Victory Modal -->
-    <div class="modal-overlay" id="victoryModal" role="dialog" aria-modal="true" aria-labelledby="victoryTitle" aria-hidden="true">
+    <div class="modal-overlay" id="victoryModal">
         <div class="modal-content victory-modal">
-            <h2 class="victory-title" id="victoryTitle">Victoire !</h2>
+            <h2 class="victory-title">Victoire !</h2>
             <div class="victory-stats">
                 <div class="victory-stat">
                     <span class="victory-stat__label">Score</span>
@@ -325,26 +257,26 @@
     </div>
 
     <!-- Confetti canvas (full-screen, outside modal) -->
-    <canvas id="confettiCanvas" aria-hidden="true"></canvas>
+    <canvas id="confettiCanvas"></canvas>
 
     <!-- Export Modal -->
-    <div class="modal-overlay" id="exportModal" role="dialog" aria-modal="true" aria-labelledby="exportTitle" aria-hidden="true">
+    <div class="modal-overlay" id="exportModal">
         <div class="modal-content export-modal">
-            <h2 class="export-title" id="exportTitle">Exporter en PNG</h2>
+            <h2 class="export-title">Exporter en PNG</h2>
             <div class="export-options">
                 <button class="btn btn--primary" id="exportEmpty">Puzzle vide</button>
                 <button class="btn btn--primary" id="exportSolutions">Puzzle avec solutions</button>
             </div>
-            <button class="modal-close" id="exportClose" aria-label="Fermer">&times;</button>
+            <button class="modal-close" id="exportClose">&times;</button>
         </div>
     </div>
 
     <!-- Solution Popup Modal -->
-    <div class="modal-overlay" id="solutionModal" role="dialog" aria-modal="true" aria-labelledby="solutionModalTitle" aria-hidden="true">
+    <div class="modal-overlay" id="solutionModal">
         <div class="modal-content solution-modal">
             <div class="solution-modal__header">
                 <h2 class="solution-modal__title" id="solutionModalTitle">Solutions possibles</h2>
-                <button class="modal-close" id="solutionModalClose" aria-label="Fermer">&times;</button>
+                <button class="modal-close" id="solutionModalClose">&times;</button>
             </div>
             <div class="solution-modal__grid" id="solutionModalGrid">
                 <!-- Populated dynamically -->
@@ -352,23 +284,6 @@
         </div>
     </div>
 
-    <!-- Consent banner (RGPD) -->
-    <div class="consent-banner" id="consentBanner" role="dialog" aria-live="polite" aria-labelledby="consentTitle" hidden>
-        <div class="consent-banner__content">
-            <h2 class="consent-banner__title" id="consentTitle">Cookies &amp; mesure d'audience</h2>
-            <p class="consent-banner__text">
-                Ce site utilise Google Analytics (via Google Tag Manager) pour mesurer l'audience
-                de façon anonyme. Aucune donnée n'est collectée sans votre accord.
-                <a href="privacy.html">En savoir plus</a>
-            </p>
-            <div class="consent-banner__actions">
-                <button type="button" class="btn btn--secondary" id="consentReject">Refuser</button>
-                <button type="button" class="btn btn--primary" id="consentAccept">Accepter</button>
-            </div>
-        </div>
-    </div>
-
-    <script src="js/consent.js"></script>
     <script src="js/i18n.js"></script>
     <script src="js/api.js"></script>
     <script src="js/puzzle-engine.js"></script>

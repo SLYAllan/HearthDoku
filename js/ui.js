@@ -46,23 +46,6 @@ const UI = (() => {
     function init() {
         cacheElements();
         bindEvents();
-        observeModals();
-    }
-
-    // Keep aria-hidden in sync with the modal-overlay--visible class
-    // so changes to any modal stay accessible without touching every callsite.
-    function observeModals() {
-        document.querySelectorAll('.modal-overlay').forEach(modal => {
-            const sync = () => {
-                const visible = modal.classList.contains('modal-overlay--visible');
-                modal.setAttribute('aria-hidden', visible ? 'false' : 'true');
-            };
-            sync();
-            new MutationObserver(sync).observe(modal, {
-                attributes: true,
-                attributeFilter: ['class'],
-            });
-        });
     }
 
     function bindEvents() {
@@ -95,8 +78,7 @@ const UI = (() => {
         });
 
         els.controlsToggle.addEventListener('click', () => {
-            const opened = els.controlsContent.classList.toggle('controls-content--open');
-            els.controlsToggle.setAttribute('aria-expanded', opened ? 'true' : 'false');
+            els.controlsContent.classList.toggle('controls-content--open');
         });
 
         els.filterSearch.addEventListener('input', onFilterSearch);
@@ -618,9 +600,9 @@ const UI = (() => {
             const checked = allowedSets.includes(s) ? 'checked' : '';
             const iconPath = HearthstoneAPI.getSetIcon(s);
             const iconHtml = iconPath
-                ? `<img class="filter-item__icon filter-item__icon--set" src="${iconPath}" alt="" onerror="this.style.display='none'">`
+                ? `<img class="filter-item__icon" src="${iconPath}" alt="" onerror="this.style.display='none'">`
                 : '';
-            return `<label class="filter-item filter-item--set" data-set="${s}" data-name="${name.toLowerCase()}">
+            return `<label class="filter-item" data-set="${s}" data-name="${name.toLowerCase()}">
                 <input type="checkbox" value="${s}" ${checked}>
                 ${iconHtml}
                 <span class="filter-item__label">${name}</span>

@@ -35,10 +35,6 @@ A Hearthstone-themed Sudoku puzzle game where players match cards to criteria on
 ```
 HearthDoku/
 ├── index.html          # Main game page
-├── privacy.html        # Legal notice & privacy policy
-├── manifest.json       # PWA manifest
-├── robots.txt          # Crawler rules
-├── sitemap.xml         # SEO sitemap
 ├── css/
 │   └── style.css       # Clay dark theme styles
 ├── js/
@@ -48,7 +44,6 @@ HearthDoku/
 │   ├── card-search.js  # Card search & filtering
 │   ├── ui.js           # UI rendering & interactions
 │   ├── export.js       # PNG export & sharing
-│   ├── consent.js      # RGPD cookie consent + GTM loader
 │   └── i18n.js         # Internationalization (FR/EN)
 ├── logo/               # Game logo assets
 └── DESIGN.md           # Design system reference (Clay)
