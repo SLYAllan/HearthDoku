@@ -1490,3 +1490,216 @@ body {
         grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
     }
 }
+
+/* ============================================
+   Accessibility utilities
+   ============================================ */
+.visually-hidden {
+    position: absolute !important;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: var(--accent-gold);
+    color: var(--bg-canvas);
+    padding: 0.5rem 0.75rem;
+    z-index: 10000;
+    text-decoration: none;
+    font-weight: 700;
+    border-radius: 0 0 8px 0;
+}
+
+.skip-link:focus {
+    top: 0;
+    outline: 2px solid var(--text-primary);
+    outline-offset: 2px;
+}
+
+/* Respect user motion preferences */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ============================================
+   Extension icons → rendered white
+   Only extension/set icons; rarity & class kept intact
+   ============================================ */
+.filter-item__icon--set,
+.search-result__set-icon {
+    filter: brightness(0) invert(1) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
+}
+
+/* ============================================
+   Site footer
+   ============================================ */
+.site-footer {
+    margin-top: 2rem;
+    padding: 1.25rem 1.5rem 1.5rem;
+    border-top: 1px solid var(--border-oat-light);
+    background: var(--bg-surface);
+    color: var(--text-tertiary);
+    font-size: 0.8rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.site-footer__text {
+    max-width: 60ch;
+    line-height: 1.5;
+}
+
+.site-footer__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: center;
+}
+
+.site-footer__links a,
+.site-footer__link-btn {
+    color: var(--text-secondary);
+    text-decoration: none;
+    background: none;
+    border: 0;
+    padding: 0;
+    font: inherit;
+    cursor: pointer;
+}
+
+.site-footer__links a:hover,
+.site-footer__link-btn:hover,
+.site-footer__links a:focus-visible,
+.site-footer__link-btn:focus-visible {
+    color: var(--accent-gold);
+    text-decoration: underline;
+    outline: none;
+}
+
+/* ============================================
+   Consent banner (RGPD)
+   ============================================ */
+.consent-banner {
+    position: fixed;
+    left: 1rem;
+    right: 1rem;
+    bottom: 1rem;
+    max-width: 640px;
+    margin-inline: auto;
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    border: 1px solid var(--border-oat);
+    border-radius: 14px;
+    box-shadow: var(--shadow-clay), 0 8px 24px rgba(0, 0, 0, 0.5);
+    padding: 1rem 1.25rem;
+    z-index: 9999;
+}
+
+.consent-banner[hidden] {
+    display: none;
+}
+
+.consent-banner__title {
+    font-size: 1rem;
+    margin-bottom: 0.4rem;
+    color: var(--accent-gold);
+}
+
+.consent-banner__text {
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    margin-bottom: 0.85rem;
+}
+
+.consent-banner__text a {
+    color: var(--accent-gold);
+}
+
+.consent-banner__actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+/* ============================================
+   Legal page (privacy.html)
+   ============================================ */
+.legal-page {
+    background: var(--bg-canvas);
+}
+
+.legal-content {
+    max-width: 780px;
+    margin: 2rem auto;
+    padding: 0 1.25rem 3rem;
+    line-height: 1.6;
+    color: var(--text-primary);
+}
+
+.legal-content h1 {
+    font-size: 1.75rem;
+    margin-bottom: 1.25rem;
+    color: var(--accent-gold);
+}
+
+.legal-content h2 {
+    font-size: 1.2rem;
+    margin-top: 2rem;
+    margin-bottom: 0.6rem;
+    color: var(--text-primary);
+}
+
+.legal-content h3 {
+    font-size: 1rem;
+    margin-top: 1.25rem;
+    margin-bottom: 0.4rem;
+    color: var(--text-secondary);
+}
+
+.legal-content p,
+.legal-content ul {
+    margin-bottom: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.legal-content ul {
+    padding-left: 1.25rem;
+}
+
+.legal-content a {
+    color: var(--accent-gold);
+}
+
+.legal-content code {
+    font-family: var(--font-mono);
+    background: var(--bg-surface);
+    padding: 0.05rem 0.35rem;
+    border-radius: 4px;
+    font-size: 0.85em;
+}
+
+.legal-footer {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-oat-light);
+}
