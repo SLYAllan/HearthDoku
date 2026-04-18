@@ -81,6 +81,50 @@
                     </div>
                 </div>
 
+                <div class="room-setup__section">
+                    <button type="button" class="room-setup__toggle" id="toggleFilters">
+                        <span class="room-setup__toggle-arrow">&#9656;</span>
+                        <span id="labelAdvancedFilters">Filtres avancés</span>
+                    </button>
+                    <div class="room-setup__filters" id="filtersPanel" style="display:none">
+                        <div class="room-filters__presets">
+                            <button type="button" class="btn btn--preset btn--small" data-room-preset="standard">Standard</button>
+                            <button type="button" class="btn btn--preset btn--small" data-room-preset="wild">Wild</button>
+                            <button type="button" class="btn btn--preset btn--small" data-room-preset="classic">Classic</button>
+                        </div>
+                        <div class="room-filters__group">
+                            <div class="room-filters__group-header">
+                                <h4 id="labelFilterExtensions">Extensions</h4>
+                                <span class="room-filters__actions">
+                                    <button type="button" class="room-filters__action" id="roomBtnCheckAll">&#10003;</button>
+                                    <button type="button" class="room-filters__action" id="roomBtnUncheckAll">&#10007;</button>
+                                </span>
+                            </div>
+                            <div class="room-filters__list" id="roomSetFilters"></div>
+                        </div>
+                        <div class="room-filters__group">
+                            <div class="room-filters__group-header">
+                                <h4 id="labelFilterRarities">Raretés</h4>
+                                <span class="room-filters__actions">
+                                    <button type="button" class="room-filters__action" id="roomBtnCheckAllRarity">&#10003;</button>
+                                    <button type="button" class="room-filters__action" id="roomBtnUncheckAllRarity">&#10007;</button>
+                                </span>
+                            </div>
+                            <div class="room-filters__list" id="roomRarityFilters"></div>
+                        </div>
+                        <div class="room-filters__group">
+                            <div class="room-filters__group-header">
+                                <h4 id="labelFilterClasses">Classes</h4>
+                                <span class="room-filters__actions">
+                                    <button type="button" class="room-filters__action" id="roomBtnCheckAllClass">&#10003;</button>
+                                    <button type="button" class="room-filters__action" id="roomBtnUncheckAllClass">&#10007;</button>
+                                </span>
+                            </div>
+                            <div class="room-filters__list" id="roomClassFilters"></div>
+                        </div>
+                    </div>
+                </div>
+
                 <button class="btn btn--primary btn--large" id="btnCreateRoom">Créer une room</button>
 
                 <div class="room-setup__divider">
@@ -109,6 +153,7 @@
                     <div class="room-sidebar__header">
                         <span class="room-sidebar__code" id="sidebarCode"></span>
                         <span class="room-sidebar__mode-tag" id="sidebarMode"></span>
+                        <span class="room-sidebar__config" id="sidebarConfig" style="display:none"></span>
                     </div>
                     <div class="room-sidebar__timer" id="sidebarTimer" style="display:none">0:00</div>
 
