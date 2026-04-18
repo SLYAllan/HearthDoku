@@ -350,12 +350,22 @@ class RoomManager {
 
         const room = this.rooms.get(info.code);
         if (room) {
+            const wasHost = info.playerId === room.hostId;
             room.players.delete(info.playerId);
             this.rateLimiter.remove(info.playerId);
 
             if (room.players.size === 0) {
                 this.rooms.delete(info.code);
             } else {
+                if (wasHost) {
+                    const newHost = room.players.values().next().value;
+                    room.hostId = newHost.id;
+                    this.broadcast(room, {
+                        type: 'host_changed',
+                        hostId: newHost.id,
+                        name: newHost.name,
+                    });
+                }
                 this.broadcast(room, { type: 'player_left', playerId: info.playerId });
                 if (room.mode === 'versus' && room.startedAt) {
                     this.checkVersusEnd(room);
