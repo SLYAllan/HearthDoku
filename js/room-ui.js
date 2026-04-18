@@ -17,6 +17,7 @@ const RoomUI = (() => {
     let activeCellIndex = null;
     let score = 0;
     let errors = 0;
+    let roomConfig = null;
     const MAX_ERRORS = 3;
 
     const els = {};
@@ -102,6 +103,9 @@ const RoomUI = (() => {
         RoomClient.on('game_over', onGameOver);
         RoomClient.on('error', onError);
         RoomClient.on('status', onConnectionStatus);
+        RoomClient.on('host_changed', onHostChanged);
+        RoomClient.on('kicked', onKicked);
+        RoomClient.on('player_kicked', onPlayerKicked);
     }
 
     // --- WS event handlers ---
@@ -114,6 +118,7 @@ const RoomUI = (() => {
         gameStarted = state.started;
         startedAt = state.startedAt;
         puzzle = state.puzzle;
+        roomConfig = state.config;
 
         players.clear();
         state.players.forEach(p => players.set(p.id, p));
@@ -149,6 +154,28 @@ const RoomUI = (() => {
     function onPlayerLeft(msg) {
         players.delete(msg.playerId);
         renderPlayerList();
+    }
+
+    function onHostChanged(msg) {
+        hostId = msg.hostId;
+        renderPlayerList();
+        renderSidebar();
+        const text = I18n.t('hostChanged').replace('{name}', msg.name);
+        setStatus(text);
+    }
+
+    function onKicked() {
+        gameFinished = true;
+        clearInterval(timerInterval);
+        sessionStorage.setItem('hearthdoku_kicked', '1');
+        window.location.replace('/room.html');
+    }
+
+    function onPlayerKicked(msg) {
+        players.delete(msg.playerId);
+        renderPlayerList();
+        const text = I18n.t('playerKicked').replace('{name}', msg.name);
+        setStatus(text);
     }
 
     function onGameStarted(msg) {
@@ -266,6 +293,28 @@ const RoomUI = (() => {
         els.sidebarMode.textContent = mode === 'coop' ? I18n.t('cooperative') : I18n.t('competitive');
         els.sidebarMode.className = `room-sidebar__mode-tag room-sidebar__mode-tag--${mode}`;
 
+        if (roomConfig && els.sidebarConfig) {
+            const parts = [];
+            if (roomConfig.sets && roomConfig.sets.length > 0) {
+                const stdSets = HearthstoneAPI.STANDARD_SETS || [];
+                const isStd = stdSets.length > 0 && roomConfig.sets.length === stdSets.length &&
+                    stdSets.every(s => roomConfig.sets.includes(s));
+                if (isStd) {
+                    parts.push('Standard');
+                } else {
+                    parts.push(`${roomConfig.sets.length} sets`);
+                }
+            }
+            if (roomConfig.rarities && roomConfig.rarities.length > 0 && roomConfig.rarities.length < 5) {
+                parts.push(roomConfig.rarities.map(r => I18n.getMap('RARITY_MAP')[r] || r).join(', '));
+            }
+            if (roomConfig.classes && roomConfig.classes.length > 0 && roomConfig.classes.length < 12) {
+                parts.push(`${roomConfig.classes.length} ${I18n.t('filterClasses').toLowerCase()}`);
+            }
+            els.sidebarConfig.textContent = parts.length > 0 ? parts.join(' · ') : '';
+            els.sidebarConfig.style.display = parts.length > 0 ? 'block' : 'none';
+        }
+
         if (mode === 'versus' && !gameStarted && myId === hostId) {
             els.btnStartGame.style.display = 'block';
             els.btnStartGame.textContent = I18n.t('startGame');
@@ -290,6 +339,10 @@ const RoomUI = (() => {
             const isHost = id === hostId;
             const nameTag = isMe ? `${p.name} (${I18n.t('you')})` : p.name;
             const hostBadge = isHost ? `<span class="player-badge player-badge--host">${I18n.t('host')}</span>` : '';
+            const canKick = myId === hostId && !isMe && !isHost;
+            const kickBtn = canKick
+                ? `<button class="player-kick" data-kick-id="${id}" title="${I18n.t('kick')}">&#10005;</button>`
+                : '';
 
             let statusHtml = '';
             if (mode === 'versus') {
@@ -315,9 +368,16 @@ const RoomUI = (() => {
                     <span class="player-name">${nameTag}${hostBadge}</span>
                     ${statusHtml}
                 </div>
+                ${kickBtn}
             </div>`;
         }
         list.innerHTML = html;
+
+        list.querySelectorAll('.player-kick').forEach(btn => {
+            btn.addEventListener('click', () => {
+                RoomClient.kickPlayer(btn.dataset.kickId);
+            });
+        });
     }
 
     function bindImgFallbacks(container) {
