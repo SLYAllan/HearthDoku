@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>HearthDoku — Redirecting</title>
+    <script>
+    (function() {
+        var path = location.pathname;
+        var match = path.match(/^\/room\/([A-Za-z0-9]{4,6})$/);
+        if (match) {
+            location.replace('/room.html?code=' + match[1]);
+        } else {
+            location.replace('/');
+        }
+    })();
+    </script>
+</head>
+<body>
+    <p>Redirecting...</p>
+</body>
+</html>

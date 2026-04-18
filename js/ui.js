@@ -764,6 +764,8 @@ const UI = (() => {
         const btnDailyPuzzle = document.getElementById('btnDailyPuzzle');
         if (btnDailyPuzzle) btnDailyPuzzle.textContent = `📅 ${I18n.t('dailyPuzzle')}`;
         document.getElementById('btnNewPuzzle').textContent = I18n.t('newPuzzle');
+        const btnMultiplayer = document.getElementById('btnMultiplayer');
+        if (btnMultiplayer) btnMultiplayer.textContent = I18n.t('multiplayer');
         document.getElementById('btnShowSolution').textContent = I18n.t('showSolution');
         document.getElementById('btnExport').textContent = I18n.t('exportPng');
         document.getElementById('btnShare').textContent = I18n.t('share');
