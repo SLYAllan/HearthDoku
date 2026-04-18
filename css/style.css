@@ -1901,6 +1901,126 @@ body {
     color: var(--text-primary);
 }
 
+/* --- Room Setup: Filter Toggle --- */
+.room-setup__toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    width: 100%;
+    background: none;
+    border: 1px solid var(--border-oat-light);
+    border-radius: 8px;
+    padding: 0.6rem 0.75rem;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.room-setup__toggle:hover {
+    color: var(--text-primary);
+    border-color: var(--text-secondary);
+}
+
+.room-setup__toggle-arrow {
+    font-size: 0.7rem;
+    transition: transform 0.2s;
+}
+
+.room-setup__toggle--open .room-setup__toggle-arrow {
+    transform: rotate(90deg);
+}
+
+/* --- Room Setup: Filter Panel --- */
+.room-setup__filters {
+    margin-top: 0.5rem;
+    padding: 0.75rem;
+    border: 1px solid var(--border-oat-light);
+    border-radius: 8px;
+    background: var(--bg-canvas);
+}
+
+.room-filters__presets {
+    display: flex;
+    gap: 0.4rem;
+    margin-bottom: 0.75rem;
+}
+
+.room-filters__group {
+    margin-bottom: 0.6rem;
+}
+
+.room-filters__group:last-child {
+    margin-bottom: 0;
+}
+
+.room-filters__group-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.35rem;
+}
+
+.room-filters__group-header h4 {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 0;
+}
+
+.room-filters__actions {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.room-filters__action {
+    background: none;
+    border: 1px solid var(--border-oat-light);
+    border-radius: 4px;
+    padding: 0.15rem 0.4rem;
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.room-filters__action:hover {
+    color: var(--text-primary);
+    border-color: var(--text-secondary);
+}
+
+.room-filters__list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.2rem;
+}
+
+.room-filters__list label {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.78rem;
+    padding: 0.2rem 0.3rem;
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.room-filters__list label:hover {
+    background: var(--bg-elevated);
+}
+
+.room-filters__list label img {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
 /* --- Room Layout --- */
 .room-game {
     display: flex;
@@ -1974,6 +2094,13 @@ body {
 .room-sidebar__mode-tag--versus {
     background: rgba(252, 121, 129, 0.15);
     color: var(--pomegranate-400);
+}
+
+.room-sidebar__config {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    padding: 0.2rem 0.5rem;
 }
 
 .room-sidebar__timer {
@@ -2091,6 +2218,33 @@ body {
     font-family: var(--font-mono);
     font-weight: 600;
     color: var(--text-primary);
+}
+
+/* --- Player Kick Button --- */
+.player-kick {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.player-item:hover .player-kick {
+    opacity: 1;
+}
+
+.player-kick:hover {
+    color: var(--accent-red);
+    border-color: var(--accent-red);
 }
 
 /* --- Coop cell border --- */
