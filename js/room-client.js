@@ -106,6 +106,19 @@ const RoomClient = (() => {
                 emit('player_left', msg);
                 break;
 
+            case 'host_changed':
+                if (roomState) roomState.hostId = msg.hostId;
+                emit('host_changed', msg);
+                break;
+
+            case 'kicked':
+                emit('kicked', msg);
+                break;
+
+            case 'player_kicked':
+                emit('player_kicked', msg);
+                break;
+
             case 'game_started':
                 if (roomState) roomState.started = true;
                 if (roomState) roomState.startedAt = msg.startedAt;
@@ -167,6 +180,10 @@ const RoomClient = (() => {
         send({ type: 'place', row, col, cardId, dbfId });
     }
 
+    function kickPlayer(playerId) {
+        send({ type: 'kick', playerId });
+    }
+
     function getPlayerId() {
         return playerId;
     }
@@ -193,7 +210,7 @@ const RoomClient = (() => {
     }
 
     return {
-        on, connect, createRoom, joinRoom, startGame, placeCard,
+        on, connect, createRoom, joinRoom, startGame, placeCard, kickPlayer,
         getPlayerId, getRoomCode, getRoomState, getStoredName, setStoredName, disconnect,
     };
 })();
