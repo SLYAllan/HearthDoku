@@ -82,6 +82,7 @@ class RoomManager {
             grid: Array(9).fill(null),
             players: new Map(),
             finished: false,
+            bannedIPs: new Set(),
         };
 
         const player = {
@@ -116,6 +117,12 @@ class RoomManager {
         }
         if (room.players.size >= MAX_PLAYERS) {
             this.sendTo(ws, { type: 'error', message: 'Room is full (max 8 players)' });
+            return;
+        }
+
+        const ip = ws._socket.remoteAddress;
+        if (room.bannedIPs.has(ip)) {
+            this.sendTo(ws, { type: 'error', message: 'Banned from this room' });
             return;
         }
 
@@ -162,6 +169,50 @@ class RoomManager {
 
         room.startedAt = Date.now();
         this.broadcast(room, { type: 'game_started', startedAt: room.startedAt });
+    }
+
+    kickPlayer(ws, { playerId }) {
+        const info = this.playerToRoom.get(ws);
+        if (!info) return;
+
+        const room = this.rooms.get(info.code);
+        if (!room) return;
+
+        if (info.playerId !== room.hostId) {
+            this.sendTo(ws, { type: 'error', message: 'Only host can kick' });
+            return;
+        }
+        if (playerId === room.hostId) {
+            this.sendTo(ws, { type: 'error', message: 'Cannot kick yourself' });
+            return;
+        }
+
+        const target = room.players.get(playerId);
+        if (!target) {
+            this.sendTo(ws, { type: 'error', message: 'Player not found' });
+            return;
+        }
+
+        const targetIp = target.ws._socket.remoteAddress;
+        room.bannedIPs.add(targetIp);
+
+        this.sendTo(target.ws, { type: 'kicked' });
+
+        room.players.delete(playerId);
+        this.playerToRoom.delete(target.ws);
+        this.rateLimiter.remove(playerId);
+
+        target.ws.close();
+
+        this.broadcast(room, {
+            type: 'player_kicked',
+            playerId,
+            name: target.name,
+        });
+
+        if (room.mode === 'versus' && room.startedAt) {
+            this.checkVersusEnd(room);
+        }
     }
 
     placeCard(ws, { row, col, cardId, dbfId }) {

@@ -67,6 +67,9 @@ wss.on('connection', (ws, req) => {
                     dbfId: msg.dbfId,
                 });
                 break;
+            case 'kick':
+                roomManager.kickPlayer(ws, { playerId: msg.playerId });
+                break;
         }
     });
 
