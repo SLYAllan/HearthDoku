@@ -229,10 +229,12 @@ class RoomManager {
             }
         } else {
             player.errors++;
+            const allCards = getCards();
+            const wrongCard = allCards.find(c => c.dbfId === dbfId);
             this.sendTo(player.ws, {
                 type: 'cell_error',
                 row, col,
-                cardName: cardId,
+                cardName: wrongCard ? wrongCard.name : cardId,
             });
         }
     }
@@ -290,10 +292,12 @@ class RoomManager {
             }
         } else {
             player.errors++;
+            const allCards = getCards();
+            const wrongCard = allCards.find(c => c.dbfId === dbfId);
             this.sendTo(player.ws, {
                 type: 'cell_error',
                 row, col,
-                cardName: cardId,
+                cardName: wrongCard ? wrongCard.name : cardId,
             });
 
             if (player.errors >= MAX_ERRORS) {

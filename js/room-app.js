@@ -98,7 +98,7 @@
     RoomUI.init();
 
     RoomClient.on('room_created', (msg) => {
-        history.replaceState(null, '', '/room/' + msg.code);
+        history.replaceState(null, '', '/room.html?code=' + msg.code);
     });
 
     document.getElementById('btnGameOverClose').addEventListener('click', () => {

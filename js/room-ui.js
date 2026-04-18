@@ -320,24 +320,54 @@ const RoomUI = (() => {
         list.innerHTML = html;
     }
 
+    function bindImgFallbacks(container) {
+        container.querySelectorAll('img[alt]').forEach(img => {
+            if (img._fbBound) return;
+            img._fbBound = true;
+            img.addEventListener('error', () => {
+                const fb = img.alt || '?';
+                img.outerHTML = fb;
+            });
+        });
+    }
+
     function renderGrid() {
         if (!puzzle) return;
         for (let c = 0; c < 3; c++) {
             const el = document.getElementById(`colHeader${c}`);
             el.innerHTML = renderBadge(puzzle.colCriteria[c]);
+            bindImgFallbacks(el);
         }
         for (let r = 0; r < 3; r++) {
             const el = document.getElementById(`rowHeader${r}`);
             el.innerHTML = renderBadge(puzzle.rowCriteria[r]);
+            bindImgFallbacks(el);
         }
+    }
+
+    function stripInlineHandlers(html) {
+        return html.replace(/\s*onerror="[^"]*"/g, '');
     }
 
     function renderBadge(criterion) {
         const display = PuzzleEngine.getCriterionDisplay(criterion);
         return `<div class="badge ${display.bgClass}" title="${display.tooltip}">
-            <span class="badge__icon">${display.icon}</span>
+            <span class="badge__icon">${stripInlineHandlers(display.icon)}</span>
             <span class="badge__label">${display.label}</span>
         </div>`;
+    }
+
+    function cardImgHtml(renderUrl, name) {
+        return `<img src="${renderUrl}" alt="${name}">`;
+    }
+
+    function bindCardImgFallback(cellEl, name) {
+        const img = cellEl.querySelector('img');
+        if (img) {
+            img.addEventListener('error', () => {
+                img.parentElement.innerHTML = '<span class="cell-card__name">' + name + '</span>';
+            });
+        }
     }
 
     function renderCoopCell(idx, data) {
@@ -351,10 +381,11 @@ const RoomUI = (() => {
         const renderUrl = HearthstoneAPI.getCardRenderUrl(data.cardId);
 
         cellEl.innerHTML = `<div class="cell-card cell-card--correct cell-card--coop" style="border-left: 3px solid ${color}">
-            <img src="${renderUrl}" alt="${data.cardName}" onerror="this.parentElement.innerHTML='<span class=\\'cell-card__name\\'>${data.cardName}</span>'">
+            ${cardImgHtml(renderUrl, data.cardName)}
             <div class="cell-card__name-overlay">${data.cardName}</div>
         </div>`;
         cellEl.classList.add('grid-cell--correct');
+        bindCardImgFallback(cellEl, data.cardName);
     }
 
     function renderMyCell(idx, data) {
@@ -365,11 +396,12 @@ const RoomUI = (() => {
 
         const renderUrl = HearthstoneAPI.getCardRenderUrl(data.cardId);
         cellEl.innerHTML = `<div class="cell-card cell-card--correct">
-            <img src="${renderUrl}" alt="${data.cardName}" onerror="this.parentElement.innerHTML='<span class=\\'cell-card__name\\'>${data.cardName}</span>'">
+            ${cardImgHtml(renderUrl, data.cardName)}
             <div class="cell-card__name-overlay">${data.cardName}</div>
             <div class="cell-card__score">+${data.score}</div>
         </div>`;
         cellEl.classList.add('grid-cell--correct');
+        bindCardImgFallback(cellEl, data.cardName);
     }
 
     function renderStats() {
@@ -522,7 +554,7 @@ const RoomUI = (() => {
     // --- Copy link ---
 
     function copyRoomLink() {
-        const url = `${location.origin}/room/${roomCode}`;
+        const url = `${location.origin}/room.html?code=${roomCode}`;
         navigator.clipboard.writeText(url).then(() => {
             const btn = els.btnCopyLink;
             const orig = btn.textContent;
