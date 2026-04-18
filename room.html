@@ -91,6 +91,8 @@
                     <button class="btn btn--secondary" id="btnJoinRoom">Rejoindre</button>
                 </div>
 
+                <div class="room-setup__status" id="setupStatus" style="display:none"></div>
+
                 <a href="/" class="room-setup__back" id="linkBackToSolo">Retour au solo</a>
             </div>
         </div>
@@ -252,6 +254,24 @@
             document.getElementById('playerName').value = savedName;
         }
 
+        // Status feedback on setup page
+        const setupStatus = document.getElementById('setupStatus');
+        function showSetupStatus(text, isError) {
+            setupStatus.textContent = text;
+            setupStatus.className = 'room-setup__status' + (isError ? ' room-setup__status--error' : '');
+            setupStatus.style.display = 'block';
+        }
+
+        RoomClient.on('status', (msg) => {
+            if (msg.status === 'connecting') showSetupStatus(I18n.t('connecting'), false);
+            if (msg.status === 'disconnected') showSetupStatus(I18n.t('disconnected'), true);
+        });
+        RoomClient.on('error', (msg) => {
+            showSetupStatus(msg.message, true);
+            document.getElementById('btnCreateRoom').disabled = false;
+            document.getElementById('btnJoinRoom').disabled = false;
+        });
+
         // Create room
         document.getElementById('btnCreateRoom').addEventListener('click', () => {
             const name = document.getElementById('playerName').value.trim();
@@ -259,6 +279,8 @@
             const mode = modeEl ? modeEl.value : 'coop';
 
             if (name) RoomClient.setStoredName(name);
+            document.getElementById('btnCreateRoom').disabled = true;
+            showSetupStatus(I18n.t('connecting'), false);
             RoomClient.createRoom(mode, name || null, null);
         });
 
@@ -269,6 +291,8 @@
             if (!code) return;
 
             if (name) RoomClient.setStoredName(name);
+            document.getElementById('btnJoinRoom').disabled = true;
+            showSetupStatus(I18n.t('connecting'), false);
             RoomClient.joinRoom(code, name || null);
         });
 
@@ -276,6 +300,7 @@
         if (codeFromUrl) {
             const name = document.getElementById('playerName').value.trim();
             if (name) RoomClient.setStoredName(name);
+            showSetupStatus(I18n.t('connecting'), false);
             RoomClient.joinRoom(codeFromUrl, name || null);
         }
 

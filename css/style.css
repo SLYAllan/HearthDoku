@@ -1873,6 +1873,21 @@ body {
     align-items: center;
 }
 
+.room-setup__status {
+    margin-top: 1rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    text-align: center;
+    background: rgba(59, 211, 253, 0.08);
+    color: var(--slushie-500);
+}
+
+.room-setup__status--error {
+    background: rgba(252, 121, 129, 0.1);
+    color: var(--accent-red);
+}
+
 .room-setup__back {
     display: block;
     text-align: center;

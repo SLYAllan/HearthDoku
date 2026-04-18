@@ -2,9 +2,14 @@
  * HearthDoku — Room WebSocket client
  */
 const RoomClient = (() => {
-    const WS_URL = location.hostname === 'localhost' || location.hostname === '127.0.0.1'
-        ? `ws://${location.hostname}:8080`
-        : 'wss://hearthdoku-server.fly.dev';
+    function getWsUrl() {
+        const h = location.hostname;
+        if (!h || h === 'localhost' || h === '127.0.0.1') {
+            return 'ws://localhost:8080';
+        }
+        return 'wss://hearthdoku-server.fly.dev';
+    }
+    const WS_URL = getWsUrl();
 
     let ws = null;
     let roomCode = null;
@@ -13,6 +18,7 @@ const RoomClient = (() => {
     let reconnectAttempts = 0;
     const MAX_RECONNECT = 5;
     let handlers = {};
+    let pendingAction = null;
 
     function on(event, fn) {
         if (!handlers[event]) handlers[event] = [];
@@ -25,19 +31,29 @@ const RoomClient = (() => {
         }
     }
 
-    function connect() {
-        if (ws && (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN)) return;
+    function connect(onOpen) {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            if (onOpen) onOpen();
+            return;
+        }
+        if (ws && ws.readyState === WebSocket.CONNECTING) {
+            if (onOpen) ws.addEventListener('open', onOpen, { once: true });
+            return;
+        }
 
         emit('status', { status: 'connecting' });
-        ws = new WebSocket(WS_URL);
+
+        try {
+            ws = new WebSocket(WS_URL);
+        } catch (e) {
+            emit('error', { message: 'WebSocket connection failed' });
+            return;
+        }
 
         ws.onopen = () => {
             reconnectAttempts = 0;
             emit('status', { status: 'connected' });
-
-            if (roomCode && !roomState) {
-                send({ type: 'join', code: roomCode, name: getStoredName() });
-            }
+            if (onOpen) onOpen();
         };
 
         ws.onmessage = (e) => {
@@ -51,14 +67,16 @@ const RoomClient = (() => {
             tryReconnect();
         };
 
-        ws.onerror = () => {};
+        ws.onerror = () => {
+            emit('error', { message: 'Connection error — is the server running on port 8080?' });
+        };
     }
 
     function tryReconnect() {
         if (reconnectAttempts >= MAX_RECONNECT) return;
         reconnectAttempts++;
         const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 10000);
-        setTimeout(connect, delay);
+        setTimeout(() => connect(), delay);
     }
 
     function send(msg) {
@@ -129,28 +147,16 @@ const RoomClient = (() => {
     }
 
     function createRoom(mode, name, config) {
-        connect();
-        const waitForOpen = () => {
-            if (ws.readyState === WebSocket.OPEN) {
-                send({ type: 'create', mode, name: name || getStoredName(), config });
-            } else {
-                setTimeout(waitForOpen, 100);
-            }
-        };
-        waitForOpen();
+        connect(() => {
+            send({ type: 'create', mode, name: name || getStoredName(), config });
+        });
     }
 
     function joinRoom(code, name) {
         roomCode = code.toUpperCase().trim();
-        connect();
-        const waitForOpen = () => {
-            if (ws.readyState === WebSocket.OPEN) {
-                send({ type: 'join', code: roomCode, name: name || getStoredName() });
-            } else {
-                setTimeout(waitForOpen, 100);
-            }
-        };
-        waitForOpen();
+        connect(() => {
+            send({ type: 'join', code: roomCode, name: name || getStoredName() });
+        });
     }
 
     function startGame() {
