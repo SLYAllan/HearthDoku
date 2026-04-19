@@ -209,7 +209,7 @@
     });
     RoomClient.on('kicked', () => {
         sessionStorage.setItem('hearthdoku_kicked', '1');
-        window.location.replace('/room.html');
+        window.location.replace('room.html');
     });
 
     document.getElementById('btnCreateRoom').addEventListener('click', () => {
@@ -245,7 +245,7 @@
     RoomUI.init();
 
     RoomClient.on('room_created', (msg) => {
-        history.replaceState(null, '', '/room.html?code=' + msg.code);
+        history.replaceState(null, '', 'room.html?code=' + msg.code);
     });
 
     document.getElementById('btnGameOverClose').addEventListener('click', () => {

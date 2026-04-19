@@ -7,7 +7,7 @@ const RoomClient = (() => {
         if (!h || h === 'localhost' || h === '127.0.0.1') {
             return 'ws://localhost:8080';
         }
-        return 'wss://hearthdoku-server.fly.dev';
+        return 'wss://hearthdoku-server.onrender.com';
     }
     const WS_URL = getWsUrl();
 
@@ -153,6 +153,10 @@ const RoomClient = (() => {
                 emit('game_over', msg);
                 break;
 
+            case 'surrender_vote':
+                emit('surrender_vote', msg);
+                break;
+
             case 'error':
                 emit('error', msg);
                 break;
@@ -184,6 +188,10 @@ const RoomClient = (() => {
         send({ type: 'kick', playerId });
     }
 
+    function surrender() {
+        send({ type: 'surrender' });
+    }
+
     function getPlayerId() {
         return playerId;
     }
@@ -210,7 +218,7 @@ const RoomClient = (() => {
     }
 
     return {
-        on, connect, createRoom, joinRoom, startGame, placeCard, kickPlayer,
+        on, connect, createRoom, joinRoom, startGame, placeCard, kickPlayer, surrender,
         getPlayerId, getRoomCode, getRoomState, getStoredName, setStoredName, disconnect,
     };
 })();

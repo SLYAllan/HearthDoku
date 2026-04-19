@@ -19,6 +19,9 @@ const RoomUI = (() => {
     let errors = 0;
     let roomConfig = null;
     const MAX_ERRORS = 3;
+    let surrenderVotes = 0;
+    let surrenderNeeded = 0;
+    let mySurrenderVote = false;
 
     const els = {};
 
@@ -45,6 +48,8 @@ const RoomUI = (() => {
         els.gameOverModal = document.getElementById('gameOverModal');
         els.gameOverTitle = document.getElementById('gameOverTitle');
         els.gameOverRanking = document.getElementById('gameOverRanking');
+        els.btnSurrender = document.getElementById('btnSurrender');
+        els.surrenderStatus = document.getElementById('surrenderStatus');
     }
 
     function init() {
@@ -58,6 +63,10 @@ const RoomUI = (() => {
 
         els.btnStartGame.addEventListener('click', () => {
             RoomClient.startGame();
+        });
+
+        els.btnSurrender.addEventListener('click', () => {
+            RoomClient.surrender();
         });
 
         els.searchClose.addEventListener('click', closeSearchModal);
@@ -76,6 +85,7 @@ const RoomUI = (() => {
         document.querySelectorAll('.grid-cell').forEach(cell => {
             cell.addEventListener('click', () => {
                 if (gameFinished) return;
+                if (errors >= MAX_ERRORS) return;
                 if (mode === 'versus' && !gameStarted) return;
                 const row = parseInt(cell.dataset.row);
                 const col = parseInt(cell.dataset.col);
@@ -101,6 +111,7 @@ const RoomUI = (() => {
         RoomClient.on('player_finished', onPlayerFinished);
         RoomClient.on('player_eliminated', onPlayerEliminated);
         RoomClient.on('game_over', onGameOver);
+        RoomClient.on('surrender_vote', onSurrenderVote);
         RoomClient.on('error', onError);
         RoomClient.on('status', onConnectionStatus);
         RoomClient.on('host_changed', onHostChanged);
@@ -123,6 +134,14 @@ const RoomUI = (() => {
         players.clear();
         state.players.forEach(p => players.set(p.id, p));
 
+        const meData = state.players.find(p => p.id === state.you);
+        errors = meData ? meData.errors : 0;
+        if (mode === 'coop') {
+            score = state.players.reduce((sum, p) => sum + p.score, 0);
+        } else {
+            score = meData ? meData.score : 0;
+        }
+
         renderSidebar();
         renderGrid();
         renderStats();
@@ -130,7 +149,7 @@ const RoomUI = (() => {
         if (state.grid && mode === 'coop') {
             state.grid.forEach((cell, i) => {
                 if (cell) {
-                    cellState[i] = { cardId: cell.cardId, cardName: cell.cardName, playerId: cell.playerId, correct: true };
+                    cellState[i] = { cardId: cell.cardId, cardName: cell.cardName, dbfId: cell.dbfId, playerId: cell.playerId, correct: true };
                     renderCoopCell(i, cell);
                 }
             });
@@ -138,7 +157,7 @@ const RoomUI = (() => {
 
         if (gameStarted) {
             startTimer();
-            setStatus(I18n.t('gameStarted'));
+            if (mode === 'versus') setStatus(I18n.t('gameStarted'));
         } else if (mode === 'versus') {
             setStatus(myId === hostId ? I18n.t('waitingForPlayers') : I18n.t('waitingForHost'));
         }
@@ -168,7 +187,7 @@ const RoomUI = (() => {
         gameFinished = true;
         clearInterval(timerInterval);
         sessionStorage.setItem('hearthdoku_kicked', '1');
-        window.location.replace('/room.html');
+        window.location.replace('room.html');
     }
 
     function onPlayerKicked(msg) {
@@ -188,14 +207,16 @@ const RoomUI = (() => {
 
     function onCellFilled(msg) {
         const idx = msg.row * 3 + msg.col;
+        const localName = getLocalCardName(msg.dbfId, msg.cardName);
+        const localMsg = Object.assign({}, msg, { cardName: localName });
+
+        usedCardIds.add(msg.dbfId || msg.cardId);
 
         if (mode === 'coop') {
-            cellState[idx] = { cardId: msg.cardId, cardName: msg.cardName, playerId: msg.playerId, correct: true };
-            renderCoopCell(idx, msg);
+            cellState[idx] = { cardId: msg.cardId, cardName: localName, dbfId: msg.dbfId, playerId: msg.playerId, correct: true };
+            renderCoopCell(idx, localMsg);
 
-            if (msg.playerId === myId) {
-                score += msg.score;
-            }
+            score += msg.score;
 
             const p = players.get(msg.playerId);
             if (p) p.score += msg.score;
@@ -203,8 +224,8 @@ const RoomUI = (() => {
         } else {
             if (msg.playerId === myId) {
                 score += msg.score;
-                cellState[idx] = { cardId: msg.cardId, cardName: msg.cardName, correct: true };
-                renderMyCell(idx, msg);
+                cellState[idx] = { cardId: msg.cardId, cardName: localName, dbfId: msg.dbfId, correct: true };
+                renderMyCell(idx, localMsg);
             }
         }
 
@@ -213,25 +234,27 @@ const RoomUI = (() => {
     }
 
     function onCellError(msg) {
-        errors++;
-        const idx = msg.row * 3 + msg.col;
+        if (msg.playerId === myId) {
+            errors = msg.playerErrors !== undefined ? msg.playerErrors : (errors + 1);
+        }
+        const localName = getLocalCardName(msg.dbfId, msg.cardName);
         const cellEl = document.querySelector(`.grid-cell[data-row="${msg.row}"][data-col="${msg.col}"]`);
         if (cellEl) {
             cellEl.innerHTML = `<div class="cell-card cell-card--wrong">
                 <span class="cell-card__x">&#10007;</span>
-                <span class="cell-card__name">${msg.cardName}</span>
+                <span class="cell-card__name">${escapeHtml(localName)}</span>
             </div>`;
             cellEl.classList.add('grid-cell--wrong', 'anim-wrong');
             setTimeout(() => {
                 cellEl.classList.remove('anim-wrong');
-                if (mode === 'versus') {
-                    cellEl.innerHTML = '';
-                    cellEl.classList.remove('grid-cell--wrong');
-                }
+                cellEl.innerHTML = '';
+                cellEl.classList.remove('grid-cell--wrong');
             }, 800);
         }
         renderStats();
-        closeSearchModal();
+        if (!msg.playerId || msg.playerId === myId) {
+            closeSearchModal();
+        }
     }
 
     function onCellRejected(msg) {
@@ -268,10 +291,17 @@ const RoomUI = (() => {
         }
     }
 
+    function onSurrenderVote(msg) {
+        surrenderVotes = msg.votes;
+        surrenderNeeded = msg.needed;
+        mySurrenderVote = msg.playerId === myId ? !mySurrenderVote : mySurrenderVote;
+        updateSurrenderUI();
+    }
+
     function onGameOver(msg) {
         gameFinished = true;
         clearInterval(timerInterval);
-        showGameOverModal(msg.scores);
+        showGameOverModal(msg);
     }
 
     function onError(msg) {
@@ -284,6 +314,35 @@ const RoomUI = (() => {
         } else if (msg.status === 'disconnected') {
             setStatus(I18n.t('disconnected'), true);
         }
+    }
+
+    // --- Helpers ---
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    function getLocalCardName(dbfId, fallback) {
+        if (!dbfId) return fallback;
+        const cards = HearthstoneAPI.getCollectibleCards();
+        const card = cards.find(c => c.dbfId === dbfId);
+        return card ? card.name : fallback;
+    }
+
+    function updateSurrenderUI() {
+        if (!els.btnSurrender) return;
+        if (surrenderVotes > 0) {
+            els.surrenderStatus.textContent = `${surrenderVotes}/${surrenderNeeded} votes`;
+            els.surrenderStatus.style.display = 'block';
+        } else {
+            els.surrenderStatus.style.display = 'none';
+        }
+        els.btnSurrender.textContent = mySurrenderVote ? I18n.t('cancelSurrender') : I18n.t('surrender');
     }
 
     // --- Rendering ---
@@ -322,8 +381,11 @@ const RoomUI = (() => {
             els.btnStartGame.style.display = 'none';
         }
 
-        if (mode === 'versus') {
-            els.sidebarTimer.style.display = 'block';
+        els.sidebarTimer.style.display = 'block';
+
+        if (gameStarted || mode === 'coop') {
+            els.btnSurrender.style.display = 'block';
+            els.btnSurrender.textContent = I18n.t('surrender');
         }
 
         renderPlayerList();
@@ -337,7 +399,7 @@ const RoomUI = (() => {
         for (const [id, p] of players) {
             const isMe = id === myId;
             const isHost = id === hostId;
-            const nameTag = isMe ? `${p.name} (${I18n.t('you')})` : p.name;
+            const nameTag = isMe ? `${escapeHtml(p.name)} (${I18n.t('you')})` : escapeHtml(p.name);
             const hostBadge = isHost ? `<span class="player-badge player-badge--host">${I18n.t('host')}</span>` : '';
             const canKick = myId === hostId && !isMe && !isHost;
             const kickBtn = canKick
@@ -381,12 +443,13 @@ const RoomUI = (() => {
     }
 
     function bindImgFallbacks(container) {
-        container.querySelectorAll('img[alt]').forEach(img => {
+        container.querySelectorAll('img').forEach(img => {
             if (img._fbBound) return;
             img._fbBound = true;
             img.addEventListener('error', () => {
-                const fb = img.alt || '?';
-                img.outerHTML = fb;
+                const fb = img.dataset.fallback || img.alt || '?';
+                const text = document.createTextNode(fb);
+                img.replaceWith(text);
             });
         });
     }
@@ -405,27 +468,28 @@ const RoomUI = (() => {
         }
     }
 
-    function stripInlineHandlers(html) {
-        return html.replace(/\s*onerror="[^"]*"/g, '');
-    }
-
     function renderBadge(criterion) {
         const display = PuzzleEngine.getCriterionDisplay(criterion);
         return `<div class="badge ${display.bgClass}" title="${display.tooltip}">
-            <span class="badge__icon">${stripInlineHandlers(display.icon)}</span>
+            <span class="badge__icon">${display.icon}</span>
             <span class="badge__label">${display.label}</span>
         </div>`;
     }
 
     function cardImgHtml(renderUrl, name) {
-        return `<img src="${renderUrl}" alt="${name}">`;
+        return `<img src="${renderUrl}" alt="${escapeHtml(name)}">`;
     }
 
     function bindCardImgFallback(cellEl, name) {
         const img = cellEl.querySelector('img');
         if (img) {
             img.addEventListener('error', () => {
-                img.parentElement.innerHTML = '<span class="cell-card__name">' + name + '</span>';
+                const span = document.createElement('span');
+                span.className = 'cell-card__name';
+                span.textContent = name;
+                const parent = img.parentElement;
+                parent.textContent = '';
+                parent.appendChild(span);
             });
         }
     }
@@ -438,14 +502,17 @@ const RoomUI = (() => {
 
         const p = players.get(data.playerId);
         const color = p ? p.color : '#888';
+        const pName = p ? p.name : '';
+        const localName = getLocalCardName(data.dbfId, data.cardName);
         const renderUrl = HearthstoneAPI.getCardRenderUrl(data.cardId);
 
-        cellEl.innerHTML = `<div class="cell-card cell-card--correct cell-card--coop" style="border-left: 3px solid ${color}">
-            ${cardImgHtml(renderUrl, data.cardName)}
-            <div class="cell-card__name-overlay">${data.cardName}</div>
+        cellEl.innerHTML = `<div class="cell-card cell-card--correct cell-card--coop" style="border-left: 5px solid ${color}">
+            ${cardImgHtml(renderUrl, localName)}
+            <div class="cell-card__name-overlay">${escapeHtml(localName)}</div>
+            <span class="cell-card__player-dot" style="background:${color}" title="${escapeHtml(pName)}"></span>
         </div>`;
         cellEl.classList.add('grid-cell--correct');
-        bindCardImgFallback(cellEl, data.cardName);
+        bindCardImgFallback(cellEl, localName);
     }
 
     function renderMyCell(idx, data) {
@@ -457,7 +524,7 @@ const RoomUI = (() => {
         const renderUrl = HearthstoneAPI.getCardRenderUrl(data.cardId);
         cellEl.innerHTML = `<div class="cell-card cell-card--correct">
             ${cardImgHtml(renderUrl, data.cardName)}
-            <div class="cell-card__name-overlay">${data.cardName}</div>
+            <div class="cell-card__name-overlay">${escapeHtml(data.cardName)}</div>
             <div class="cell-card__score">+${data.score}</div>
         </div>`;
         cellEl.classList.add('grid-cell--correct');
@@ -520,17 +587,21 @@ const RoomUI = (() => {
             const setIcon = showSetBadge ? HearthstoneAPI.getSetIcon(setCode) : null;
             const setName = showSetBadge ? HearthstoneAPI.getSetDisplayName(setCode) : '';
             const setIconHtml = setIcon
-                ? `<img class="search-result__set-icon" src="${setIcon}" alt="" onerror="this.style.display='none'">`
+                ? `<img class="search-result__set-icon" src="${setIcon}" alt="">`
                 : '';
 
             return `<div class="search-result ${used ? 'search-result--used' : ''}" data-card-id="${card.id}" data-dbf-id="${card.dbfId}">
                 <div class="search-result__info">
-                    <div class="search-result__name">${card.name}</div>
-                    ${showSetBadge ? `<div class="search-result__set">${setIconHtml}<span>${setName}</span></div>` : ''}
+                    <div class="search-result__name">${escapeHtml(card.name)}</div>
+                    ${showSetBadge ? `<div class="search-result__set">${setIconHtml}<span>${escapeHtml(setName)}</span></div>` : ''}
                 </div>
                 ${used ? `<div class="search-result__used-tag">${I18n.t('alreadyUsed')}</div>` : ''}
             </div>`;
         }).join('');
+
+        els.searchResults.querySelectorAll('.search-result__set-icon').forEach(img => {
+            img.addEventListener('error', () => { img.style.display = 'none'; }, { once: true });
+        });
 
         els.searchResults.querySelectorAll('.search-result:not(.search-result--used)').forEach(el => {
             el.addEventListener('click', () => {
@@ -585,23 +656,46 @@ const RoomUI = (() => {
 
     // --- Game Over Modal ---
 
-    function showGameOverModal(scores) {
-        els.gameOverTitle.textContent = I18n.t('finalRanking');
-        let html = '<ol class="ranking-list">';
+    function showGameOverModal(msg) {
+        const { scores, reason, time, totalErrors, mode: gameMode } = msg;
+
+        let title;
+        if (reason === 'errors') {
+            title = I18n.t('gameLost');
+        } else if (reason === 'surrender') {
+            title = I18n.t('gameSurrendered');
+        } else {
+            title = (gameMode || mode) === 'coop' ? I18n.t('gameWon') : I18n.t('finalRanking');
+        }
+        els.gameOverTitle.textContent = title;
+
+        let summaryHtml = '<div class="game-over-summary">';
+        if (time) {
+            summaryHtml += `<div class="game-over-stat"><span class="game-over-stat__label">${I18n.t('time')}</span><span class="game-over-stat__value">${formatTime(time)}</span></div>`;
+        }
+        const totalScore = scores.reduce((sum, s) => sum + s.score, 0);
+        summaryHtml += `<div class="game-over-stat"><span class="game-over-stat__label">${I18n.t('score')}</span><span class="game-over-stat__value">${totalScore}pts</span></div>`;
+        if (totalErrors !== null && totalErrors !== undefined) {
+            summaryHtml += `<div class="game-over-stat"><span class="game-over-stat__label">${I18n.t('errorsLabel')}</span><span class="game-over-stat__value">${totalErrors}/${MAX_ERRORS}</span></div>`;
+        }
+        summaryHtml += '</div>';
+
+        let rankHtml = '<ol class="ranking-list">';
         scores.forEach((s, i) => {
             const me = s.playerId === myId ? ' ranking-item--me' : '';
             const status = s.eliminated
                 ? `<span class="ranking-status ranking-status--eliminated">${I18n.t('eliminated')}</span>`
                 : s.time ? `<span class="ranking-status">${formatTime(s.time)}</span>` : '';
-            html += `<li class="ranking-item${me}">
+            rankHtml += `<li class="ranking-item${me}">
                 <span class="ranking-rank">#${i + 1}</span>
-                <span class="ranking-name">${s.name}</span>
+                <span class="ranking-name">${escapeHtml(s.name)}</span>
                 <span class="ranking-score">${s.score}pts</span>
                 ${status}
             </li>`;
         });
-        html += '</ol>';
-        els.gameOverRanking.innerHTML = html;
+        rankHtml += '</ol>';
+
+        els.gameOverRanking.innerHTML = summaryHtml + rankHtml;
         els.gameOverModal.classList.add('modal-overlay--visible');
     }
 
@@ -614,7 +708,8 @@ const RoomUI = (() => {
     // --- Copy link ---
 
     function copyRoomLink() {
-        const url = `${location.origin}/room.html?code=${roomCode}`;
+        const base = location.href.replace(/[?#].*$/, '').replace(/[^/]*$/, '');
+        const url = `${base}room.html?code=${roomCode}`;
         navigator.clipboard.writeText(url).then(() => {
             const btn = els.btnCopyLink;
             const orig = btn.textContent;

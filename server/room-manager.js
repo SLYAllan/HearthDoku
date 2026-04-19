@@ -40,10 +40,16 @@ class RoomManager {
 
     generatePlayerName() {
         const num = Math.floor(1000 + Math.random() * 9000);
-        return `Joueur#${num}`;
+        return `Player#${num}`;
     }
 
-    createRoom(ws, { mode, name, config }) {
+    sanitizeName(name) {
+        if (!name || typeof name !== 'string') return null;
+        return name.replace(/[<>"]/g, '').trim().slice(0, 20) || null;
+    }
+
+    createRoom(ws, { mode, name: rawName, config }) {
+        const name = this.sanitizeName(rawName);
         if (mode !== 'coop' && mode !== 'versus') {
             this.sendTo(ws, { type: 'error', message: 'Invalid mode' });
             return;
@@ -72,7 +78,7 @@ class RoomManager {
             hostId: playerId,
             createdAt: now,
             expiresAt: now + ROOM_TTL_MS,
-            startedAt: null,
+            startedAt: mode === 'coop' ? now : null,
             config: config || null,
             puzzle: {
                 rowCriteria: puzzle.rowCriteria,
@@ -83,6 +89,8 @@ class RoomManager {
             players: new Map(),
             finished: false,
             bannedIPs: new Set(),
+            coopErrors: 0,
+            surrenderVotes: new Set(),
         };
 
         const player = {
@@ -105,7 +113,12 @@ class RoomManager {
         this.sendRoomState(ws, room, playerId);
     }
 
-    joinRoom(ws, { code, name }) {
+    joinRoom(ws, { code, name: rawName }) {
+        const name = this.sanitizeName(rawName);
+        if (!code || typeof code !== 'string' || !/^[A-Z0-9]{4,8}$/.test(code)) {
+            this.sendTo(ws, { type: 'error', message: 'Invalid room code' });
+            return;
+        }
         const room = this.rooms.get(code);
         if (!room) {
             this.sendTo(ws, { type: 'error', message: 'Room not found' });
@@ -215,6 +228,35 @@ class RoomManager {
         }
     }
 
+    handleSurrender(ws) {
+        const info = this.playerToRoom.get(ws);
+        if (!info) return;
+        const room = this.rooms.get(info.code);
+        if (!room || room.finished) return;
+        if (room.mode === 'versus' && !room.startedAt) return;
+
+        if (room.surrenderVotes.has(info.playerId)) {
+            room.surrenderVotes.delete(info.playerId);
+        } else {
+            room.surrenderVotes.add(info.playerId);
+        }
+
+        const total = room.players.size;
+        const needed = total <= 2 ? total : Math.ceil(total * 0.75);
+
+        this.broadcast(room, {
+            type: 'surrender_vote',
+            playerId: info.playerId,
+            votes: room.surrenderVotes.size,
+            needed,
+            total,
+        });
+
+        if (room.surrenderVotes.size >= needed) {
+            this.endGame(room, 'surrender');
+        }
+    }
+
     placeCard(ws, { row, col, cardId, dbfId }) {
         const info = this.playerToRoom.get(ws);
         if (!info) return;
@@ -282,11 +324,20 @@ class RoomManager {
             player.errors++;
             const allCards = getCards();
             const wrongCard = allCards.find(c => c.dbfId === dbfId);
-            this.sendTo(player.ws, {
+            this.broadcast(room, {
                 type: 'cell_error',
                 row, col,
+                playerId: player.id,
                 cardName: wrongCard ? wrongCard.name : cardId,
+                dbfId,
+                playerErrors: player.errors,
             });
+            if (player.errors >= MAX_ERRORS) {
+                const allEliminated = [...room.players.values()].every(p => p.errors >= MAX_ERRORS);
+                if (allEliminated) {
+                    this.endGame(room, 'errors');
+                }
+            }
         }
     }
 
@@ -349,6 +400,7 @@ class RoomManager {
                 type: 'cell_error',
                 row, col,
                 cardName: wrongCard ? wrongCard.name : cardId,
+                dbfId,
             });
 
             if (player.errors >= MAX_ERRORS) {
@@ -370,8 +422,9 @@ class RoomManager {
         }
     }
 
-    endGame(room) {
+    endGame(room, reason = 'completed') {
         room.finished = true;
+        const elapsed = room.startedAt ? Date.now() - room.startedAt : null;
 
         const scores = [...room.players.values()]
             .map(p => ({
@@ -392,7 +445,16 @@ class RoomManager {
                 return b.score - a.score;
             });
 
-        this.broadcast(room, { type: 'game_over', scores });
+        this.broadcast(room, {
+            type: 'game_over',
+            scores,
+            reason,
+            time: elapsed,
+            totalErrors: room.mode === 'coop'
+                ? [...room.players.values()].reduce((sum, p) => sum + p.errors, 0)
+                : null,
+            mode: room.mode,
+        });
     }
 
     handleDisconnect(ws) {

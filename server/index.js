@@ -3,7 +3,7 @@ const { WebSocketServer } = require('ws');
 const { fetchCards } = require('./card-fetcher');
 const { RoomManager } = require('./room-manager');
 
-const PORT = parseInt(process.env.WS_PORT || '8080', 10);
+const PORT = parseInt(process.env.PORT || process.env.WS_PORT || '8080', 10);
 const CORS_ORIGIN = process.env.CORS_ORIGIN || '*';
 
 const roomManager = new RoomManager();
@@ -23,11 +23,11 @@ const server = http.createServer((req, res) => {
     res.end('Not found');
 });
 
-const wss = new WebSocketServer({ server });
+const wss = new WebSocketServer({ server, maxPayload: 8 * 1024 });
 
 wss.on('connection', (ws, req) => {
     const origin = req.headers.origin || '';
-    if (CORS_ORIGIN !== '*' && !CORS_ORIGIN.split(',').some(o => origin.startsWith(o.trim()))) {
+    if (CORS_ORIGIN !== '*' && !CORS_ORIGIN.split(',').some(o => origin === o.trim())) {
         ws.close(4003, 'Origin not allowed');
         return;
     }
@@ -70,6 +70,9 @@ wss.on('connection', (ws, req) => {
             case 'kick':
                 roomManager.kickPlayer(ws, { playerId: msg.playerId });
                 break;
+            case 'surrender':
+                roomManager.handleSurrender(ws);
+                break;
         }
     });
 
@@ -77,7 +80,8 @@ wss.on('connection', (ws, req) => {
         roomManager.handleDisconnect(ws);
     });
 
-    ws.on('error', () => {
+    ws.on('error', (err) => {
+        console.error('[ws] Client error:', err.message);
         roomManager.handleDisconnect(ws);
     });
 });
@@ -96,3 +100,15 @@ start().catch(err => {
     console.error('[server] Fatal:', err);
     process.exit(1);
 });
+
+function shutdown() {
+    console.log('[server] Shutting down...');
+    roomManager.destroy();
+    wss.clients.forEach(ws => ws.close(1001, 'Server shutting down'));
+    wss.close(() => {
+        server.close(() => process.exit(0));
+    });
+    setTimeout(() => process.exit(1), 5000);
+}
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);

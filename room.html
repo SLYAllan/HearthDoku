@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://art.hearthstonejson.com https://www.googletagmanager.com https://www.google-analytics.com; connect-src 'self' https://api.hearthstonejson.com https://www.googletagmanager.com https://www.google-analytics.com https://region1.google-analytics.com wss://hearthdoku-server.fly.dev ws://localhost:8080; frame-src https://www.googletagmanager.com; form-action 'self';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://art.hearthstonejson.com https://www.googletagmanager.com https://www.google-analytics.com; connect-src 'self' https://api.hearthstonejson.com https://www.googletagmanager.com https://www.google-analytics.com https://region1.google-analytics.com wss://hearthdoku-server.onrender.com ws://localhost:8080; frame-src https://www.googletagmanager.com; base-uri 'self'; form-action 'self';">
 
-    <base href="/">
+    <base href=".">
     <title>HearthDoku — Room Multijoueur</title>
     <meta name="description" content="Jouez en multijoueur sur HearthDoku ! Créez une room et défiez vos amis.">
     <meta name="robots" content="noindex">
@@ -27,13 +27,13 @@
             <div class="title-bar__left">
                 <div class="title-bar__logo">
                     <img src="logo/Icon_Logo.webp" alt="" class="hs-logo" width="40" height="40">
-                    <a href="/" class="title-bar__title title-bar__title--link">HearthDoku</a>
+                    <a href="index.html" class="title-bar__title title-bar__title--link">HearthDoku</a>
                 </div>
                 <div class="lang-switcher">
                     <label for="langSelect" class="visually-hidden">Langue / Language</label>
                     <select id="langSelect" class="lang-select">
-                        <option value="fr">FR</option>
-                        <option value="en">EN</option>
+                        <option value="fr">FR — Français</option>
+                        <option value="en">EN — English</option>
                     </select>
                 </div>
             </div>
@@ -138,7 +138,7 @@
 
                 <div class="room-setup__status" id="setupStatus" style="display:none"></div>
 
-                <a href="/" class="room-setup__back" id="linkBackToSolo">Retour au solo</a>
+                <a href="index.html" class="room-setup__back" id="linkBackToSolo">Retour au solo</a>
             </div>
         </div>
 
@@ -164,6 +164,8 @@
 
                     <button class="btn btn--primary btn--small" id="btnStartGame" style="display:none">Lancer la partie</button>
                     <button class="btn btn--secondary btn--small" id="btnCopyLink">Copier le lien</button>
+                    <button class="btn btn--danger btn--small" id="btnSurrender" style="display:none">Abandonner</button>
+                    <div class="room-sidebar__surrender-status" id="surrenderStatus" style="display:none"></div>
                 </aside>
 
                 <!-- Game Area -->
@@ -235,7 +237,7 @@
             <h2 class="game-over-title" id="gameOverTitle">Classement final</h2>
             <div class="game-over-ranking" id="gameOverRanking"></div>
             <div class="game-over-actions">
-                <a href="/" class="btn btn--primary">Retour au solo</a>
+                <a href="index.html" class="btn btn--primary">Retour au solo</a>
                 <button class="btn btn--secondary" id="btnGameOverClose">Fermer</button>
             </div>
         </div>

@@ -1,0 +1,20 @@
+app = "hearthdoku-server"
+primary_region = "cdg"
+
+[build]
+
+[env]
+  WS_PORT = "8080"
+  CORS_ORIGIN = "https://slyallan.github.io"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "suspend"
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[vm]]
+  memory = "256mb"
+  cpu_kind = "shared"
+  cpus = 1

@@ -98,6 +98,11 @@ const I18n = (() => {
             filterClasses: 'Classes',
             filterAll: 'Tout',
             filterNone: 'Rien',
+            surrender: 'Abandonner',
+            cancelSurrender: 'Annuler le vote',
+            gameLost: 'Défaite !',
+            gameWon: 'Victoire !',
+            gameSurrendered: 'Partie abandonnée',
 
             // Tooltips
             tooltipMana: 'Coût en mana',
@@ -362,6 +367,11 @@ const I18n = (() => {
             filterClasses: 'Classes',
             filterAll: 'All',
             filterNone: 'None',
+            surrender: 'Surrender',
+            cancelSurrender: 'Cancel vote',
+            gameLost: 'Defeat!',
+            gameWon: 'Victory!',
+            gameSurrendered: 'Game surrendered',
 
             // Tooltips
             tooltipMana: 'Mana cost',
