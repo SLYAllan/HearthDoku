@@ -55,6 +55,12 @@
         toggleFilters.classList.toggle('room-setup__toggle--open', !open);
     });
 
+    function bindFilterImgFallbacks(container) {
+        container.querySelectorAll('img').forEach(img => {
+            img.addEventListener('error', () => { img.style.display = 'none'; }, { once: true });
+        });
+    }
+
     // --- Render filter checkboxes ---
     function renderRoomFilters(sets) {
         const setContainer = document.getElementById('roomSetFilters');
@@ -65,11 +71,10 @@
         setContainer.innerHTML = sets.map(s => {
             const name = HearthstoneAPI.getSetDisplayName(s);
             const iconPath = HearthstoneAPI.getSetIcon(s);
-            const iconHtml = iconPath
-                ? `<img src="${iconPath}" alt="" onerror="this.style.display='none'">`
-                : '';
+            const iconHtml = iconPath ? `<img src="${iconPath}" alt="">` : '';
             return `<label><input type="checkbox" value="${s}" checked>${iconHtml}<span>${name}</span></label>`;
         }).join('');
+        bindFilterImgFallbacks(setContainer);
 
         // Rarities
         const rarityMap = HearthstoneAPI.getRarityMap();
@@ -77,11 +82,10 @@
         rarityContainer.innerHTML = rarityOrder.filter(r => rarityMap[r]).map(r => {
             const name = rarityMap[r];
             const iconPath = HearthstoneAPI.getRarityIcon(r);
-            const iconHtml = iconPath
-                ? `<img src="${iconPath}" alt="" onerror="this.style.display='none'">`
-                : '';
+            const iconHtml = iconPath ? `<img src="${iconPath}" alt="">` : '';
             return `<label><input type="checkbox" value="${r}" checked>${iconHtml}<span>${name}</span></label>`;
         }).join('');
+        bindFilterImgFallbacks(rarityContainer);
 
         // Classes
         const classMap = HearthstoneAPI.getClassMap();
@@ -93,11 +97,10 @@
         classContainer.innerHTML = classOrder.filter(c => classMap[c]).map(cls => {
             const name = classMap[cls];
             const iconPath = HearthstoneAPI.getClassIcon(cls);
-            const iconHtml = iconPath
-                ? `<img src="${iconPath}" alt="" onerror="this.style.display='none'">`
-                : '';
+            const iconHtml = iconPath ? `<img src="${iconPath}" alt="">` : '';
             return `<label><input type="checkbox" value="${cls}" checked>${iconHtml}<span>${name}</span></label>`;
         }).join('');
+        bindFilterImgFallbacks(classContainer);
     }
 
     function getCheckedValues(containerId) {
