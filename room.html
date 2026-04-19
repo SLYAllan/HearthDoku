@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://art.hearthstonejson.com https://www.googletagmanager.com https://www.google-analytics.com; connect-src 'self' https://api.hearthstonejson.com https://www.googletagmanager.com https://www.google-analytics.com https://region1.google-analytics.com wss://hearthdoku-server.onrender.com ws://localhost:8080; frame-src https://www.googletagmanager.com; base-uri 'self'; form-action 'self';">
+
+    <base href=".">
+    <title>HearthDoku — Room Multijoueur</title>
+    <meta name="description" content="Jouez en multijoueur sur HearthDoku ! Créez une room et défiez vos amis.">
+    <meta name="robots" content="noindex">
+    <meta name="theme-color" content="#1c1917">
+    <meta name="color-scheme" content="dark">
+
+    <link rel="icon" type="image/webp" href="logo/Icon_Logo.webp">
+    <link rel="apple-touch-icon" href="logo/Icon_Logo.webp">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Title Bar -->
+        <header class="title-bar">
+            <div class="title-bar__left">
+                <div class="title-bar__logo">
+                    <img src="logo/Icon_Logo.webp" alt="" class="hs-logo" width="40" height="40">
+                    <a href="index.html" class="title-bar__title title-bar__title--link">HearthDoku</a>
+                </div>
+                <div class="lang-switcher">
+                    <label for="langSelect" class="visually-hidden">Langue / Language</label>
+                    <select id="langSelect" class="lang-select">
+                        <option value="fr">FR — Français</option>
+                        <option value="en">EN — English</option>
+                    </select>
+                </div>
+            </div>
+            <div class="title-bar__right">
+                <a class="btn-twitter" href="https://x.com/Solary_Allan" target="_blank" rel="noopener noreferrer" aria-label="Twitter @Solary_Allan">
+                    <svg class="btn-twitter__icon" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.259 5.63L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z"/>
+                    </svg>
+                </a>
+                <a class="btn-coffee" href="https://buymeacoffee.com/slyallan" target="_blank" rel="noopener noreferrer">
+                    <svg class="btn-coffee__icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M18 8h1a4 4 0 0 1 0 8h-1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <line x1="6" y1="1" x2="6" y2="4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="10" y1="1" x2="10" y2="4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="14" y1="1" x2="14" y2="4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </a>
+            </div>
+        </header>
+
+        <!-- Room Setup (shown before joining/creating) -->
+        <div class="room-setup" id="roomSetup">
+            <div class="room-setup__card">
+                <h2 class="room-setup__title" id="setupTitle">Créer une room</h2>
+
+                <div class="room-setup__field">
+                    <label for="playerName" id="labelPlayerName">Votre pseudo</label>
+                    <input type="text" id="playerName" class="room-setup__input" maxlength="20" placeholder="Joueur#1234">
+                </div>
+
+                <div class="room-setup__section">
+                    <h3 class="room-setup__subtitle" id="labelModeSelection">Choisir le mode</h3>
+                    <div class="room-setup__modes">
+                        <label class="room-mode-option room-mode-option--selected">
+                            <input type="radio" name="roomMode" value="coop" checked>
+                            <span class="room-mode-option__title" id="labelCoop">Coopératif</span>
+                            <span class="room-mode-option__desc" id="labelCoopDesc">Grille partagée — remplissez ensemble</span>
+                        </label>
+                        <label class="room-mode-option">
+                            <input type="radio" name="roomMode" value="versus">
+                            <span class="room-mode-option__title" id="labelVersus">Compétitif</span>
+                            <span class="room-mode-option__desc" id="labelVersusDesc">Grilles individuelles — le plus rapide gagne</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="room-setup__section">
+                    <button type="button" class="room-setup__toggle" id="toggleFilters">
+                        <span class="room-setup__toggle-arrow">&#9656;</span>
+                        <span id="labelAdvancedFilters">Filtres avancés</span>
+                    </button>
+                    <div class="room-setup__filters" id="filtersPanel" style="display:none">
+                        <div class="room-filters__presets">
+                            <button type="button" class="btn btn--preset btn--small" data-room-preset="standard">Standard</button>
+                            <button type="button" class="btn btn--preset btn--small" data-room-preset="wild">Wild</button>
+                            <button type="button" class="btn btn--preset btn--small" data-room-preset="classic">Classic</button>
+                        </div>
+                        <div class="room-filters__group">
+                            <div class="room-filters__group-header">
+                                <h4 id="labelFilterExtensions">Extensions</h4>
+                                <span class="room-filters__actions">
+                                    <button type="button" class="room-filters__action" id="roomBtnCheckAll">&#10003;</button>
+                                    <button type="button" class="room-filters__action" id="roomBtnUncheckAll">&#10007;</button>
+                                </span>
+                            </div>
+                            <div class="room-filters__list" id="roomSetFilters"></div>
+                        </div>
+                        <div class="room-filters__group">
+                            <div class="room-filters__group-header">
+                                <h4 id="labelFilterRarities">Raretés</h4>
+                                <span class="room-filters__actions">
+                                    <button type="button" class="room-filters__action" id="roomBtnCheckAllRarity">&#10003;</button>
+                                    <button type="button" class="room-filters__action" id="roomBtnUncheckAllRarity">&#10007;</button>
+                                </span>
+                            </div>
+                            <div class="room-filters__list" id="roomRarityFilters"></div>
+                        </div>
+                        <div class="room-filters__group">
+                            <div class="room-filters__group-header">
+                                <h4 id="labelFilterClasses">Classes</h4>
+                                <span class="room-filters__actions">
+                                    <button type="button" class="room-filters__action" id="roomBtnCheckAllClass">&#10003;</button>
+                                    <button type="button" class="room-filters__action" id="roomBtnUncheckAllClass">&#10007;</button>
+                                </span>
+                            </div>
+                            <div class="room-filters__list" id="roomClassFilters"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn btn--primary btn--large" id="btnCreateRoom">Créer une room</button>
+
+                <div class="room-setup__divider">
+                    <span id="labelOrJoin">ou rejoindre une room</span>
+                </div>
+
+                <div class="room-setup__join">
+                    <input type="text" id="joinCode" class="room-setup__input room-setup__input--code" maxlength="6" placeholder="CODE" autocomplete="off">
+                    <button class="btn btn--secondary" id="btnJoinRoom">Rejoindre</button>
+                </div>
+
+                <div class="room-setup__status" id="setupStatus" style="display:none"></div>
+
+                <a href="index.html" class="room-setup__back" id="linkBackToSolo">Retour au solo</a>
+            </div>
+        </div>
+
+        <!-- Room Game (hidden until joined) -->
+        <div class="room-game" id="roomGame" style="display:none">
+            <!-- Status Banner -->
+            <div class="room-status-banner" id="roomStatusBanner" style="display:none"></div>
+
+            <div class="room-layout">
+                <!-- Sidebar -->
+                <aside class="room-sidebar" id="roomSidebar">
+                    <div class="room-sidebar__header">
+                        <span class="room-sidebar__code" id="sidebarCode"></span>
+                        <span class="room-sidebar__mode-tag" id="sidebarMode"></span>
+                        <span class="room-sidebar__config" id="sidebarConfig" style="display:none"></span>
+                    </div>
+                    <div class="room-sidebar__timer" id="sidebarTimer" style="display:none">0:00</div>
+
+                    <div class="room-sidebar__section">
+                        <h3 class="room-sidebar__section-title" id="sidebarPlayerCount">Joueurs (0)</h3>
+                        <div class="room-sidebar__players" id="sidebarPlayers"></div>
+                    </div>
+
+                    <button class="btn btn--primary btn--small" id="btnStartGame" style="display:none">Lancer la partie</button>
+                    <button class="btn btn--secondary btn--small" id="btnCopyLink">Copier le lien</button>
+                    <button class="btn btn--danger btn--small" id="btnSurrender" style="display:none">Abandonner</button>
+                    <div class="room-sidebar__surrender-status" id="surrenderStatus" style="display:none"></div>
+                </aside>
+
+                <!-- Game Area -->
+                <main class="game-area">
+                    <!-- Stats Panel -->
+                    <div class="stats-panel">
+                        <div class="stat-item">
+                            <span class="stat-label">PTS</span>
+                            <span class="stat-value" id="statPts">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">ERREURS</span>
+                            <span class="stat-value" id="statPP">0/3</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">TIME</span>
+                            <span class="stat-value" id="statTimer">0:00</span>
+                        </div>
+                    </div>
+
+                    <!-- Puzzle Grid -->
+                    <div class="puzzle-container" id="puzzleContainer">
+                        <div class="puzzle-grid" id="puzzleGrid" role="grid" aria-label="Grille HearthDoku 3x3">
+                            <div class="grid-corner"></div>
+                            <div class="grid-col-header" id="colHeader0"></div>
+                            <div class="grid-col-header" id="colHeader1"></div>
+                            <div class="grid-col-header" id="colHeader2"></div>
+                            <div class="grid-row-header" id="rowHeader0"></div>
+                            <div class="grid-cell" data-row="0" data-col="0"></div>
+                            <div class="grid-cell" data-row="0" data-col="1"></div>
+                            <div class="grid-cell" data-row="0" data-col="2"></div>
+                            <div class="grid-row-header" id="rowHeader1"></div>
+                            <div class="grid-cell" data-row="1" data-col="0"></div>
+                            <div class="grid-cell" data-row="1" data-col="1"></div>
+                            <div class="grid-cell" data-row="1" data-col="2"></div>
+                            <div class="grid-row-header" id="rowHeader2"></div>
+                            <div class="grid-cell" data-row="2" data-col="0"></div>
+                            <div class="grid-cell" data-row="2" data-col="1"></div>
+                            <div class="grid-cell" data-row="2" data-col="2"></div>
+                        </div>
+                    </div>
+
+                    <!-- Loading -->
+                    <div class="loading-overlay" id="loadingOverlay" style="display:none">
+                        <div class="loading-spinner"></div>
+                        <p class="loading-text">Chargement...</p>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Modal -->
+    <div class="modal-overlay" id="searchModal" role="dialog" aria-modal="true" aria-labelledby="searchTitle" aria-hidden="true">
+        <div class="modal-content search-modal">
+            <div class="search-header">
+                <h3 class="search-title" id="searchTitle">Chercher une carte</h3>
+                <button class="modal-close" id="searchClose" aria-label="Fermer">&times;</button>
+            </div>
+            <label for="searchInput" class="visually-hidden">Chercher une carte</label>
+            <input type="text" class="search-input" id="searchInput" placeholder="Chercher une carte..." autocomplete="off">
+            <div class="search-results" id="searchResults"></div>
+        </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div class="modal-overlay" id="gameOverModal" role="dialog" aria-modal="true" aria-labelledby="gameOverTitle" aria-hidden="true">
+        <div class="modal-content game-over-modal">
+            <h2 class="game-over-title" id="gameOverTitle">Classement final</h2>
+            <div class="game-over-ranking" id="gameOverRanking"></div>
+            <div class="game-over-actions">
+                <a href="index.html" class="btn btn--primary">Retour au solo</a>
+                <button class="btn btn--secondary" id="btnGameOverClose">Fermer</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/i18n.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/puzzle-engine.js"></script>
+    <script src="js/card-search.js"></script>
+    <script src="js/room-client.js"></script>
+    <script src="js/room-ui.js"></script>
+    <script src="js/room-app.js"></script>
+</body>
+</html>

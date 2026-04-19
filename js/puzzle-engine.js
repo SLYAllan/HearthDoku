@@ -267,7 +267,7 @@ const PuzzleEngine = (() => {
 
     function imgIcon(src, fallbackEmoji, alt) {
         if (src) {
-            return `<img class="badge-icon-img" src="${src}" alt="${alt || ''}" onerror="this.outerHTML='${fallbackEmoji}'">`;
+            return `<img class="badge-icon-img" src="${src}" alt="${alt || ''}" data-fallback="${fallbackEmoji}">`;
         }
         return fallbackEmoji;
     }

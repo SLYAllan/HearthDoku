@@ -58,6 +58,7 @@ const App = (() => {
 
     function generateDailyPuzzle() {
         isDailyMode = true;
+        UI.setFiltersVisible(false);
         UI.showLoading();
         setTimeout(() => {
             const puzzle = PuzzleEngine.generatePuzzle(allCards, null, getDailySeed());
@@ -252,6 +253,7 @@ const App = (() => {
 
     function generateNewPuzzle() {
         isDailyMode = false;
+        UI.setFiltersVisible(true);
         UI.showLoading();
 
         setTimeout(() => {

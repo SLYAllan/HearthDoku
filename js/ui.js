@@ -15,6 +15,21 @@ const UI = (() => {
     let gameFinished = false;
     let dailyOpts = null; // { daily: true, saveFn }
 
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function bindBadgeFallbacks(el) {
+        el.querySelectorAll('.badge-icon-img[data-fallback]').forEach(img => {
+            img.addEventListener('error', () => {
+                const fb = img.dataset.fallback || '';
+                const text = document.createTextNode(fb);
+                img.replaceWith(text);
+            }, { once: true });
+        });
+    }
+
     // DOM references
     const els = {};
 
@@ -155,11 +170,13 @@ const UI = (() => {
         for (let c = 0; c < 3; c++) {
             const el = document.getElementById(`colHeader${c}`);
             el.innerHTML = renderBadge(puzzle.colCriteria[c]);
+            bindBadgeFallbacks(el);
         }
 
         for (let r = 0; r < 3; r++) {
             const el = document.getElementById(`rowHeader${r}`);
             el.innerHTML = renderBadge(puzzle.rowCriteria[r]);
+            bindBadgeFallbacks(el);
         }
 
         els.statUniq.textContent = puzzle.uniqueCount;
@@ -230,14 +247,16 @@ const UI = (() => {
             const showSetBadge = AMBIGUOUS_SETS.has(setCode);
             const setIcon = showSetBadge ? HearthstoneAPI.getSetIcon(setCode) : null;
             const setName = showSetBadge ? HearthstoneAPI.getSetDisplayName(setCode) : '';
+            const isSvgIcon = setIcon && setIcon.endsWith('.svg');
+            const setIconCls = 'search-result__set-icon' + (isSvgIcon ? ' filter-item__icon--svg' : '');
             const setIconHtml = setIcon
-                ? `<img class="search-result__set-icon" src="${setIcon}" alt="" onerror="this.style.display='none'">`
+                ? `<img class="${setIconCls}" src="${setIcon}" alt="">`
                 : '';
 
             return `<div class="search-result ${used ? 'search-result--used' : ''}" data-card-id="${card.id}" data-dbf-id="${card.dbfId}">
                 <div class="search-result__info">
-                    <div class="search-result__name">${card.name}</div>
-                    ${showSetBadge ? `<div class="search-result__set">${setIconHtml}<span>${setName}</span></div>` : ''}
+                    <div class="search-result__name">${escapeHtml(card.name)}</div>
+                    ${showSetBadge ? `<div class="search-result__set">${setIconHtml}<span>${escapeHtml(setName)}</span></div>` : ''}
                 </div>
                 ${used ? `<div class="search-result__used-tag">${I18n.t('alreadyUsed')}</div>` : ''}
             </div>`;
@@ -249,6 +268,10 @@ const UI = (() => {
                 const dbfId = parseInt(el.dataset.dbfId);
                 selectCard(cardId, dbfId);
             });
+        });
+
+        els.searchResults.querySelectorAll('img').forEach(img => {
+            img.addEventListener('error', () => { img.style.display = 'none'; }, { once: true });
         });
     }
 
@@ -271,11 +294,18 @@ const UI = (() => {
             usedCardIds.add(dbfId || cardId);
 
             const renderUrl = HearthstoneAPI.getCardRenderUrl(cardId);
+            const safeName = escapeHtml(card.name);
             cellEl.innerHTML = `<div class="cell-card cell-card--correct">
-                <img src="${renderUrl}" alt="${card.name}" onerror="this.parentElement.innerHTML='<span class=\\'cell-card__name\\'>${card.name}</span>'">
-                <div class="cell-card__name-overlay">${card.name}</div>
+                <img src="${renderUrl}" alt="${safeName}">
+                <div class="cell-card__name-overlay">${safeName}</div>
                 <div class="cell-card__score">+${cardScore}</div>
             </div>`;
+            const correctImg = cellEl.querySelector('img');
+            if (correctImg) {
+                correctImg.addEventListener('error', () => {
+                    correctImg.parentElement.innerHTML = `<span class="cell-card__name">${safeName}</span>`;
+                }, { once: true });
+            }
             cellEl.classList.add('grid-cell--correct');
             animateCorrect(cellEl);
 
@@ -288,7 +318,7 @@ const UI = (() => {
             const name = selectedCard ? selectedCard.name : cardId;
             cellEl.innerHTML = `<div class="cell-card cell-card--wrong">
                 <span class="cell-card__x">✗</span>
-                <span class="cell-card__name">${name}</span>
+                <span class="cell-card__name">${escapeHtml(name)}</span>
             </div>`;
             cellState[activeCellIndex] = { card: selectedCard, correct: false };
             animateWrong(cellEl);
@@ -426,11 +456,18 @@ const UI = (() => {
             const col = i % 3;
             const renderUrl = HearthstoneAPI.getCardRenderUrl(card.id);
             const cellEl = document.querySelector(`.grid-cell[data-row="${row}"][data-col="${col}"]`);
+            const safeCardName = escapeHtml(card.name);
             cellEl.innerHTML = `<div class="cell-card cell-card--solution">
-                <img src="${renderUrl}" alt="${card.name}" onerror="this.parentElement.innerHTML='<span class=\\'cell-card__name\\'>${card.name}</span>'">
-                <div class="cell-card__name-overlay">${card.name}</div>
+                <img src="${renderUrl}" alt="${safeCardName}">
+                <div class="cell-card__name-overlay">${safeCardName}</div>
                 <div class="cell-card__solution-tag">${I18n.t('solution')}</div>
             </div>`;
+            const solImg = cellEl.querySelector('img');
+            if (solImg) {
+                solImg.addEventListener('error', () => {
+                    solImg.parentElement.innerHTML = `<span class="cell-card__name">${safeCardName}</span>`;
+                }, { once: true });
+            }
             cellEl.classList.add('grid-cell--solution');
         }
 
@@ -463,9 +500,10 @@ const UI = (() => {
                 <div class="solution-cell__cards">
                     ${cards.map(card => {
                         const renderUrl = HearthstoneAPI.getCardRenderUrl(card.id);
-                        return `<div class="solution-card" title="${card.name}">
-                            <img src="${renderUrl}" alt="${card.name}" onerror="this.parentElement.innerHTML='<span class=\\'solution-card__name\\'>${card.name}</span>'">
-                            <div class="solution-card__label">${card.name}</div>
+                        const esc = escapeHtml(card.name);
+                        return `<div class="solution-card" title="${esc}">
+                            <img src="${renderUrl}" alt="${esc}">
+                            <div class="solution-card__label">${esc}</div>
                         </div>`;
                     }).join('')}
                 </div>
@@ -473,6 +511,11 @@ const UI = (() => {
         }
 
         grid.innerHTML = html;
+        grid.querySelectorAll('.solution-card img').forEach(img => {
+            img.addEventListener('error', () => {
+                img.parentElement.innerHTML = `<span class="solution-card__name">${img.alt}</span>`;
+            }, { once: true });
+        });
         modal.classList.add('modal-overlay--visible');
 
         const onClose = () => {
@@ -621,8 +664,10 @@ const UI = (() => {
             const name = HearthstoneAPI.getSetDisplayName(s);
             const checked = allowedSets.includes(s) ? 'checked' : '';
             const iconPath = HearthstoneAPI.getSetIcon(s);
+            const isSvg = iconPath && iconPath.endsWith('.svg');
+            const iconCls = 'filter-item__icon' + (isSvg ? ' filter-item__icon--svg' : '');
             const iconHtml = iconPath
-                ? `<img class="filter-item__icon filter-item__icon--set" src="${iconPath}" alt="" onerror="this.style.display='none'">`
+                ? `<img class="${iconCls}" src="${iconPath}" alt="">`
                 : '';
             return `<label class="filter-item filter-item--set" data-set="${s}" data-name="${name.toLowerCase()}">
                 <input type="checkbox" value="${s}" ${checked}>
@@ -635,6 +680,10 @@ const UI = (() => {
             cb.addEventListener('change', () => {
                 if (App.onSetFilterChange) App.onSetFilterChange();
             });
+        });
+
+        els.filterList.querySelectorAll('img').forEach(img => {
+            img.addEventListener('error', () => { img.style.display = 'none'; }, { once: true });
         });
     }
 
@@ -649,7 +698,7 @@ const UI = (() => {
             const checked = allowed.includes(r) ? 'checked' : '';
             const iconPath = HearthstoneAPI.getRarityIcon(r);
             const iconHtml = iconPath
-                ? `<img class="filter-item__icon" src="${iconPath}" alt="" onerror="this.style.display='none'">`
+                ? `<img class="filter-item__icon" src="${iconPath}" alt="">`
                 : '';
             return `<label class="filter-item filter-item--rarity filter-item--rarity-${r.toLowerCase()}">
                 <input type="checkbox" value="${r}" ${checked}>
@@ -662,6 +711,10 @@ const UI = (() => {
             cb.addEventListener('change', () => {
                 if (App.onRarityFilterChange) App.onRarityFilterChange();
             });
+        });
+
+        els.rarityFilterList.querySelectorAll('img').forEach(img => {
+            img.addEventListener('error', () => { img.style.display = 'none'; }, { once: true });
         });
     }
 
@@ -680,7 +733,7 @@ const UI = (() => {
             const checked = allowed.includes(cls) ? 'checked' : '';
             const iconPath = HearthstoneAPI.getClassIcon(cls);
             const iconHtml = iconPath
-                ? `<img class="filter-item__icon" src="${iconPath}" alt="" onerror="this.style.display='none'">`
+                ? `<img class="filter-item__icon" src="${iconPath}" alt="">`
                 : '';
             return `<label class="filter-item filter-item--class filter-item--class-${cls.toLowerCase()}">
                 <input type="checkbox" value="${cls}" ${checked}>
@@ -693,6 +746,10 @@ const UI = (() => {
             cb.addEventListener('change', () => {
                 if (App.onClassFilterChange) App.onClassFilterChange();
             });
+        });
+
+        els.classFilterList.querySelectorAll('img').forEach(img => {
+            img.addEventListener('error', () => { img.style.display = 'none'; }, { once: true });
         });
     }
 
@@ -749,6 +806,11 @@ const UI = (() => {
         });
     }
 
+    function setFiltersVisible(visible) {
+        const content = document.getElementById('controlsContent');
+        if (content) content.classList.toggle('controls-content--daily-mode', !visible);
+    }
+
     // Update all static UI text based on current language
     function updateUIText() {
         document.documentElement.lang = I18n.getLang();
@@ -762,8 +824,10 @@ const UI = (() => {
 
         // Action buttons
         const btnDailyPuzzle = document.getElementById('btnDailyPuzzle');
-        if (btnDailyPuzzle) btnDailyPuzzle.textContent = `📅 ${I18n.t('dailyPuzzle')}`;
+        if (btnDailyPuzzle) btnDailyPuzzle.textContent = I18n.t('dailyPuzzle');
         document.getElementById('btnNewPuzzle').textContent = I18n.t('newPuzzle');
+        const btnMultiplayer = document.getElementById('btnMultiplayer');
+        if (btnMultiplayer) btnMultiplayer.textContent = I18n.t('multiplayer');
         document.getElementById('btnShowSolution').textContent = I18n.t('showSolution');
         document.getElementById('btnExport').textContent = I18n.t('exportPng');
         document.getElementById('btnShare').textContent = I18n.t('share');
@@ -871,6 +935,7 @@ const UI = (() => {
         setPresetChecked,
         updateStats,
         updateUIText,
+        setFiltersVisible,
         get currentPuzzle() { return currentPuzzle; },
         get score() { return score; },
         get errors() { return errors; },
