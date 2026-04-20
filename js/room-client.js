@@ -7,7 +7,7 @@ const RoomClient = (() => {
         if (!h || h === 'localhost' || h === '127.0.0.1') {
             return { http: 'http://localhost:8080', ws: 'ws://localhost:8080' };
         }
-        return { http: 'https://hearthdoku-server.onrender.com', ws: 'wss://hearthdoku-server.onrender.com' };
+        return { http: 'https://ws.hearthdoku.fr', ws: 'wss://ws.hearthdoku.fr' };
     }
     const SERVER = getServerOrigin();
 
