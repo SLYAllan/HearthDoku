@@ -2,14 +2,14 @@
  * HearthDoku — Room WebSocket client
  */
 const RoomClient = (() => {
-    function getWsUrl() {
+    function getServerOrigin() {
         const h = location.hostname;
         if (!h || h === 'localhost' || h === '127.0.0.1') {
-            return 'ws://localhost:8080';
+            return { http: 'http://localhost:8080', ws: 'ws://localhost:8080' };
         }
-        return 'wss://hearthdoku-server.onrender.com';
+        return { http: 'https://hearthdoku-server.onrender.com', ws: 'wss://hearthdoku-server.onrender.com' };
     }
-    const WS_URL = getWsUrl();
+    const SERVER = getServerOrigin();
 
     let ws = null;
     let roomCode = null;
@@ -18,7 +18,7 @@ const RoomClient = (() => {
     let reconnectAttempts = 0;
     const MAX_RECONNECT = 5;
     let handlers = {};
-    let pendingAction = null;
+    let serverAwake = false;
 
     function on(event, fn) {
         if (!handlers[event]) handlers[event] = [];
@@ -31,7 +31,17 @@ const RoomClient = (() => {
         }
     }
 
-    function connect(onOpen) {
+    async function wakeServer() {
+        if (serverAwake) return;
+        try {
+            const res = await fetch(SERVER.http + '/health', { mode: 'cors' });
+            if (res.ok) serverAwake = true;
+        } catch {
+            // server may still be waking up
+        }
+    }
+
+    async function connect(onOpen) {
         if (ws && ws.readyState === WebSocket.OPEN) {
             if (onOpen) onOpen();
             return;
@@ -43,8 +53,10 @@ const RoomClient = (() => {
 
         emit('status', { status: 'connecting' });
 
+        await wakeServer();
+
         try {
-            ws = new WebSocket(WS_URL);
+            ws = new WebSocket(SERVER.ws);
         } catch (e) {
             emit('error', { message: 'WebSocket connection failed' });
             return;
@@ -52,6 +64,7 @@ const RoomClient = (() => {
 
         ws.onopen = () => {
             reconnectAttempts = 0;
+            serverAwake = true;
             emit('status', { status: 'connected' });
             if (onOpen) onOpen();
         };
@@ -68,7 +81,7 @@ const RoomClient = (() => {
         };
 
         ws.onerror = () => {
-            emit('error', { message: 'Connection error — is the server running on port 8080?' });
+            emit('error', { message: 'Connection error' });
         };
     }
 
