@@ -39,8 +39,9 @@ wss.on('close', () => clearInterval(heartbeat));
 wss.on('connection', (ws, req) => {
     ws.isAlive = true;
     ws.on('pong', () => { ws.isAlive = true; });
-    const origin = req.headers.origin || '';
-    if (CORS_ORIGIN !== '*' && !CORS_ORIGIN.split(',').some(o => origin === o.trim())) {
+    const origin = (req.headers.origin || '').replace(/\/+$/, '');
+    if (CORS_ORIGIN !== '*' && !CORS_ORIGIN.split(',').some(o => origin === o.trim().replace(/\/+$/, ''))) {
+        console.log(`[ws] Origin rejected: "${origin}" (allowed: "${CORS_ORIGIN}")`);
         ws.close(4003, 'Origin not allowed');
         return;
     }
