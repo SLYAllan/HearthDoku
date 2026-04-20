@@ -74,6 +74,8 @@ const App = (() => {
             const prev = getDailyResult();
             if (prev) {
                 UI.markDailyAlreadyPlayed();
+            } else {
+                UI.restoreDailyProgress();
             }
         }, 50);
     }

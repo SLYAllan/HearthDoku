@@ -125,6 +125,87 @@ const UI = (() => {
         els.loadingOverlay.style.display = 'none';
     }
 
+    function getDailyProgressKey() {
+        const d = new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `hearthdoku_progress_${y}-${m}-${day}`;
+    }
+
+    function saveDailyProgress() {
+        if (!dailyOpts || gameFinished) return;
+        try {
+            const data = {
+                cellState: cellState.map(s => s ? { cardId: s.card.id, dbfId: s.card.dbfId, name: s.card.name, correct: s.correct } : null),
+                score,
+                errors,
+                timerSeconds,
+                usedCardIds: [...usedCardIds],
+            };
+            localStorage.setItem(getDailyProgressKey(), JSON.stringify(data));
+        } catch { /* localStorage unavailable */ }
+    }
+
+    function loadDailyProgress() {
+        try {
+            const raw = localStorage.getItem(getDailyProgressKey());
+            return raw ? JSON.parse(raw) : null;
+        } catch { return null; }
+    }
+
+    function clearDailyProgress() {
+        try { localStorage.removeItem(getDailyProgressKey()); } catch {}
+    }
+
+    function restoreDailyProgress() {
+        const saved = loadDailyProgress();
+        if (!saved) return false;
+
+        score = saved.score || 0;
+        errors = saved.errors || 0;
+        timerSeconds = saved.timerSeconds || 0;
+        usedCardIds = new Set(saved.usedCardIds || []);
+
+        saved.cellState.forEach((s, i) => {
+            if (!s || !s.correct) return;
+            const allCards = HearthstoneAPI.getCollectibleCards();
+            const card = allCards.find(c => c.dbfId === s.dbfId) || { id: s.cardId, dbfId: s.dbfId, name: s.name };
+            cellState[i] = { card, correct: true };
+
+            const row = Math.floor(i / 3);
+            const col = i % 3;
+            const cellEl = document.querySelector(`.grid-cell[data-row="${row}"][data-col="${col}"]`);
+            if (!cellEl) return;
+            const renderUrl = HearthstoneAPI.getCardRenderUrl(card.id);
+            const safeName = escapeHtml(card.name);
+            cellEl.innerHTML = `<div class="cell-card cell-card--correct">
+                <img src="${renderUrl}" alt="${safeName}">
+                <div class="cell-card__name-overlay">${safeName}</div>
+            </div>`;
+            const img = cellEl.querySelector('img');
+            if (img) {
+                img.addEventListener('error', () => {
+                    img.parentElement.innerHTML = `<span class="cell-card__name">${safeName}</span>`;
+                }, { once: true });
+            }
+            cellEl.classList.add('grid-cell--correct');
+        });
+
+        updateStats();
+        clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+            timerSeconds++;
+            els.statTimer.textContent = formatTime(timerSeconds);
+        }, 1000);
+
+        if (errors >= MAX_ERRORS) {
+            endGame(false);
+        }
+
+        return true;
+    }
+
     function resetGame() {
         cellState = Array(9).fill(null);
         score = 0;
@@ -311,6 +392,7 @@ const UI = (() => {
 
             closeSearchModal();
             updateStats();
+            saveDailyProgress();
             checkVictory();
         } else {
             errors++;
@@ -325,6 +407,7 @@ const UI = (() => {
 
             closeSearchModal();
             updateStats();
+            saveDailyProgress();
 
             if (errors >= MAX_ERRORS) {
                 endGame(false);
@@ -352,8 +435,8 @@ const UI = (() => {
     function endGame(victory) {
         gameFinished = true;
         clearInterval(timerInterval);
+        clearDailyProgress();
 
-        // Save daily result if in daily mode
         if (dailyOpts && dailyOpts.saveFn) {
             dailyOpts.saveFn(score, formatTime(timerSeconds), errors);
         }
@@ -430,8 +513,8 @@ const UI = (() => {
         if (!currentPuzzle) return;
         gameFinished = true;
         clearInterval(timerInterval);
+        clearDailyProgress();
 
-        // Save daily result on give-up (win/loss paths already save via endGame)
         if (dailyOpts && dailyOpts.saveFn) {
             dailyOpts.saveFn(score, formatTime(timerSeconds), errors);
         }
@@ -942,5 +1025,6 @@ const UI = (() => {
         get timerSeconds() { return timerSeconds; },
         get gameFinished() { return gameFinished; },
         formatTime,
+        restoreDailyProgress,
     };
 })();

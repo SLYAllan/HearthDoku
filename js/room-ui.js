@@ -22,6 +22,7 @@ const RoomUI = (() => {
     let surrenderVotes = 0;
     let surrenderNeeded = 0;
     let mySurrenderVote = false;
+    let solutions = null;
 
     const els = {};
 
@@ -50,6 +51,7 @@ const RoomUI = (() => {
         els.gameOverRanking = document.getElementById('gameOverRanking');
         els.btnSurrender = document.getElementById('btnSurrender');
         els.surrenderStatus = document.getElementById('surrenderStatus');
+        els.btnShowSolutions = document.getElementById('btnShowSolutions');
     }
 
     function init() {
@@ -69,6 +71,11 @@ const RoomUI = (() => {
             RoomClient.surrender();
         });
 
+        els.btnShowSolutions.addEventListener('click', () => {
+            showSolutionsOnGrid();
+            closeGameOverModal();
+        });
+
         els.searchClose.addEventListener('click', closeSearchModal);
         els.searchModal.addEventListener('click', (e) => {
             if (e.target === els.searchModal) closeSearchModal();
@@ -86,7 +93,7 @@ const RoomUI = (() => {
             cell.addEventListener('click', () => {
                 if (gameFinished) return;
                 if (errors >= MAX_ERRORS) return;
-                if (mode === 'versus' && !gameStarted) return;
+                if (!gameStarted) return;
                 const row = parseInt(cell.dataset.row);
                 const col = parseInt(cell.dataset.col);
                 const idx = row * 3 + col;
@@ -157,8 +164,8 @@ const RoomUI = (() => {
 
         if (gameStarted) {
             startTimer();
-            if (mode === 'versus') setStatus(I18n.t('gameStarted'));
-        } else if (mode === 'versus') {
+            setStatus(I18n.t('gameStarted'));
+        } else {
             setStatus(myId === hostId ? I18n.t('waitingForPlayers') : I18n.t('waitingForHost'));
         }
 
@@ -301,6 +308,7 @@ const RoomUI = (() => {
     function onGameOver(msg) {
         gameFinished = true;
         clearInterval(timerInterval);
+        solutions = msg.solutions || null;
         showGameOverModal(msg);
     }
 
@@ -374,7 +382,7 @@ const RoomUI = (() => {
             els.sidebarConfig.style.display = parts.length > 0 ? 'block' : 'none';
         }
 
-        if (mode === 'versus' && !gameStarted && myId === hostId) {
+        if (!gameStarted && myId === hostId) {
             els.btnStartGame.style.display = 'block';
             els.btnStartGame.textContent = I18n.t('startGame');
         } else {
@@ -383,7 +391,7 @@ const RoomUI = (() => {
 
         els.sidebarTimer.style.display = 'block';
 
-        if (gameStarted || mode === 'coop') {
+        if (gameStarted) {
             els.btnSurrender.style.display = 'block';
             els.btnSurrender.textContent = I18n.t('surrender');
         }
@@ -529,6 +537,25 @@ const RoomUI = (() => {
         </div>`;
         cellEl.classList.add('grid-cell--correct');
         bindCardImgFallback(cellEl, data.cardName);
+    }
+
+    function showSolutionsOnGrid() {
+        if (!solutions) return;
+        solutions.forEach((sol, idx) => {
+            if (!sol || cellState[idx]) return;
+            const row = Math.floor(idx / 3);
+            const col = idx % 3;
+            const cellEl = document.querySelector(`.grid-cell[data-row="${row}"][data-col="${col}"]`);
+            if (!cellEl) return;
+            const localName = getLocalCardName(sol.dbfId, sol.cardName);
+            const renderUrl = HearthstoneAPI.getCardRenderUrl(sol.cardId);
+            cellEl.innerHTML = `<div class="cell-card cell-card--solution">
+                ${cardImgHtml(renderUrl, localName)}
+                <div class="cell-card__name-overlay">${escapeHtml(localName)}</div>
+            </div>`;
+            cellEl.classList.add('grid-cell--solution');
+            bindCardImgFallback(cellEl, localName);
+        });
     }
 
     function renderStats() {
@@ -696,6 +723,7 @@ const RoomUI = (() => {
         rankHtml += '</ol>';
 
         els.gameOverRanking.innerHTML = summaryHtml + rankHtml;
+        els.btnShowSolutions.textContent = I18n.t('showSolutions');
         els.gameOverModal.classList.add('modal-overlay--visible');
     }
 
