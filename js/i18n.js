@@ -103,6 +103,7 @@ const I18n = (() => {
             gameLost: 'Défaite !',
             gameWon: 'Victoire !',
             gameSurrendered: 'Partie abandonnée',
+            showSolutions: 'Voir les solutions',
 
             // Tooltips
             tooltipMana: 'Coût en mana',
@@ -372,6 +373,7 @@ const I18n = (() => {
             gameLost: 'Defeat!',
             gameWon: 'Victory!',
             gameSurrendered: 'Game surrendered',
+            showSolutions: 'Show solutions',
 
             // Tooltips
             tooltipMana: 'Mana cost',

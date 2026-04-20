@@ -78,7 +78,7 @@ class RoomManager {
             hostId: playerId,
             createdAt: now,
             expiresAt: now + ROOM_TTL_MS,
-            startedAt: mode === 'coop' ? now : null,
+            startedAt: null,
             config: config || null,
             puzzle: {
                 rowCriteria: puzzle.rowCriteria,
@@ -233,7 +233,7 @@ class RoomManager {
         if (!info) return;
         const room = this.rooms.get(info.code);
         if (!room || room.finished) return;
-        if (room.mode === 'versus' && !room.startedAt) return;
+        if (!room.startedAt) return;
 
         if (room.surrenderVotes.has(info.playerId)) {
             room.surrenderVotes.delete(info.playerId);
@@ -270,7 +270,7 @@ class RoomManager {
         if (row < 0 || row > 2 || col < 0 || col > 2) return;
         const cellIndex = row * 3 + col;
 
-        if (room.mode === 'versus' && !room.startedAt) {
+        if (!room.startedAt) {
             this.sendTo(ws, { type: 'cell_rejected', row, col, reason: 'game_not_started' });
             return;
         }
@@ -399,8 +399,10 @@ class RoomManager {
             this.sendTo(player.ws, {
                 type: 'cell_error',
                 row, col,
+                playerId: player.id,
                 cardName: wrongCard ? wrongCard.name : cardId,
                 dbfId,
+                playerErrors: player.errors,
             });
 
             if (player.errors >= MAX_ERRORS) {
@@ -445,6 +447,11 @@ class RoomManager {
                 return b.score - a.score;
             });
 
+        const solutions = room.puzzle.cellCards.map(cellCards => {
+            const best = cellCards[0];
+            return best ? { cardId: best.id, cardName: best.name, dbfId: best.dbfId } : null;
+        });
+
         this.broadcast(room, {
             type: 'game_over',
             scores,
@@ -454,6 +461,7 @@ class RoomManager {
                 ? [...room.players.values()].reduce((sum, p) => sum + p.errors, 0)
                 : null,
             mode: room.mode,
+            solutions,
         });
     }
 
