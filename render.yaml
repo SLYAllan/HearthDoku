@@ -11,4 +11,4 @@ services:
       - key: NODE_VERSION
         value: "20"
       - key: CORS_ORIGIN
-        value: https://slyallan.github.io
+        value: https://slyallan.github.io,https://hearthdoku.fr,https://www.hearthdoku.fr
