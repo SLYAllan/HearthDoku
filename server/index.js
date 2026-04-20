@@ -41,10 +41,11 @@ wss.on('connection', (ws, req) => {
     ws.on('pong', () => { ws.isAlive = true; });
     const origin = (req.headers.origin || '').replace(/\/+$/, '');
     if (CORS_ORIGIN !== '*' && !CORS_ORIGIN.split(',').some(o => origin === o.trim().replace(/\/+$/, ''))) {
-        console.log(`[ws] Origin rejected: "${origin}" (allowed: "${CORS_ORIGIN}")`);
+        console.log(`[ws] Origin rejected: "${origin}"`);
         ws.close(4003, 'Origin not allowed');
         return;
     }
+    console.log(`[ws] Connection from "${origin}"`);
 
     ws.on('message', (data) => {
         let msg;
