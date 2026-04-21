@@ -402,8 +402,14 @@ const UI = (() => {
                 <span class="cell-card__x">✗</span>
                 <span class="cell-card__name">${escapeHtml(name)}</span>
             </div>`;
-            cellState[activeCellIndex] = { card: selectedCard, correct: false };
+            const errIdx = activeCellIndex;
             animateWrong(cellEl);
+            setTimeout(() => {
+                if (!cellState[errIdx]) {
+                    cellEl.innerHTML = '';
+                    cellEl.classList.remove('grid-cell--wrong');
+                }
+            }, 800);
 
             closeSearchModal();
             updateStats();
