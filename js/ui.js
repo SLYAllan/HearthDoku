@@ -402,8 +402,14 @@ const UI = (() => {
                 <span class="cell-card__x">✗</span>
                 <span class="cell-card__name">${escapeHtml(name)}</span>
             </div>`;
-            cellState[activeCellIndex] = { card: selectedCard, correct: false };
+            const errIdx = activeCellIndex;
             animateWrong(cellEl);
+            setTimeout(() => {
+                if (!cellState[errIdx]) {
+                    cellEl.innerHTML = '';
+                    cellEl.classList.remove('grid-cell--wrong');
+                }
+            }, 800);
 
             closeSearchModal();
             updateStats();
@@ -441,10 +447,51 @@ const UI = (() => {
             dailyOpts.saveFn(score, formatTime(timerSeconds), errors);
         }
 
+        if (dailyOpts) {
+            revealSolutionsOnGrid();
+        }
+
         if (victory) {
             showVictoryModal();
         } else {
             showDefeatModal();
+        }
+
+        if (dailyOpts) {
+            showSolutionPopup();
+        }
+    }
+
+    function revealSolutionsOnGrid() {
+        if (!currentPuzzle) return;
+        const alreadyUsedIds = [];
+        for (let i = 0; i < 9; i++) {
+            if (cellState[i] && cellState[i].correct) {
+                alreadyUsedIds.push(cellState[i].card.dbfId || cellState[i].card.id);
+            }
+        }
+        const solution = PuzzleEngine.findSolution(currentPuzzle.cellCards, alreadyUsedIds);
+        for (let i = 0; i < 9; i++) {
+            if (cellState[i] && cellState[i].correct) continue;
+            const card = solution[i];
+            if (!card) continue;
+            const row = Math.floor(i / 3);
+            const col = i % 3;
+            const renderUrl = HearthstoneAPI.getCardRenderUrl(card.id);
+            const cellEl = document.querySelector(`.grid-cell[data-row="${row}"][data-col="${col}"]`);
+            const safeCardName = escapeHtml(card.name);
+            cellEl.innerHTML = `<div class="cell-card cell-card--solution">
+                <img src="${renderUrl}" alt="${safeCardName}">
+                <div class="cell-card__name-overlay">${safeCardName}</div>
+                <div class="cell-card__solution-tag">${I18n.t('solution')}</div>
+            </div>`;
+            const solImg = cellEl.querySelector('img');
+            if (solImg) {
+                solImg.addEventListener('error', () => {
+                    solImg.parentElement.innerHTML = `<span class="cell-card__name">${safeCardName}</span>`;
+                }, { once: true });
+            }
+            cellEl.classList.add('grid-cell--solution');
         }
     }
 
@@ -908,7 +955,7 @@ const UI = (() => {
         // Action buttons
         const btnDailyPuzzle = document.getElementById('btnDailyPuzzle');
         if (btnDailyPuzzle) btnDailyPuzzle.textContent = I18n.t('dailyPuzzle');
-        document.getElementById('btnNewPuzzle').textContent = I18n.t('newPuzzle');
+        // btnNewPuzzle label managed by App (daily → "Mode illimité", free → "Nouveau puzzle")
         const btnMultiplayer = document.getElementById('btnMultiplayer');
         if (btnMultiplayer) btnMultiplayer.textContent = I18n.t('multiplayer');
         document.getElementById('btnShowSolution').textContent = I18n.t('showSolution');
