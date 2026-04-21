@@ -56,10 +56,16 @@ const App = (() => {
 
     // ---------- Puzzle generation ----------
 
+    function updateNewPuzzleButton() {
+        const btn = document.getElementById('btnNewPuzzle');
+        if (btn) btn.textContent = isDailyMode ? I18n.t('unlimitedMode') : I18n.t('newPuzzle');
+    }
+
     function generateDailyPuzzle() {
         isDailyMode = true;
         UI.setFiltersVisible(false);
         UI.showLoading();
+        updateNewPuzzleButton();
         setTimeout(() => {
             const puzzle = PuzzleEngine.generatePuzzle(allCards, null, getDailySeed());
             if (!puzzle) {
@@ -257,6 +263,7 @@ const App = (() => {
         isDailyMode = false;
         UI.setFiltersVisible(true);
         UI.showLoading();
+        updateNewPuzzleButton();
 
         setTimeout(() => {
             allowedSets = UI.getCheckedSets();
