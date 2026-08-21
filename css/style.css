@@ -21,7 +21,7 @@
     --border-oat-light: #44403c;
     --text-primary: #fafaf9;
     --text-secondary: #a8a29e;
-    --text-tertiary: #78716c;
+    --text-tertiary: #a8a29e;
 
     /* Swatch Palette (kept vibrant on dark) */
     --matcha-300: #84e7a5;
@@ -84,6 +84,7 @@ body {
     padding: 1rem 1.5rem;
     border-bottom: 1px solid var(--border-oat-light);
     background: var(--bg-surface);
+    gap: 0.75rem;
 }
 
 .title-bar__left {
@@ -172,7 +173,7 @@ body {
     text-decoration: none;
     cursor: pointer;
     box-shadow: var(--shadow-clay);
-    transition: all 0.2s ease;
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
     white-space: nowrap;
     flex-shrink: 0;
 }
@@ -217,7 +218,7 @@ body {
     background-repeat: no-repeat;
     background-position: right 0.4rem center;
     box-shadow: var(--shadow-clay);
-    transition: all 0.2s;
+    transition: border-color 0.2s, background-color 0.2s;
 }
 
 .lang-select:hover {
@@ -262,7 +263,7 @@ body {
     cursor: pointer;
     margin-bottom: 0.5rem;
     box-shadow: var(--shadow-clay);
-    transition: all 0.2s;
+    transition: border-color 0.2s, background-color 0.2s;
 }
 
 .controls-toggle:hover {
@@ -296,7 +297,7 @@ body {
     border: none;
     border-radius: 12px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
     letter-spacing: -0.16px;
 }
 
@@ -339,7 +340,7 @@ body {
     border: 1px dashed var(--border-oat);
     border-radius: 8px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: color 0.2s, border-color 0.2s;
 }
 
 .btn--tiny:hover {
@@ -649,6 +650,16 @@ body {
     overflow: hidden;
     position: relative;
     box-shadow: var(--shadow-clay);
+    color: inherit;
+    font: inherit;
+    padding: 0;
+    min-width: 0;
+}
+
+.grid-cell:focus-visible,
+.search-result:focus-visible {
+    outline: 2px solid var(--lemon-500);
+    outline-offset: 2px;
 }
 
 .grid-cell:hover {
@@ -1056,7 +1067,11 @@ body {
     border: 1px solid var(--border-oat-light);
     border-radius: 12px;
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+    color: inherit;
+    font: inherit;
+    text-align: start;
+    width: 100%;
 }
 
 .search-result:hover {
@@ -1067,6 +1082,22 @@ body {
 .search-result--used {
     opacity: 0.35;
     cursor: not-allowed;
+}
+
+.search-result:disabled {
+    color: inherit;
+}
+
+@media (max-width: 900px) {
+    .title-bar {
+        flex-wrap: wrap;
+    }
+
+    .title-bar__nav {
+        order: 3;
+        width: 100%;
+        justify-content: center;
+    }
 }
 
 .search-result__info {
@@ -1245,7 +1276,7 @@ body {
     font-size: 0.85rem;
     z-index: 200;
     opacity: 0;
-    transition: all 0.3s;
+    transition: opacity 0.2s ease-out, transform 0.2s ease-out;
     pointer-events: none;
     box-shadow: 0 4px 16px rgba(0,0,0,0.4);
 }
@@ -1405,8 +1436,27 @@ body {
     }
 
     .puzzle-grid {
-        grid-template-columns: 120px repeat(3, 150px);
+        grid-template-columns: 120px repeat(3, minmax(0, 1fr));
         grid-template-rows: 100px repeat(3, 150px);
+        width: 100%;
+    }
+
+    .btn,
+    .btn-twitter,
+    .btn-coffee,
+    .lang-select,
+    .controls-toggle,
+    .modal-close,
+    .btn-twitter,
+    .btn-coffee,
+    .filter-item,
+    .room-filters__action {
+        min-block-size: 44px;
+    }
+
+    .modal-close,
+    .room-filters__action {
+        min-inline-size: 44px;
     }
 
     .badge {
@@ -1485,9 +1535,14 @@ body {
     }
 
     .puzzle-grid {
-        grid-template-columns: 90px repeat(3, 100px);
+        grid-template-columns: 72px repeat(3, minmax(0, 1fr));
         grid-template-rows: 75px repeat(3, 100px);
         gap: 3px;
+        width: 100%;
+    }
+
+    .puzzle-container {
+        width: 100%;
     }
 
     .badge {
@@ -2224,7 +2279,6 @@ body {
     height: 100%;
     background: var(--accent-blue);
     border-radius: 4px;
-    transition: width 0.3s ease;
 }
 
 .player-progress__text {

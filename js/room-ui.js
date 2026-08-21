@@ -2,6 +2,25 @@
  * HearthDoku — Room UI: sidebar, grid, modals for multiplayer
  */
 const RoomUI = (() => {
+    const modalTriggers = new WeakMap();
+
+    function openModal(modal, focusTarget) {
+        modalTriggers.set(modal, document.activeElement);
+        document.getElementById('app').inert = true;
+        modal.setAttribute('aria-hidden', 'false');
+        modal.classList.add('modal-overlay--visible');
+        setTimeout(() => (focusTarget || modal.querySelector('button, input, [href]'))?.focus(), 0);
+    }
+
+    function closeModal(modal) {
+        if (!modal?.classList.contains('modal-overlay--visible')) return;
+        modal.classList.remove('modal-overlay--visible');
+        modal.setAttribute('aria-hidden', 'true');
+        if (!document.querySelector('.modal-overlay--visible')) document.getElementById('app').inert = false;
+        const trigger = modalTriggers.get(modal);
+        (trigger?.disabled ? document.querySelector('.grid-cell:not(:disabled)') : trigger)?.focus();
+        modalTriggers.delete(modal);
+    }
     let mode = null;
     let players = new Map();
     let myId = null;
@@ -86,6 +105,16 @@ const RoomUI = (() => {
             if (e.key === 'Escape') {
                 closeSearchModal();
                 closeGameOverModal();
+            }
+            if (e.key === 'Tab') {
+                const modal = document.querySelector('.modal-overlay--visible');
+                if (!modal) return;
+                const items = [...modal.querySelectorAll('button:not(:disabled), input:not(:disabled), [href]')];
+                if (!items.length) return;
+                const first = items[0];
+                const last = items.at(-1);
+                if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+                else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
             }
         });
 
@@ -474,6 +503,13 @@ const RoomUI = (() => {
             el.innerHTML = renderBadge(puzzle.rowCriteria[r]);
             bindImgFallbacks(el);
         }
+        document.querySelectorAll('.grid-cell').forEach(cell => {
+            const row = Number(cell.dataset.row);
+            const col = Number(cell.dataset.col);
+            const rowLabel = PuzzleEngine.getCriterionDisplay(puzzle.rowCriteria[row]).label;
+            const colLabel = PuzzleEngine.getCriterionDisplay(puzzle.colCriteria[col]).label;
+            cell.setAttribute('aria-label', `${rowLabel} — ${colLabel}`);
+        });
     }
 
     function renderBadge(criterion) {
@@ -520,6 +556,7 @@ const RoomUI = (() => {
             <span class="cell-card__player-dot" style="background:${color}" title="${escapeHtml(pName)}"></span>
         </div>`;
         cellEl.classList.add('grid-cell--correct');
+        cellEl.disabled = true;
         bindCardImgFallback(cellEl, localName);
     }
 
@@ -536,6 +573,7 @@ const RoomUI = (() => {
             <div class="cell-card__score">+${data.score}</div>
         </div>`;
         cellEl.classList.add('grid-cell--correct');
+        cellEl.disabled = true;
         bindCardImgFallback(cellEl, data.cardName);
     }
 
@@ -576,12 +614,11 @@ const RoomUI = (() => {
         els.searchInput.value = '';
         els.searchInput.placeholder = I18n.t('searchPlaceholder');
         els.searchResults.innerHTML = '';
-        els.searchModal.classList.add('modal-overlay--visible');
-        setTimeout(() => els.searchInput.focus(), 100);
+        openModal(els.searchModal, els.searchInput);
     }
 
     function closeSearchModal() {
-        els.searchModal.classList.remove('modal-overlay--visible');
+        closeModal(els.searchModal);
         activeCellIndex = null;
         CardSearch.cancelSearch();
     }
@@ -605,25 +642,26 @@ const RoomUI = (() => {
             return;
         }
 
-        const AMBIGUOUS_SETS = new Set(['CORE', 'LEGACY', 'EXPERT1', 'VANILLA']);
+        const nameCounts = results.reduce((counts, card) => counts.set(card.name, (counts.get(card.name) || 0) + 1), new Map());
+        const duplicateNames = new Set([...nameCounts].filter(([, count]) => count > 1).map(([name]) => name));
 
         els.searchResults.innerHTML = results.map(card => {
             const used = usedCardIds.has(card.dbfId || card.id);
             const setCode = card.set || '';
-            const showSetBadge = AMBIGUOUS_SETS.has(setCode);
+            const showSetBadge = duplicateNames.has(card.name);
             const setIcon = showSetBadge ? HearthstoneAPI.getSetIcon(setCode) : null;
             const setName = showSetBadge ? HearthstoneAPI.getSetDisplayName(setCode) : '';
             const setIconHtml = setIcon
                 ? `<img class="search-result__set-icon" src="${setIcon}" alt="">`
                 : '';
 
-            return `<div class="search-result ${used ? 'search-result--used' : ''}" data-card-id="${card.id}" data-dbf-id="${card.dbfId}">
+            return `<button type="button" class="search-result ${used ? 'search-result--used' : ''}" data-card-id="${card.id}" data-dbf-id="${card.dbfId}" ${used ? 'disabled' : ''}>
                 <div class="search-result__info">
                     <div class="search-result__name">${escapeHtml(card.name)}</div>
                     ${showSetBadge ? `<div class="search-result__set">${setIconHtml}<span>${escapeHtml(setName)}</span></div>` : ''}
                 </div>
                 ${used ? `<div class="search-result__used-tag">${I18n.t('alreadyUsed')}</div>` : ''}
-            </div>`;
+            </button>`;
         }).join('');
 
         els.searchResults.querySelectorAll('.search-result__set-icon').forEach(img => {
@@ -724,12 +762,12 @@ const RoomUI = (() => {
 
         els.gameOverRanking.innerHTML = summaryHtml + rankHtml;
         els.btnShowSolutions.textContent = I18n.t('showSolutions');
-        els.gameOverModal.classList.add('modal-overlay--visible');
+        openModal(els.gameOverModal);
     }
 
     function closeGameOverModal() {
         if (els.gameOverModal) {
-            els.gameOverModal.classList.remove('modal-overlay--visible');
+            closeModal(els.gameOverModal);
         }
     }
 

@@ -96,8 +96,8 @@
                             <div class="room-filters__group-header">
                                 <h4 id="labelFilterExtensions">Extensions</h4>
                                 <span class="room-filters__actions">
-                                    <button type="button" class="room-filters__action" id="roomBtnCheckAll">&#10003;</button>
-                                    <button type="button" class="room-filters__action" id="roomBtnUncheckAll">&#10007;</button>
+                                    <button type="button" class="room-filters__action" id="roomBtnCheckAll" aria-label="Tout cocher">&#10003;</button>
+                                    <button type="button" class="room-filters__action" id="roomBtnUncheckAll" aria-label="Tout décocher">&#10007;</button>
                                 </span>
                             </div>
                             <div class="room-filters__list" id="roomSetFilters"></div>
@@ -106,8 +106,8 @@
                             <div class="room-filters__group-header">
                                 <h4 id="labelFilterRarities">Raretés</h4>
                                 <span class="room-filters__actions">
-                                    <button type="button" class="room-filters__action" id="roomBtnCheckAllRarity">&#10003;</button>
-                                    <button type="button" class="room-filters__action" id="roomBtnUncheckAllRarity">&#10007;</button>
+                                    <button type="button" class="room-filters__action" id="roomBtnCheckAllRarity" aria-label="Tout cocher">&#10003;</button>
+                                    <button type="button" class="room-filters__action" id="roomBtnUncheckAllRarity" aria-label="Tout décocher">&#10007;</button>
                                 </span>
                             </div>
                             <div class="room-filters__list" id="roomRarityFilters"></div>
@@ -116,8 +116,8 @@
                             <div class="room-filters__group-header">
                                 <h4 id="labelFilterClasses">Classes</h4>
                                 <span class="room-filters__actions">
-                                    <button type="button" class="room-filters__action" id="roomBtnCheckAllClass">&#10003;</button>
-                                    <button type="button" class="room-filters__action" id="roomBtnUncheckAllClass">&#10007;</button>
+                                    <button type="button" class="room-filters__action" id="roomBtnCheckAllClass" aria-label="Tout cocher">&#10003;</button>
+                                    <button type="button" class="room-filters__action" id="roomBtnUncheckAllClass" aria-label="Tout décocher">&#10007;</button>
                                 </span>
                             </div>
                             <div class="room-filters__list" id="roomClassFilters"></div>
@@ -132,11 +132,12 @@
                 </div>
 
                 <div class="room-setup__join">
+                    <label for="joinCode" class="visually-hidden" id="labelJoinCode">Code de la room</label>
                     <input type="text" id="joinCode" class="room-setup__input room-setup__input--code" maxlength="6" placeholder="CODE" autocomplete="off">
                     <button class="btn btn--secondary" id="btnJoinRoom">Rejoindre</button>
                 </div>
 
-                <div class="room-setup__status" id="setupStatus" style="display:none"></div>
+                <div class="room-setup__status" id="setupStatus" role="status" aria-live="polite" style="display:none"></div>
 
                 <a href="index.html" class="room-setup__back" id="linkBackToSolo">Retour au solo</a>
             </div>
@@ -145,7 +146,7 @@
         <!-- Room Game (hidden until joined) -->
         <div class="room-game" id="roomGame" style="display:none">
             <!-- Status Banner -->
-            <div class="room-status-banner" id="roomStatusBanner" style="display:none"></div>
+            <div class="room-status-banner" id="roomStatusBanner" role="status" aria-live="polite" style="display:none"></div>
 
             <div class="room-layout">
                 <!-- Sidebar -->
@@ -188,23 +189,23 @@
 
                     <!-- Puzzle Grid -->
                     <div class="puzzle-container" id="puzzleContainer">
-                        <div class="puzzle-grid" id="puzzleGrid" role="grid" aria-label="Grille HearthDoku 3x3">
+                        <div class="puzzle-grid" id="puzzleGrid" role="group" aria-label="Grille HearthDoku 3x3">
                             <div class="grid-corner"></div>
                             <div class="grid-col-header" id="colHeader0"></div>
                             <div class="grid-col-header" id="colHeader1"></div>
                             <div class="grid-col-header" id="colHeader2"></div>
                             <div class="grid-row-header" id="rowHeader0"></div>
-                            <div class="grid-cell" data-row="0" data-col="0"></div>
-                            <div class="grid-cell" data-row="0" data-col="1"></div>
-                            <div class="grid-cell" data-row="0" data-col="2"></div>
+                            <button type="button" class="grid-cell" data-row="0" data-col="0" aria-label="Case ligne 1, colonne 1"></button>
+                            <button type="button" class="grid-cell" data-row="0" data-col="1" aria-label="Case ligne 1, colonne 2"></button>
+                            <button type="button" class="grid-cell" data-row="0" data-col="2" aria-label="Case ligne 1, colonne 3"></button>
                             <div class="grid-row-header" id="rowHeader1"></div>
-                            <div class="grid-cell" data-row="1" data-col="0"></div>
-                            <div class="grid-cell" data-row="1" data-col="1"></div>
-                            <div class="grid-cell" data-row="1" data-col="2"></div>
+                            <button type="button" class="grid-cell" data-row="1" data-col="0" aria-label="Case ligne 2, colonne 1"></button>
+                            <button type="button" class="grid-cell" data-row="1" data-col="1" aria-label="Case ligne 2, colonne 2"></button>
+                            <button type="button" class="grid-cell" data-row="1" data-col="2" aria-label="Case ligne 2, colonne 3"></button>
                             <div class="grid-row-header" id="rowHeader2"></div>
-                            <div class="grid-cell" data-row="2" data-col="0"></div>
-                            <div class="grid-cell" data-row="2" data-col="1"></div>
-                            <div class="grid-cell" data-row="2" data-col="2"></div>
+                            <button type="button" class="grid-cell" data-row="2" data-col="0" aria-label="Case ligne 3, colonne 1"></button>
+                            <button type="button" class="grid-cell" data-row="2" data-col="1" aria-label="Case ligne 3, colonne 2"></button>
+                            <button type="button" class="grid-cell" data-row="2" data-col="2" aria-label="Case ligne 3, colonne 3"></button>
                         </div>
                     </div>
 

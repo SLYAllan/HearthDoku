@@ -14,6 +14,23 @@ const UI = (() => {
     let activeCellIndex = null;
     let gameFinished = false;
     let dailyOpts = null; // { daily: true, saveFn }
+    const modalTriggers = new WeakMap();
+
+    function openModal(modal, focusTarget) {
+        modalTriggers.set(modal, document.activeElement);
+        document.getElementById('app').inert = true;
+        modal.classList.add('modal-overlay--visible');
+        setTimeout(() => (focusTarget || modal.querySelector('button, input, [href]'))?.focus(), 0);
+    }
+
+    function closeModal(modal) {
+        if (!modal.classList.contains('modal-overlay--visible')) return;
+        modal.classList.remove('modal-overlay--visible');
+        if (!document.querySelector('.modal-overlay--visible')) document.getElementById('app').inert = false;
+        const trigger = modalTriggers.get(modal);
+        (trigger?.disabled ? document.querySelector('.grid-cell:not(:disabled)') : trigger)?.focus();
+        modalTriggers.delete(modal);
+    }
 
     function escapeHtml(str) {
         if (!str) return '';
@@ -106,6 +123,16 @@ const UI = (() => {
                 closeExportModal();
                 closeSolutionModal();
                 closeDefeatModal();
+            }
+            if (e.key === 'Tab') {
+                const modal = document.querySelector('.modal-overlay--visible');
+                if (!modal) return;
+                const items = [...modal.querySelectorAll('button:not(:disabled), input:not(:disabled), [href]')];
+                if (!items.length) return;
+                const first = items[0];
+                const last = items.at(-1);
+                if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+                else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
             }
         });
 
@@ -225,6 +252,7 @@ const UI = (() => {
         document.querySelectorAll('.grid-cell').forEach(cell => {
             cell.innerHTML = '';
             cell.className = 'grid-cell';
+            cell.disabled = false;
         });
     }
 
@@ -260,6 +288,14 @@ const UI = (() => {
             bindBadgeFallbacks(el);
         }
 
+        document.querySelectorAll('.grid-cell').forEach(cell => {
+            const row = Number(cell.dataset.row);
+            const col = Number(cell.dataset.col);
+            const rowLabel = PuzzleEngine.getCriterionDisplay(puzzle.rowCriteria[row]).label;
+            const colLabel = PuzzleEngine.getCriterionDisplay(puzzle.colCriteria[col]).label;
+            cell.setAttribute('aria-label', `${rowLabel} — ${colLabel}`);
+        });
+
         els.statUniq.textContent = puzzle.uniqueCount;
         startTimer();
     }
@@ -288,12 +324,11 @@ const UI = (() => {
         els.searchInput.value = '';
         els.searchInput.placeholder = I18n.t('searchPlaceholder');
         els.searchResults.innerHTML = '';
-        els.searchModal.classList.add('modal-overlay--visible');
-        setTimeout(() => els.searchInput.focus(), 100);
+        openModal(els.searchModal, els.searchInput);
     }
 
     function closeSearchModal() {
-        els.searchModal.classList.remove('modal-overlay--visible');
+        closeModal(els.searchModal);
         activeCellIndex = null;
         CardSearch.cancelSearch();
     }
@@ -319,13 +354,13 @@ const UI = (() => {
             return;
         }
 
-        // Sets that share identical card names across versions — always show their set badge
-        const AMBIGUOUS_SETS = new Set(['CORE', 'LEGACY', 'EXPERT1', 'VANILLA']);
+        const nameCounts = results.reduce((counts, card) => counts.set(card.name, (counts.get(card.name) || 0) + 1), new Map());
+        const duplicateNames = new Set([...nameCounts].filter(([, count]) => count > 1).map(([name]) => name));
 
         els.searchResults.innerHTML = results.map(card => {
             const used = usedCardIds.has(card.dbfId || card.id);
             const setCode = card.set || '';
-            const showSetBadge = AMBIGUOUS_SETS.has(setCode);
+            const showSetBadge = duplicateNames.has(card.name);
             const setIcon = showSetBadge ? HearthstoneAPI.getSetIcon(setCode) : null;
             const setName = showSetBadge ? HearthstoneAPI.getSetDisplayName(setCode) : '';
             const isSvgIcon = setIcon && setIcon.endsWith('.svg');
@@ -334,13 +369,13 @@ const UI = (() => {
                 ? `<img class="${setIconCls}" src="${setIcon}" alt="">`
                 : '';
 
-            return `<div class="search-result ${used ? 'search-result--used' : ''}" data-card-id="${card.id}" data-dbf-id="${card.dbfId}">
+            return `<button type="button" class="search-result ${used ? 'search-result--used' : ''}" data-card-id="${card.id}" data-dbf-id="${card.dbfId}" ${used ? 'disabled' : ''}>
                 <div class="search-result__info">
                     <div class="search-result__name">${escapeHtml(card.name)}</div>
                     ${showSetBadge ? `<div class="search-result__set">${setIconHtml}<span>${escapeHtml(setName)}</span></div>` : ''}
                 </div>
                 ${used ? `<div class="search-result__used-tag">${I18n.t('alreadyUsed')}</div>` : ''}
-            </div>`;
+            </button>`;
         }).join('');
 
         els.searchResults.querySelectorAll('.search-result:not(.search-result--used)').forEach(el => {
@@ -388,6 +423,7 @@ const UI = (() => {
                 }, { once: true });
             }
             cellEl.classList.add('grid-cell--correct');
+            cellEl.disabled = true;
             animateCorrect(cellEl);
 
             closeSearchModal();
@@ -457,9 +493,6 @@ const UI = (() => {
             showDefeatModal();
         }
 
-        if (dailyOpts) {
-            showSolutionPopup();
-        }
     }
 
     function revealSolutionsOnGrid() {
@@ -499,22 +532,22 @@ const UI = (() => {
         document.getElementById('victoryScore').textContent = score;
         document.getElementById('victoryTime').textContent = formatTime(timerSeconds);
         document.getElementById('victoryPP').textContent = `${errors}/${MAX_ERRORS}`;
-        els.victoryModal.classList.add('modal-overlay--visible');
+        openModal(els.victoryModal);
         spawnConfetti();
     }
 
     function closeVictoryModal() {
-        els.victoryModal.classList.remove('modal-overlay--visible');
+        closeModal(els.victoryModal);
     }
 
     function showDefeatModal() {
         document.getElementById('defeatScore').textContent = score;
         document.getElementById('defeatTime').textContent = formatTime(timerSeconds);
-        els.defeatModal.classList.add('modal-overlay--visible');
+        openModal(els.defeatModal);
     }
 
     function closeDefeatModal() {
-        els.defeatModal.classList.remove('modal-overlay--visible');
+        closeModal(els.defeatModal);
     }
 
     function setModeBar(isDaily, dateLabel) {
@@ -549,11 +582,11 @@ const UI = (() => {
     }
 
     function showExportModal() {
-        els.exportModal.classList.add('modal-overlay--visible');
+        openModal(els.exportModal);
     }
 
     function closeExportModal() {
-        els.exportModal.classList.remove('modal-overlay--visible');
+        closeModal(els.exportModal);
     }
 
     function showSolution() {
@@ -646,10 +679,10 @@ const UI = (() => {
                 img.parentElement.innerHTML = `<span class="solution-card__name">${img.alt}</span>`;
             }, { once: true });
         });
-        modal.classList.add('modal-overlay--visible');
+        openModal(modal, closeBtn);
 
         const onClose = () => {
-            modal.classList.remove('modal-overlay--visible');
+            closeModal(modal);
             closeBtn.removeEventListener('click', onClose);
             modal.removeEventListener('click', onModalClick);
         };
@@ -663,7 +696,7 @@ const UI = (() => {
 
     function closeSolutionModal() {
         const modal = document.getElementById('solutionModal');
-        if (modal) modal.classList.remove('modal-overlay--visible');
+        if (modal) closeModal(modal);
     }
 
     function getShareText() {

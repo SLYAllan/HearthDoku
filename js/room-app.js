@@ -22,6 +22,9 @@
         document.getElementById('btnJoinRoom').textContent = I18n.t('joinRoom');
         document.getElementById('linkBackToSolo').textContent = I18n.t('backToSolo');
         document.getElementById('joinCode').placeholder = I18n.t('enterCode');
+        document.getElementById('labelJoinCode').textContent = I18n.t('enterCode');
+        document.querySelectorAll('[id*="BtnCheckAll"]').forEach(button => button.setAttribute('aria-label', I18n.t('checkAll')));
+        document.querySelectorAll('[id*="BtnUncheckAll"]').forEach(button => button.setAttribute('aria-label', I18n.t('uncheckAll')));
         document.getElementById('labelAdvancedFilters').textContent = I18n.t('advancedFilters');
         document.getElementById('labelFilterExtensions').textContent = I18n.t('filterExtensions');
         document.getElementById('labelFilterRarities').textContent = I18n.t('filterRarities');

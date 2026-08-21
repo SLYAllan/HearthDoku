@@ -101,21 +101,23 @@ const App = (() => {
                 UI.updateUIText();
                 UI.showLoading();
 
-                // Reload cards in the new language
-                allCards = await HearthstoneAPI.fetchCards();
-                allSets = HearthstoneAPI.getAllSets();
-                allowedSets = [...allSets];
-                allowedRarities = [...ALL_RARITIES];
-                allowedClasses = [...ALL_CLASSES];
+                try {
+                    allCards = await HearthstoneAPI.fetchCards();
+                    allSets = HearthstoneAPI.getAllSets();
+                    allowedSets = [...allSets];
+                    allowedRarities = [...ALL_RARITIES];
+                    allowedClasses = [...ALL_CLASSES];
 
-                UI.renderFilterList(allSets);
-                UI.renderRarityFilterList();
-                UI.renderClassFilterList();
+                    UI.renderFilterList(allSets);
+                    UI.renderRarityFilterList();
+                    UI.renderClassFilterList();
 
-                if (isDailyMode) {
-                    generateDailyPuzzle();
-                } else {
-                    generateNewPuzzle();
+                    if (isDailyMode) generateDailyPuzzle();
+                    else generateNewPuzzle();
+                } catch (err) {
+                    console.error('Language reload error:', err);
+                    UI.hideLoading();
+                    alert(I18n.t('errorLoadCards'));
                 }
             });
         }
@@ -246,14 +248,15 @@ const App = (() => {
     }
 
     function buildPool() {
+        if (!allowedSets.length || !allowedRarities.length || !allowedClasses.length) return [];
         let pool = allCards;
-        if (allowedSets.length > 0 && allowedSets.length !== allSets.length) {
+        if (allowedSets.length !== allSets.length) {
             pool = pool.filter(c => allowedSets.includes(c.set));
         }
-        if (allowedRarities.length > 0 && allowedRarities.length !== ALL_RARITIES.length) {
+        if (allowedRarities.length !== ALL_RARITIES.length) {
             pool = pool.filter(c => allowedRarities.includes(c.rarity));
         }
-        if (allowedClasses.length > 0 && allowedClasses.length !== ALL_CLASSES.length) {
+        if (allowedClasses.length !== ALL_CLASSES.length) {
             pool = pool.filter(c => cardMatchesClass(c, allowedClasses));
         }
         return pool;

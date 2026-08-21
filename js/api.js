@@ -6,7 +6,7 @@ const HearthstoneAPI = (() => {
     const API_URL_EN = 'https://api.hearthstonejson.com/v1/latest/enUS/cards.json';
     const CACHE_KEY = 'hearthdoku_cards_cache';
     const CACHE_VERSION_KEY = 'hearthdoku_cache_version';
-    const CACHE_VERSION = '5'; // Bumped: lang-aware cache
+    const CACHE_VERSION = '6'; // Refresh for Escape from Violet Hold
 
     let allCards = [];
     let collectibleCards = [];
@@ -98,6 +98,7 @@ const HearthstoneAPI = (() => {
         'THE_LOST_CITY', 'TLC',
         'TIME_TRAVEL', 'TIME',
         'CATACLYSM', 'CATA',
+        'JAIL',
     ];
 
     const CLASSIC_SETS = ['EXPERT1', 'CORE', 'BASIC', 'VANILLA', 'LEGACY'];
@@ -215,6 +216,9 @@ const HearthstoneAPI = (() => {
         'TIME_TRAVEL': 'logo/extensions/Across_the_Timeways_-_SVG_logo.svg',
         'TIME': 'logo/extensions/Across_the_Timeways_-_SVG_logo.svg',
         'TAVERNS_OF_TIME': 'logo/extensions/Across_the_Timeways_-_SVG_logo.svg',
+
+        // 2026
+        'JAIL': 'logo/extensions/Escape_from_Violet_Hold.png',
 
         // Misc
         'WONDERS': 'logo/extensions/TwistIcon.webp',
