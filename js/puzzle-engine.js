@@ -144,7 +144,7 @@ const PuzzleEngine = (() => {
     function generatePuzzle(cards, allowedSets = null, seed = null) {
         let pool = cards;
         if (allowedSets && allowedSets.length > 0) {
-            pool = cards.filter(c => allowedSets.includes(c.set));
+                pool = cards.filter(c => allowedSets.includes(HearthstoneAPI.getCanonicalSetCode(c.set)));
         }
 
         if (pool.length < 9) return null;

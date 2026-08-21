@@ -19,11 +19,13 @@ test('classic card versions have distinct set labels', () => {
     const api = read('js/api.js');
     const i18n = read('js/i18n.js');
 
-    assert.match(i18n, /'EXPERT1':\s*'Héritage'/);
-    assert.match(i18n, /'VANILLA':\s*'Classique'/);
-    assert.match(i18n, /'LEGACY':\s*'Héritage \(cartes de base\)'/);
-    assert.match(i18n, /'EXPERT1':\s*'Legacy'/);
-    assert.match(i18n, /'VANILLA':\s*'Classic'/);
+    assert.match(i18n, /'EXPERT1':\s*'Classique'/);
+    assert.match(i18n, /'VANILLA':\s*'Héritage'/);
+    assert.match(i18n, /'LEGACY':\s*'Héritage'/);
+    assert.match(i18n, /'EXPERT1':\s*'Classic'/);
+    assert.match(i18n, /'VANILLA':\s*'Legacy'/);
+    assert.match(api, /function getCanonicalSetCode\(setCode\)/);
+    assert.match(api, /setCode === 'VANILLA' \? 'LEGACY' : setCode/);
     assert.match(api, /EXCLUDED_SET_PREFIXES[\s\S]*'CORE_HIDDEN'/);
 });
 

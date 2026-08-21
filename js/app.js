@@ -251,7 +251,7 @@ const App = (() => {
         if (!allowedSets.length || !allowedRarities.length || !allowedClasses.length) return [];
         let pool = allCards;
         if (allowedSets.length !== allSets.length) {
-            pool = pool.filter(c => allowedSets.includes(c.set));
+            pool = pool.filter(c => allowedSets.includes(HearthstoneAPI.getCanonicalSetCode(c.set)));
         }
         if (allowedRarities.length !== ALL_RARITIES.length) {
             pool = pool.filter(c => allowedRarities.includes(c.rarity));

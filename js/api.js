@@ -101,7 +101,7 @@ const HearthstoneAPI = (() => {
         'ESCAPEFROM_VIOLET_HOLD',
     ];
 
-    const CLASSIC_SETS = ['EXPERT1', 'CORE', 'BASIC', 'VANILLA', 'LEGACY'];
+    const CLASSIC_SETS = ['EXPERT1', 'CORE', 'BASIC', 'LEGACY'];
 
     // Sets to exclude from the game (non-real sets)
     const EXCLUDED_SET_PREFIXES = [
@@ -259,7 +259,11 @@ const HearthstoneAPI = (() => {
         health: 'logo/Health_icon_large.webp',
     };
 
-    function getSetIcon(setCode) { return SET_ICONS[setCode] || null; }
+    function getCanonicalSetCode(setCode) {
+        return setCode === 'VANILLA' ? 'LEGACY' : setCode;
+    }
+
+    function getSetIcon(setCode) { return SET_ICONS[getCanonicalSetCode(setCode)] || null; }
     function getClassIcon(classCode) { return CLASS_ICONS[classCode] || null; }
     function getRarityIcon(rarityCode) { return RARITY_ICONS[rarityCode] || null; }
     function getStatIcon(statType) { return STAT_ICONS[statType] || null; }
@@ -274,7 +278,7 @@ const HearthstoneAPI = (() => {
 
     function getSetDisplayName(setCode) {
         const names = getSetDisplayNames();
-        return names[setCode] || setCode;
+        return names[getCanonicalSetCode(setCode)] || setCode;
     }
 
     function getCollectibleCards() {
@@ -288,7 +292,7 @@ const HearthstoneAPI = (() => {
     function getAllSets() {
         const sets = new Set();
         collectibleCards.forEach(c => {
-            if (c.set && !isExcludedSet(c.set)) sets.add(c.set);
+            if (c.set && !isExcludedSet(c.set)) sets.add(getCanonicalSetCode(c.set));
         });
         // Deduplicate sets that have the same display name
         // Keep the set code with the most cards
@@ -360,7 +364,7 @@ const HearthstoneAPI = (() => {
                 return card.cardClass === value || card.classes?.includes(value);
             }
             case 'set': {
-                return card.set === value;
+                return getCanonicalSetCode(card.set) === getCanonicalSetCode(value);
             }
             case 'rarity': {
                 return card.rarity === value;
@@ -378,6 +382,7 @@ const HearthstoneAPI = (() => {
         cardMatchesCriterion,
         cardHasKeyword,
         getSetDisplayName,
+        getCanonicalSetCode,
         getCardRenderUrl,
         isExcludedSet,
         getSetIcon,

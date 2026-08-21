@@ -39,7 +39,7 @@ Les contrôles du parcours solo, du multijoueur, du responsive et de l’accessi
 
 ### Réponses de recherche
 
-Quand plusieurs cartes portent le même nom, chaque réponse affiche son extension. `VANILLA` s'affiche comme « Classique », `EXPERT1` comme « Héritage » et `LEGACY` comme « Héritage (cartes de base) ». Un Gnome lépreux en double ne porte donc plus deux fois le badge « Classique ».
+Quand plusieurs cartes portent le même nom, chaque réponse affiche son extension. `EXPERT1` s'affiche comme « Classique ». `VANILLA` et `LEGACY` forment un seul groupe « Héritage ». Un Gnome lépreux en double porte donc un badge « Classique » et un badge « Héritage », sans doublon dans les filtres.
 
 ### Filtres et logos
 
