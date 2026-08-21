@@ -6,7 +6,7 @@ const HearthstoneAPI = (() => {
     const API_URL_EN = 'https://api.hearthstonejson.com/v1/latest/enUS/cards.json';
     const CACHE_KEY = 'hearthdoku_cards_cache';
     const CACHE_VERSION_KEY = 'hearthdoku_cache_version';
-    const CACHE_VERSION = '6'; // Refresh for Escape from Violet Hold
+    const CACHE_VERSION = '7'; // Refresh for the current set code and labels
 
     let allCards = [];
     let collectibleCards = [];
@@ -98,7 +98,7 @@ const HearthstoneAPI = (() => {
         'THE_LOST_CITY', 'TLC',
         'TIME_TRAVEL', 'TIME',
         'CATACLYSM', 'CATA',
-        'JAIL',
+        'ESCAPEFROM_VIOLET_HOLD',
     ];
 
     const CLASSIC_SETS = ['EXPERT1', 'CORE', 'BASIC', 'VANILLA', 'LEGACY'];
@@ -108,7 +108,7 @@ const HearthstoneAPI = (() => {
         'PLACEHOLDER', 'HERO_SKINS', 'LETTUCE', 'LETL', 'PET', 'TUT',
         'TUTORIAL', 'CREDITS', 'MISSIONS', 'DEBUG', 'TEMP', 'TAVERN',
         'TB', 'MERCENARIES', 'BATTLEGROUNDS', 'SLUSH', 'CHEAT', 'BLANK',
-        'DEMO', 'NONE', 'INVALID', 'TEST', 'WILD_EVENT',
+        'DEMO', 'NONE', 'INVALID', 'TEST', 'WILD_EVENT', 'CORE_HIDDEN',
     ];
 
     // Icon paths for each set (relative to project root)
@@ -218,7 +218,7 @@ const HearthstoneAPI = (() => {
         'TAVERNS_OF_TIME': 'logo/extensions/Across_the_Timeways_-_SVG_logo.svg',
 
         // 2026
-        'JAIL': 'logo/extensions/Escape_from_Violet_Hold.png',
+        'ESCAPEFROM_VIOLET_HOLD': 'logo/extensions/Escape_from_Violet_Hold_-_Icon.webp',
 
         // Misc
         'WONDERS': 'logo/extensions/TwistIcon.webp',

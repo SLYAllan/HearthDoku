@@ -8,11 +8,31 @@ test('the current Hearthstone set is available everywhere', () => {
     const api = read('js/api.js');
     const i18n = read('js/i18n.js');
 
-    assert.match(api, /STANDARD_SETS[\s\S]*'JAIL'/);
-    assert.match(api, /'JAIL':\s*'logo\/extensions\/Escape_from_Violet_Hold\.png'/);
-    assert.match(i18n, /'JAIL':\s*'Évasion du fort Pourpre'/);
-    assert.match(i18n, /'JAIL':\s*'Escape from Violet Hold'/);
-    assert.ok(fs.existsSync('logo/extensions/Escape_from_Violet_Hold.png'));
+    assert.match(api, /STANDARD_SETS[\s\S]*'ESCAPEFROM_VIOLET_HOLD'/);
+    assert.match(api, /'ESCAPEFROM_VIOLET_HOLD':\s*'logo\/extensions\/Escape_from_Violet_Hold_-_Icon\.webp'/);
+    assert.match(i18n, /'ESCAPEFROM_VIOLET_HOLD':\s*'Évasion du fort Pourpre'/);
+    assert.match(i18n, /'ESCAPEFROM_VIOLET_HOLD':\s*'Escape from Violet Hold'/);
+    assert.ok(fs.existsSync('logo/extensions/Escape_from_Violet_Hold_-_Icon.webp'));
+});
+
+test('classic card versions have distinct set labels', () => {
+    const api = read('js/api.js');
+    const i18n = read('js/i18n.js');
+
+    assert.match(i18n, /'EXPERT1':\s*'Héritage'/);
+    assert.match(i18n, /'VANILLA':\s*'Classique'/);
+    assert.match(i18n, /'LEGACY':\s*'Héritage \(cartes de base\)'/);
+    assert.match(i18n, /'EXPERT1':\s*'Legacy'/);
+    assert.match(i18n, /'VANILLA':\s*'Classic'/);
+    assert.match(api, /EXCLUDED_SET_PREFIXES[\s\S]*'CORE_HIDDEN'/);
+});
+
+test('every declared set icon exists', () => {
+    const paths = [...read('js/api.js').matchAll(/:\s*(['"])(logo\/extensions\/.+?)\1/g)]
+        .map(match => match[2]);
+
+    assert.ok(paths.length > 0);
+    for (const path of new Set(paths)) assert.ok(fs.existsSync(path), `missing set icon: ${path}`);
 });
 
 test('game choices use native buttons', () => {
