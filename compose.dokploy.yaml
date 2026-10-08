@@ -1,0 +1,12 @@
+# Serveur WS de HearthDoku sur le serveur maison (phase 4). Le domaine ws.hearthdoku.fr
+# se pose dans Dokploy, en HTTP : Cloudflare chiffre (D20 du dépôt serveur).
+# TAG : le SHA à déployer, posé par le Dashboard ; sans lui, la dernière image de main.
+services:
+  ws:
+    image: ghcr.io/slyallan/hearthdoku-ws:${TAG:-main}
+    restart: unless-stopped
+    mem_limit: 128m
+    environment:
+      PORT: "8080"
+      # Sans elle, le serveur accepte toutes les origines : on refuse de démarrer.
+      CORS_ORIGIN: ${CORS_ORIGIN:?CORS_ORIGIN manquante}
