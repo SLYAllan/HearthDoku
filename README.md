@@ -78,3 +78,10 @@ python3 -m http.server 8000
 ## License
 
 All Hearthstone assets and card data are property of Blizzard Entertainment.
+
+## Image du serveur WS
+
+À chaque push sur `main` qui touche `server/`, `.github/workflows/image-serveur.yml`
+construit l'image du serveur WS, vérifie qu'elle répond sur `/health`, puis la pousse
+dans GHCR (`ghcr.io/slyallan/hearthdoku-ws:<sha>` et `:main`). `compose.dokploy.yaml`
+servira au déploiement sur le serveur maison. Le front reste sur GitHub Pages.
