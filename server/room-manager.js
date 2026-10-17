@@ -9,6 +9,10 @@ const MAX_ERRORS = 3;
 const ROOM_TTL_MS = 2 * 60 * 60 * 1000; // 2 hours
 const CLEANUP_INTERVAL_MS = 60 * 1000;
 
+// Jour et heure à Paris, pour les tuiles de la fiche du Dashboard (/health).
+const JOUR_PARIS = new Intl.DateTimeFormat('fr-CA', { timeZone: 'Europe/Paris' });
+const HEURE_PARIS = new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit' });
+
 const PLAYER_COLORS = [
     '#22c55e', '#3bd3fd', '#f8cc65', '#fc7981',
     '#a78bfa', '#60a5fa', '#f97316', '#e040a0',
@@ -19,6 +23,8 @@ class RoomManager {
         this.rooms = new Map();
         this.playerToRoom = new Map();
         this.rateLimiter = new RateLimiter();
+        this.demarre = Date.now();
+        this.partiesDuJour = { jour: JOUR_PARIS.format(this.demarre), nombre: 0 };
         this.cleanupTimer = setInterval(() => this.cleanup(), CLEANUP_INTERVAL_MS);
     }
 
@@ -181,6 +187,9 @@ class RoomManager {
         }
 
         room.startedAt = Date.now();
+        const jour = JOUR_PARIS.format(room.startedAt);
+        if (this.partiesDuJour.jour !== jour) this.partiesDuJour = { jour, nombre: 0 };
+        this.partiesDuJour.nombre++;
         this.broadcast(room, { type: 'game_started', startedAt: room.startedAt });
     }
 
@@ -563,10 +572,23 @@ class RoomManager {
         }
     }
 
-    getStats() {
+    getStats(maintenant = Date.now()) {
+        const rooms = this.rooms.size;
+        const players = this.playerToRoom.size;
+        const jour = JOUR_PARIS.format(maintenant);
+        const parties = {
+            titre: 'Parties du jour',
+            valeur: String(this.partiesDuJour.jour === jour ? this.partiesDuJour.nombre : 0),
+        };
+        // Avant le démarrage, le serveur ne sait rien : on dit depuis quand il compte.
+        if (JOUR_PARIS.format(this.demarre) === jour) parties.detail = `depuis ${HEURE_PARIS.format(this.demarre)}`;
         return {
-            rooms: this.rooms.size,
-            players: this.playerToRoom.size,
+            rooms,
+            players,
+            tuiles: [
+                { titre: 'Joueurs connectés', valeur: String(players), detail: `dans ${rooms} salle${rooms > 1 ? 's' : ''}` },
+                parties,
+            ],
         };
     }
 
