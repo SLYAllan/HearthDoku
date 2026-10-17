@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; base-uri 'self'; form-action 'self';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://static.cloudflareinsights.com; connect-src 'self' https://cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; base-uri 'self'; form-action 'self';">
     <title>Mentions légales &amp; confidentialité — HearthDoku</title>
     <meta name="description" content="Mentions légales et politique de confidentialité du site HearthDoku.">
     <meta name="robots" content="noindex, follow">
@@ -80,7 +80,7 @@
             <h3>4.2. Mesure d'audience (Google Analytics via Google Tag Manager)</h3>
             <p>
                 Si vous acceptez dans la bannière de consentement, Google Analytics est chargé pour mesurer
-                l'audience du site (pages vues, fréquentation). Aucun outil de tracking n'est chargé
+                l'audience du site (pages vues, fréquentation). Google Analytics n'est pas chargé
                 tant que votre consentement n'est pas donné.
             </p>
             <p>
@@ -88,7 +88,13 @@
                 <em>«&nbsp;Gérer mes cookies&nbsp;»</em> dans le pied de page.
             </p>
 
-            <h3>4.3. Vos droits (RGPD)</h3>
+            <h3>4.3. Mesure d'audience sans cookie (Cloudflare Web Analytics)</h3>
+            <p>
+                Cloudflare Web Analytics compte les visites et les pages vues, sans cookie ni
+                identifiant&nbsp;: il ne demande donc pas votre accord. Aucune donnée n'est revendue.
+            </p>
+
+            <h3>4.4. Vos droits (RGPD)</h3>
             <p>
                 Conformément au RGPD, vous disposez d'un droit d'accès, de rectification, d'effacement
                 et d'opposition concernant vos données. Comme aucune donnée identifiante n'est collectée
@@ -130,5 +136,6 @@
             <a href="./">← Retour au jeu</a>
         </p>
     </main>
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "a8f2e92ff4a04e478dc913a4a681de71"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
 </html>
