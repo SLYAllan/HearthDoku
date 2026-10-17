@@ -10,3 +10,6 @@ services:
       PORT: "8080"
       # Sans elle, le serveur accepte toutes les origines : on refuse de démarrer.
       CORS_ORIGIN: ${CORS_ORIGIN:?CORS_ORIGIN manquante}
+      # Erreurs vers le Dashboard : vides, le serveur tourne sans les envoyer.
+      DASHBOARD_ERREURS_URL: ${DASHBOARD_ERREURS_URL:-}
+      DASHBOARD_ERREURS_JETON: ${DASHBOARD_ERREURS_JETON:-}
