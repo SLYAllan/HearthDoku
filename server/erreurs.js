@@ -65,4 +65,18 @@ function creerEnvoi({ url, jeton, envoyer = envoyerFetch, periode = 60_000 }) {
     return { signaler, vider, arreter };
 }
 
-module.exports = { creerEnvoi };
+// Node 24 arrête le processus sur une exception non attrapée comme sur une promesse rejetée
+// non gérée, et Docker relance le serveur. Écouter ces événements supprimerait cet arrêt : on
+// le garde, après l'envoi de l'erreur au Dashboard.
+function arreterSurErreur(envoi, sortir = (code) => process.exit(code)) {
+    for (const evenement of ['uncaughtException', 'unhandledRejection']) {
+        process.on(evenement, async (e) => {
+            console.error(`[server] ${evenement}:`, e);
+            envoi.signaler(e, evenement);
+            await envoi.arreter();
+            sortir(1);
+        });
+    }
+}
+
+module.exports = { creerEnvoi, arreterSurErreur };

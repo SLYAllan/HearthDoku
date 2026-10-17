@@ -66,3 +66,26 @@ test('sans adresse ni jeton : rien gardé, un avertissement au départ', (t) => 
     assert.equal(avertir.mock.callCount(), 1);
     envoi.arreter();
 });
+
+// Relecture : écouter unhandledRejection empêche Node 24 de s'arrêter. Le serveur s'arrête
+// comme avant (Docker le relance), après l'envoi de l'erreur.
+const { spawnSync } = require('node:child_process');
+// Le fils envoie ses erreurs à un faux Dashboard qui écrit « ENVOI <origine> » : on sait ainsi
+// que l'erreur est partie avant l'arrêt, et que l'arrêt a eu lieu.
+const lancer = (code) => spawnSync(process.execPath, ['-e', `
+    const { creerEnvoi, arreterSurErreur } = require(${JSON.stringify(require.resolve('./erreurs'))});
+    const envoi = creerEnvoi({ url: 'u', jeton: 'j', envoyer: async (_u, _j, lot) => console.log('ENVOI ' + lot[0].pile.split(String.fromCharCode(10))[0]) });
+    arreterSurErreur(envoi);
+    ${code}`], { encoding: 'utf8' });
+
+test("une promesse rejetée non gérée part au Dashboard, puis arrête le processus (code 1)", () => {
+    const r = lancer("Promise.reject(new Error('x')); setTimeout(() => {}, 2000);");
+    assert.match(r.stdout, /ENVOI unhandledRejection/);
+    assert.equal(r.status, 1);
+});
+
+test("une exception non attrapée part au Dashboard, puis arrête le processus (code 1)", () => {
+    const r = lancer("setTimeout(() => { throw new Error('y'); }, 0); setTimeout(() => {}, 2000);");
+    assert.match(r.stdout, /ENVOI uncaughtException/);
+    assert.equal(r.status, 1);
+});
