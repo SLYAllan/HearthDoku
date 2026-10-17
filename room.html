@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://art.hearthstonejson.com https://www.googletagmanager.com https://www.google-analytics.com; connect-src 'self' https://api.hearthstonejson.com https://www.googletagmanager.com https://www.google-analytics.com https://region1.google-analytics.com https://ws.hearthdoku.fr wss://ws.hearthdoku.fr ws://localhost:8080 http://localhost:8080; frame-src https://www.googletagmanager.com; base-uri 'self'; form-action 'self';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com https://www.googletagmanager.com https://www.google-analytics.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://art.hearthstonejson.com https://www.googletagmanager.com https://www.google-analytics.com; connect-src 'self' https://cloudflareinsights.com https://api.hearthstonejson.com https://www.googletagmanager.com https://www.google-analytics.com https://region1.google-analytics.com https://ws.hearthdoku.fr wss://ws.hearthdoku.fr ws://localhost:8080 http://localhost:8080; frame-src https://www.googletagmanager.com; base-uri 'self'; form-action 'self';">
 
     <base href=".">
     <title>HearthDoku — Room Multijoueur</title>
@@ -252,5 +252,6 @@
     <script src="js/room-client.js"></script>
     <script src="js/room-ui.js"></script>
     <script src="js/room-app.js"></script>
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "a8f2e92ff4a04e478dc913a4a681de71"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
 </html>
