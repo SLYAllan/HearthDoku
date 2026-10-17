@@ -2,6 +2,10 @@ const http = require('http');
 const { WebSocketServer } = require('ws');
 const { fetchCards } = require('./card-fetcher');
 const { RoomManager } = require('./room-manager');
+const { creerEnvoi } = require('./erreurs');
+
+// Erreurs vers le Dashboard du serveur maison (jeton du projet, créé sur sa fiche).
+const erreurs = creerEnvoi({ url: process.env.DASHBOARD_ERREURS_URL, jeton: process.env.DASHBOARD_ERREURS_JETON });
 
 const PORT = parseInt(process.env.PORT || process.env.WS_PORT || '8080', 10);
 const CORS_ORIGIN = process.env.CORS_ORIGIN || '*';
@@ -97,6 +101,7 @@ wss.on('connection', (ws, req) => {
 
     ws.on('error', (err) => {
         console.error('[ws] Client error:', err.message);
+        erreurs.signaler(err, 'ws');
         roomManager.handleDisconnect(ws);
     });
 });
@@ -111,14 +116,30 @@ async function start() {
     });
 }
 
-start().catch(err => {
+start().catch(async (err) => {
     console.error('[server] Fatal:', err);
+    erreurs.signaler(err, 'demarrage');
+    await erreurs.arreter();
     process.exit(1);
+});
+
+// Avant, une exception non attrapée arrêtait le serveur sans trace ailleurs que dans Docker :
+// elle part au Dashboard, puis le serveur s'arrête comme avant (Docker le relance).
+process.on('uncaughtException', async (err) => {
+    console.error('[server] Uncaught exception:', err);
+    erreurs.signaler(err, 'uncaughtException');
+    await erreurs.arreter();
+    process.exit(1);
+});
+process.on('unhandledRejection', (raison) => {
+    console.error('[server] Unhandled rejection:', raison);
+    erreurs.signaler(raison, 'unhandledRejection');
 });
 
 function shutdown() {
     console.log('[server] Shutting down...');
     roomManager.destroy();
+    erreurs.arreter();
     wss.clients.forEach(ws => ws.close(1001, 'Server shutting down'));
     wss.close(() => {
         server.close(() => process.exit(0));

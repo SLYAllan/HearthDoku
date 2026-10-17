@@ -47,6 +47,8 @@ jobs:
           cache-to: type=gha,mode=max
       - name: Node 24 dans l'image
         run: docker run --rm hearthdoku-ws:essai node --version | grep -q '^v24\.'
+      - name: Les tests du serveur passent
+        run: cd server && node --test
       - name: Le serveur répond sur /health
         run: |
           docker run -d --name ws -p 127.0.0.1:18080:8080 hearthdoku-ws:essai
